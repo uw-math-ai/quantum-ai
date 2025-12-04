@@ -1,0 +1,12 @@
+{
+	"servers": {
+		"quantum-circuit-validation-server": {
+			"type": "stdio",
+			"command": ".venv/Scripts/python.exe",
+			"args": [
+				"tools/mcp_server.py"
+			]
+		}
+	},
+	"inputs": []
+}

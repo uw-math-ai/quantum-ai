@@ -130,6 +130,10 @@ def check_error_propagation(circuit: str, data_qubits: list[int], flag_qubits: l
     # Iterate through each gate in the gate list
     for gate_index, (gate_name, qubits) in enumerate(gate_list):
         for q in qubits:
+            # Only inject faults on data qubits
+            if q not in data_qubits:
+                continue
+            
             for pauli in ("X", "Z", "Y"):
                 final_paulis, x_mask, z_mask = propagate_fault(gate_list, gate_index, pauli, q)
                 data_w = error_weight_on(data_qubits, x_mask, z_mask)

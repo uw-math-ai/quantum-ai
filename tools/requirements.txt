@@ -1,2 +1,4 @@
 stim
 fastmcp
+openai
+python-dotenv

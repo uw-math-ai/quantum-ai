@@ -1,0 +1,6 @@
+{
+    "code_family":,
+    "[[n,k,d]]":, // list of size 3 (one entry for each of n, k, d)
+    "generators":, // list of stabilizer generators in Pauli String format (e.g., ["ZZI", "IZZ", "XXX"])
+    "code_name":, // optional
+}

@@ -1,3 +1,5 @@
+# Copied from Christian's code to test the new circuits 
+
 """
 Check if a quantum circuit is fault-tolerant by analyzing error propagation.
 

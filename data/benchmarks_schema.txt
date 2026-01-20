@@ -1,6 +1,8 @@
 {
     "code_family":,
-    "[[n,k,d]]":, // list of size 3 (one entry for each of n, k, d)
+    "physical_qubits":, // number of physical qubits (n)
+    "logical_qubits":, // number of logical qubits (k)
+    "d":, // code distance
     "generators":, // list of stabilizer generators in Pauli String format (e.g., ["ZZI", "IZZ", "XXX"])
     "code_name":, // optional
 }

@@ -1,3 +1,5 @@
+# Copied from Christian's code to test the new circuits 
+
 import stim
 
 def parse_circuit_to_gate_list(circuit):

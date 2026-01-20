@@ -60,7 +60,7 @@ def circuit_2():
     return str(circuit)
 
 
-
+# Takes string circuits and converts them into a visual circuit using stim
 def visualize(circuit): 
     circ = stim.Circuit()
     split = circuit.splitlines()

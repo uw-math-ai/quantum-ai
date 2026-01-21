@@ -1,0 +1,120 @@
+# ===============================================
+# Fault-tolerant logical |+_L> (verified cat, v2)
+# Data qubits: 0–6
+# Cat ancilla: 7–10
+# Verify ancilla (cat checks): 11–13
+# ===============================================
+# Postselect (required): accept only if M11=M12=M13=0 each round.
+#
+# This is the CZ-based stabilizer-projection gadget (like the original
+# ft_logical_plus), but with full cat verification (three parity checks).
+
+# ---------- Round 1 ----------
+H 7
+CX 7 8
+CX 8 9
+CX 9 10
+
+# Verify cat Z-parities: Z7Z8, Z8Z9, Z9Z10
+CX 7 11
+CX 8 11
+M 11
+R 11
+
+CX 8 12
+CX 9 12
+M 12
+R 12
+
+CX 9 13
+CX 10 13
+M 13
+R 13
+
+CZ 7 0
+CZ 8 1
+CZ 9 2
+CZ 10 3
+
+H 7 8 9 10
+M 7 8 9 10
+R 7 8 9 10
+
+# ---------- Round 2 ----------
+H 7
+CX 7 8
+CX 8 9
+CX 9 10
+
+CX 7 11
+CX 8 11
+M 11
+R 11
+
+CX 8 12
+CX 9 12
+M 12
+R 12
+
+CX 9 13
+CX 10 13
+M 13
+R 13
+
+CZ 7 0
+CZ 8 1
+CZ 9 4
+CZ 10 5
+
+H 7 8 9 10
+M 7 8 9 10
+R 7 8 9 10
+
+# ---------- Round 3 ----------
+H 7
+CX 7 8
+CX 8 9
+CX 9 10
+
+CX 7 11
+CX 8 11
+M 11
+R 11
+
+CX 8 12
+CX 9 12
+M 12
+R 12
+
+CX 9 13
+CX 10 13
+M 13
+R 13
+
+CZ 7 0
+CZ 8 2
+CZ 9 4
+CZ 10 6
+
+H 7 8 9 10
+M 7 8 9 10
+R 7 8 9 10
+H 13
+M 13
+R 13
+
+CX 7 0
+CX 8 2
+CX 9 4
+CX 10 6
+
+H 7 8 9 10
+CX 7 14
+CX 8 14
+CX 9 14
+CX 10 14
+M 14
+R 14
+M 7 8 9 10
+R 7 8 9 10
+

@@ -1,0 +1,101 @@
+# ===============================================
+# Fault-tolerant logical |-_L> (verified cat, v2)
+# Data qubits: 0–6
+# Cat ancilla: 7–10
+# Verify ancilla (cat checks): 11–13
+# ===============================================
+# Postselect (required): accept only if M11=M12=M13=0 each round.
+#
+# Prepare |+_L> using the CZ-based gadget, then apply Z_L.
+
+# ---------- Round 1 ----------
+H 7
+CX 7 8
+CX 8 9
+CX 9 10
+
+CX 7 11
+CX 8 11
+M 11
+R 11
+
+CX 8 12
+CX 9 12
+M 12
+R 12
+
+CX 9 13
+CX 10 13
+M 13
+R 13
+
+CZ 7 0
+CZ 8 1
+CZ 9 2
+CZ 10 3
+
+H 7 8 9 10
+M 7 8 9 10
+R 7 8 9 10
+
+# ---------- Round 2 ----------
+H 7
+CX 7 8
+CX 8 9
+CX 9 10
+
+CX 7 11
+CX 8 11
+M 11
+R 11
+
+CX 8 12
+CX 9 12
+M 12
+R 12
+
+CX 9 13
+CX 10 13
+M 13
+R 13
+
+CZ 7 0
+CZ 8 1
+CZ 9 4
+CZ 10 5
+
+H 7 8 9 10
+M 7 8 9 10
+R 7 8 9 10
+
+# ---------- Round 3 ----------
+H 7
+CX 7 8
+CX 8 9
+CX 9 10
+
+CX 7 11
+CX 8 11
+M 11
+R 11
+
+CX 8 12
+CX 9 12
+M 12
+R 12
+
+CX 9 13
+CX 10 13
+M 13
+R 13
+
+CZ 7 0
+CZ 8 2
+CZ 9 4
+CZ 10 6
+
+H 7 8 9 10
+M 7 8 9 10
+R 7 8 9 10
+
+Z 0 1 2 3 4 5 6

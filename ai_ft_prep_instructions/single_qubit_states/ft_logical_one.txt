@@ -1,0 +1,104 @@
+# ==============================================
+# Fault-tolerant logical |1_L> (verified cat, v2)
+# Data qubits: 0–6
+# Cat ancilla: 7–10
+# Verify ancilla (cat checks): 11–13
+# ==============================================
+# Postselect condition (required for FT):
+#   accept only if all verification measurements are 0
+#   (M 11 == 0, M 12 == 0, M 13 == 0) in each round.
+
+# Prepare |0_L> then apply transversal X to get |1_L>
+
+# ---------- Round 1 ----------
+H 7
+CX 7 8
+CX 8 9
+CX 9 10
+
+CX 7 11
+CX 8 11
+M 11
+R 11
+
+CX 8 12
+CX 9 12
+M 12
+R 12
+
+CX 9 13
+CX 10 13
+M 13
+R 13
+
+CX 7 0
+CX 8 1
+CX 9 2
+CX 10 3
+
+H 7 8 9 10
+M 7 8 9 10
+R 7 8 9 10
+
+# ---------- Round 2 ----------
+H 7
+CX 7 8
+CX 8 9
+CX 9 10
+
+CX 7 11
+CX 8 11
+M 11
+R 11
+
+CX 8 12
+CX 9 12
+M 12
+R 12
+
+CX 9 13
+CX 10 13
+M 13
+R 13
+
+CX 7 0
+CX 8 1
+CX 9 4
+CX 10 5
+
+H 7 8 9 10
+M 7 8 9 10
+R 7 8 9 10
+
+# ---------- Round 3 ----------
+H 7
+CX 7 8
+CX 8 9
+CX 9 10
+
+CX 7 11
+CX 8 11
+M 11
+R 11
+
+CX 8 12
+CX 9 12
+M 12
+R 12
+
+CX 9 13
+CX 10 13
+M 13
+R 13
+
+CX 7 0
+CX 8 2
+CX 9 4
+CX 10 6
+
+H 7 8 9 10
+M 7 8 9 10
+R 7 8 9 10
+
+# Transversal X: |0_L> -> |1_L>
+X 0 1 2 3 4 5 6

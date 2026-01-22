@@ -73,6 +73,36 @@ def generate_concatenated_codes(outer: qecc.StabilizerCode, inner: qecc.Stabiliz
     new_distance = math.ceil(outer.distance / inner.k) * inner.distance
     return qecc.StabilizerCode(generators = new_generators, distance = new_distance, n = new_n)
 
+def ensure_logicals_defined(code: qecc.StabilizerCode, name: str) -> tuple[qecc.StabilizerCode, str]:
+    """Ensure a code has x_logicals and z_logicals properties populated."""
+    if code.x_logicals is not None and code.z_logicals is not None:
+        return code, name
+    
+    # Compute logicals if method exists
+    if hasattr(code, 'compute_logical'):
+        code.compute_logical()
+    
+    # Extract logicals using the methods
+    if hasattr(code, 'x_logicals_as_pauli_strings') and hasattr(code, 'z_logicals_as_pauli_strings'):
+        try:
+            x_logs = code.x_logicals_as_pauli_strings()
+            z_logs = code.z_logicals_as_pauli_strings()
+            
+            # Create a new StabilizerCode with logicals explicitly set
+            new_code = qecc.StabilizerCode(
+                generators=code.stabs_as_pauli_strings(),
+                x_logicals=x_logs,
+                z_logicals=z_logs,
+                distance=code.distance,
+                n=code.n
+            )
+            return new_code, name
+        except Exception as e:
+            print(f"Warning: Could not extract logicals for {name}: {e}")
+            return code, name
+    
+    return code, name
+
 if __name__ == "__main__":
     codes: list[tuple[qecc.StabilizerCode, str]] = []
     distances = [3, 5, 7]
@@ -108,6 +138,9 @@ if __name__ == "__main__":
         (qecc.RotatedSurfaceCode(d), f"Rotated Surface Code d={d}") for d in distances
     ]
 
+    # Ensure all codes have logical operators properly defined
+    codes = [ensure_logicals_defined(code, name) for code, name in codes]
+
     codes.append(
         (qecc.StabilizerCode(
             generators = ["XXXX", "ZZZZ"],
@@ -136,7 +169,7 @@ if __name__ == "__main__":
                 # Only include if not too large
                 if concat_code.n < 200:
                     concatenated_codes.append((concat_code, concat_name))
-                    # print(f"Generated: {concat_name} - [[{concat_code.n},{concat_code.k},{concat_code.distance}]]")
+                    print(f"Generated: {concat_name} - [[{concat_code.n},{concat_code.k},{concat_code.distance}]]")
             except Exception as e:
                 print(f"Failed to concatenate {outer_name} * {inner_name}: {e}")
     

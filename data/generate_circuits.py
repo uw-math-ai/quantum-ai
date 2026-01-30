@@ -135,8 +135,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate quantum circuit dataset from benchmarks')
     parser.add_argument('-n', '--num-variations', type=int, default=50,
                         help='Number of variations per code (default: 50)')
-    parser.add_argument('-o', '--output', type=str, default='dataset_generation/circuit_dataset.jsonl',
-                        help='Output filename (default: dataset_generation/circuit_dataset.jsonl)')
+    parser.add_argument('-o', '--output', type=str, default='data/circuit_dataset.jsonl',
+                        help='Output filename (default: data/circuit_dataset.jsonl)')
     parser.add_argument('-l', '--limit', type=int, default=None,
                         help='Limit number of codes to process (default: all)')
     parser.add_argument('--identity-only', action='store_true',

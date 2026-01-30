@@ -9,7 +9,7 @@ import sys
 import os
 
 # Add tools directory to path to import check_stabilizers
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'tools'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'tools'))
 from check_stabilizers import check_stabilizers
 
 
@@ -43,8 +43,8 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Verify circuits in dataset')
-    parser.add_argument('input', nargs='?', default='dataset_generation/circuit_dataset.jsonl',
-                        help='Input JSONL file (default: dataset_generation/circuit_dataset.jsonl)')
+    parser.add_argument('input', nargs='?', default='data/circuit_dataset.jsonl',
+                        help='Input JSONL file (default: data/circuit_dataset.jsonl)')
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Show detailed output for failed examples')
     parser.add_argument('--summary', '-s', action='store_true',

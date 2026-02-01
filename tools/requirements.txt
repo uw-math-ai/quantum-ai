@@ -1,5 +1,5 @@
 stim
 fastmcp
-openai
 python-dotenv
 git+https://github.com/munich-quantum-toolkit/qecc
+github-copilot-sdk

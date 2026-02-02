@@ -165,8 +165,14 @@ def check_fault_tolerance(circuit: str, data_qubits: list[int], flag_qubits: lis
     return results, True
 
 if __name__ == "__main__":
+    # data_qubits = list(range(8))
+    # flag_qubits = list(range(8, 16))
+
     data_qubits = list(range(3))
     flag_qubits = list(range(3, 5))
+
+    # data_qubits = list(range(2))
+    # flag_qubits = list(range(2, 3))
     all_qubits = data_qubits + flag_qubits
 
     # Stim circuit
@@ -217,6 +223,16 @@ if __name__ == "__main__":
         M 3
         M 4
         """
+
+    # circuit = """
+    #     H 0 1
+    #     CX 0 2 1 2
+    #     M 2
+    #     H 0 1
+    #     CX 0 2 1 2
+    #     M 2
+    #     H 0 1
+    #     """
 
     results = check_error_propagation(circuit, data_qubits, flag_qubits)
 

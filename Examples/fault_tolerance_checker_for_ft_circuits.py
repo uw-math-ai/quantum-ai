@@ -558,7 +558,7 @@ if __name__ == '__main__':
     print(flag_circuit.diagram())
     print()
     
-    print("Configuration: q8-15 is FLAG, q0-7 are DATA")
+    print("Configuration: q3-4 is FLAG, q0-2 are DATA")
     print()
     
     checker2 = FaultToleranceChecker(
@@ -569,3 +569,75 @@ if __name__ == '__main__':
         code_distance=1
     )
     is_ft2, violations2 = checker2.is_fault_tolerant(verbose=True, use_flags=True)
+
+    print("\n" + "="*70)
+    print("Example 3: prompted_1 bell state")
+    print("="*70)
+    
+    flag_circuit = stim.Circuit("""
+        H 0 1
+        CX 0 2 1 2
+        M 2
+        H 0 1
+        CX 0 2 1 2
+        M 2
+        H 0 1
+        """)
+    
+    print("\nCircuit diagram:")
+    print(flag_circuit.diagram())
+    print()
+    
+    print("Configuration: q2 is FLAG, q0-1 are DATA")
+    print()
+    
+    checker3 = FaultToleranceChecker(
+        circuit=flag_circuit,
+        num_data_qubits=2,
+        ancilla_qubits=[],
+        flag_qubits=[2],
+        code_distance=1
+    )
+    is_ft3, violations3 = checker3.is_fault_tolerant(verbose=True, use_flags=True)
+
+    print("\n" + "="*70)
+    print("Extra")
+    print("="*70)
+    
+    flag_circuit = stim.Circuit("""
+        H 0
+        CX 0 1
+        CX 1 2
+        CX 2 3
+        CX 0 4
+        CX 1 4
+        CX 1 5
+        M 4
+        M 5
+        CX 1 4
+        CX 2 4
+        CX 2 5
+        M 4 
+        M 5
+        CX 2 4
+        CX 3 4
+        CX 3 5
+        M 4
+        M 5
+    """)
+    
+    print("\nCircuit diagram:")
+    print(flag_circuit.diagram())
+    print()
+    
+    print("Configuration: q2 is FLAG, q0-1 are DATA")
+    print()
+    
+    checker3 = FaultToleranceChecker(
+        circuit=flag_circuit,
+        num_data_qubits=4,
+        ancilla_qubits=[],
+        flag_qubits=[4,5],
+        code_distance=1
+    )
+    is_ft3, violations3 = checker3.is_fault_tolerant(verbose=True, use_flags=True)

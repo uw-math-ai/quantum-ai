@@ -11,7 +11,6 @@ from check_stabilizers import check_stabilizers
 from check_error_propagation import check_fault_tolerance
 
 load_dotenv()
-client = CopilotClient({"auto_start": True})
 
 class CircuitParam(BaseModel):
     circuit: str = Field(description="The Stim circuit description as a string")
@@ -37,31 +36,39 @@ def validate_circuit(circuit: CircuitParam) -> dict:
         "fault_tolerance": fault_tolerance_results
     }
 
-def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] = [], model: str = "gpt-4.1",
-                 attachments: list[Attachment|dict] = [], timeout: int | None = 60) -> str:
+def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None = None, model: str = "gpt-4.1",
+                 attachments: list[Attachment | dict] | None = None, timeout: int | None = 60) -> str:
     """Prompt the Copilot agent and return the response."""
+    if tools is None:
+        tools = []
+    if attachments is None:
+        attachments = []
 
     async def run():
-        session = await client.create_session({
-            "model": model,
-            "tools": tools,
-            "system_message": {
-                "content": system_message,
-            }
-        })
+        client = CopilotClient({"auto_start": True})
+        try:
+            session = await client.create_session({
+                "model": model,
+                "tools": tools,
+                "system_message": {
+                    "content": system_message,
+                }
+            })
 
-        response = ""
+            response = ""
 
-        def handle_event(event):
-            nonlocal response
-            if event.type == SessionEventType.ASSISTANT_MESSAGE:
-                response = event.data.content or ""
+            def handle_event(event):
+                nonlocal response
+                if event.type == SessionEventType.ASSISTANT_MESSAGE:
+                    response = event.data.content or ""
 
-        session.on(handle_event)
+            session.on(handle_event)
 
-        await session.send_and_wait({"prompt": prompt, "attachments": attachments}, timeout=timeout)
+            await session.send_and_wait({"prompt": prompt, "attachments": attachments}, timeout=timeout)
 
-        return response
+            return response
+        finally:
+            await client.stop()
 
     return asyncio.run(run())
 

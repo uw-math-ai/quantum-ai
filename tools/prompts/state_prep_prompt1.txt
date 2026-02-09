@@ -1,0 +1,5 @@
+Generate a Stim circuit to prepare the stabilizer state defined by the following stabilizers: {stabilizers_str}.
+The circuit should prepare the logical |0⟩ state that is stabilized by the given generators.
+Always verify the correctness of the circuit using the validate_circuit tool. Retry if any stabilizers are not preserved.
+You have {attempts} attempts to generate the best possible circuit.
+Call the return_result tool before ending with the best iteration.

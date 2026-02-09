@@ -1,0 +1,23 @@
+"""
+You are generating a valid stim circuit.
+Stabilizer generators:
+{chr(10).join(stabilizers_list)}
+
+Task:
+Generate a stim-compatible preparation circuit that:
+1. Is stabilized by the given generators.
+2. Prepares the logical |0⟩ state.
+
+Output Requirements:
+- Output ONLY valid stim instructions.
+- No explanations.
+- No comments.
+- No markdown.
+- No blank lines before or after.
+- One instruction per line.
+- Format strictly: INSTRUCTION q1 q2 ...
+- Qubits must be 0-indexed integers.
+- Only allowed gates: X, Z, CX, CZ, H, M, R.
+
+Return the instruction string only.
+"""

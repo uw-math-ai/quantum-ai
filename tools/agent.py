@@ -1,7 +1,7 @@
 import stim
 import asyncio
 from dotenv import load_dotenv
-from copilot.types import Tool
+from copilot.types import Tool, Attachment
 from copilot.tools import define_tool
 from copilot import CopilotClient
 from copilot.generated.session_events import SessionEventType
@@ -37,7 +37,8 @@ def validate_circuit(circuit: CircuitParam) -> dict:
         "fault_tolerance": fault_tolerance_results
     }
 
-def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] = [], model: str = "gpt-4.1", timeout: int | None = 60) -> str:
+def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] = [], model: str = "gpt-4.1",
+                 attachments: list[Attachment|dict] = [], timeout: int | None = 60) -> str:
     """Prompt the Copilot agent and return the response."""
 
     async def run():
@@ -58,7 +59,7 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] = [], 
 
         session.on(handle_event)
 
-        await session.send_and_wait({"prompt": prompt}, timeout=timeout)
+        await session.send_and_wait({"prompt": prompt, "attachments": attachments}, timeout=timeout)
 
         return response
 
@@ -115,6 +116,8 @@ def generate_ft_state_prep(stabilizers: list[str], attempts: int = 1, timeout: i
 def main():
     circ = generate_ft_state_prep(['XXXX', 'ZZII', 'IZZI'], attempts=1, timeout=300)
     print(circ.diagram() if circ else "No circuit generated.")
+    
+    print(prompt_agent("Please read the attachment and give a response.", attachments=[{"type":"file", "path":"./tools/test-attachment.txt"}]))
 
 if __name__ == "__main__":
     main()

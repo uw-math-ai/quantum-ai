@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "data"))
 
 from circuit_generation_env import CircuitGenerationEnv
 from prompt_loader import PromptLoader
-from local_model_agent import LocalModelAgent
+from generator import LlmCircuitGenerator
 
 import time
 from typing import List, Dict
@@ -139,7 +139,7 @@ def train(
     
     # Initialize agent and environment
     print("Initializing agent and environment...")
-    agent = LocalModelAgent(model_name=model_name, temperature=temperature, max_tokens=max_tokens)
+    agent = LlmCircuitGenerator(model_name=model_name, temperature=temperature, max_tokens=max_tokens)
     optimizer = torch.optim.AdamW(agent.model.parameters(), lr=learning_rate)
     env = CircuitGenerationEnv(
         data_path="reinforcement_learning/data/circuit_permute.jsonl"
@@ -175,7 +175,7 @@ def train(
         # Generate circuits
         try:
             agent.model.eval()
-            circuits, prompts = agent.generate_batch(stabilizers_batch)
+            circuits, prompts = agent.generate_batch_circuits(stabilizers_batch)
         except Exception as e:
             print(f"Error generating batch: {e}")
             continue
@@ -227,7 +227,7 @@ def train(
             val_stabilizers = [p['input_stabilizers'] for p in val_prompts]
             try:
                 agent.model.eval()
-                val_circuits, _ = agent.generate_batch(val_stabilizers)
+                val_circuits, _ = agent.generate_batch_circuits(val_stabilizers)
                 val_rewards, _ = env.evaluate_batch(val_circuits, val_stabilizers)
                 val_mean_reward = sum(val_rewards) / len(val_rewards)
                 metrics['val_mean_reward'] = val_mean_reward

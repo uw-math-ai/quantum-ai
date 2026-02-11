@@ -128,13 +128,24 @@ class FoundryCircuitGenerator:
 
     def _build_prompt(self, stabilizers: List[str]) -> List[Dict[str, str]]:
         system = (
-            "You are a quantum circuit designer. Output ONLY Stim instructions. No explanations."
+            "You are an expert quantum circuit designer specializing in fault-tolerant codes. "
+            "Output ONLY valid Stim instructions. No explanations, no markdown, no extra text."
         )
+        
+        num_qubits = len(stabilizers[0]) if stabilizers else 1
+        stab_str = ", ".join(stabilizers)
+        
         user = (
-            f"Generate a circuit stabilized by: {' '.join(stabilizers)}\n"
-            "Use: H, X, Z, CX, CZ. One per line. Output ONLY the circuit.\n\n"
-            "Example:\nH 0\nX 1\nCX 0 1"
+            f"Design a quantum circuit that creates a state stabilized by:\n"
+            f"{stab_str}\n\n"
+            f"Constraints:\n"
+            f"- Use only: H, X, Z, CX, CZ, M (measurement)\n"
+            f"- {num_qubits} qubits (indexed 0 to {num_qubits-1})\n"
+            f"- Stabilizer notation: X/Z/I means Pauli operator on that qubit\n"
+            f"- Output format: one instruction per line, no extra whitespace\n\n"
+            f"Output ONLY the circuit:"
         )
+        
         return [
             {"role": "system", "content": system},
             {"role": "user", "content": user},
@@ -289,7 +300,7 @@ if __name__ == "__main__":
     # Load environment variables from .env file
     _load_env_from_tools()
 
-    test_stabilizers = ["XXIIXXI", "XIXIXIX", "IIIXXXX", "ZZIIZZI", "ZIZIZIZ", "IIIZZZZ"]
+    test_stabilizers = ["XXX", "ZZI", "IZZ"]
     variants = _load_variants_from_env()
 
     if not variants:

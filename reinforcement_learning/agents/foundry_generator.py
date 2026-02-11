@@ -1,13 +1,13 @@
 """
-Agent A wrapper: uses FoundryCircuitGenerator to produce circuits.
+Foundry circuit generator: wraps FoundryCircuitGenerator for batch circuit generation.
 """
 
-from typing import List, Optional
+from typing import List
 
 from foundry_wrapper import FoundryCircuitGenerator
 
 
-class CircuitGeneratorAgent:
+class FoundryCircuitGeneratorAgent:
     def __init__(
         self,
         temperature: float = 0.2,
@@ -17,14 +17,14 @@ class CircuitGeneratorAgent:
         self.max_tokens = max_tokens
         self.model = FoundryCircuitGenerator()
 
-    def generate(self, stabilizers: List[str]) -> str:
+    def generate_circuit(self, stabilizers: List[str]) -> str:
         return self.model.generate_circuit(
             stabilizers,
             max_tokens=self.max_tokens,
             temperature=self.temperature,
         )
 
-    def generate_batch(self, stabilizers_batch: List[List[str]]) -> List[str]:
+    def generate_batch_circuits(self, stabilizers_batch: List[List[str]]) -> List[str]:
         return self.model.generate_batch(
             stabilizers_batch,
             max_tokens=self.max_tokens,
@@ -33,6 +33,6 @@ class CircuitGeneratorAgent:
 
 
 if __name__ == "__main__":
-    agent = CircuitGeneratorAgent()
+    agent = FoundryCircuitGeneratorAgent()
     test_stabilizers = ["XXX", "ZZI", "IZZ"]
-    print(agent.generate(test_stabilizers))
+    print(agent.generate_circuit(test_stabilizers))

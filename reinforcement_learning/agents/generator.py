@@ -1,6 +1,6 @@
 """
-Local model agent: loads local_model locally and generates circuits.
-Captures log probabilities for policy gradient training.
+LLM circuit generator: loads a HuggingFace LLM and generates quantum circuits.
+Captures log probabilities for policy gradient RL training.
 """
 
 import torch
@@ -9,8 +9,8 @@ from typing import List, Tuple
 import numpy as np
 
 
-class LocalModelAgent:
-    """Generate circuits locally and capture log probabilities."""
+class LlmCircuitGenerator:
+    """Generate quantum circuits with log probability tracking for RL."""
     
     def __init__(
         self,
@@ -52,7 +52,7 @@ class LocalModelAgent:
 Circuit:"""
         return prompt
 
-    def generate_batch(
+    def generate_batch_circuits(
         self,
         stabilizers_batch: List[List[str]],
     ) -> Tuple[List[str], List[str]]:
@@ -209,7 +209,7 @@ Circuit:"""
         
         return circuit_str, float(mean_log_prob)
     
-    def generate_batch_with_logprobs(
+    def generate_batch_circuits_with_logprobs(
         self,
         stabilizers_batch: List[List[str]],
     ) -> Tuple[List[str], List[float]]:
@@ -231,7 +231,7 @@ Circuit:"""
 
 
 if __name__ == "__main__":
-    agent = LocalModelAgent()
+    agent = LlmCircuitGenerator()
     test_stabs = ["XXX", "ZZI", "IZZ"]
     
     print("Generating single circuit...")
@@ -240,6 +240,6 @@ if __name__ == "__main__":
     print(f"Log prob: {log_prob:.4f}")
     
     print("\nGenerating batch...")
-    circuits, log_probs = agent.generate_batch_with_logprobs([test_stabs, test_stabs])
+    circuits, log_probs = agent.generate_batch_circuits_with_logprobs([test_stabs, test_stabs])
     for c, lp in zip(circuits, log_probs):
         print(f"Circuit: {c[:30]}... | Log prob: {lp:.4f}")

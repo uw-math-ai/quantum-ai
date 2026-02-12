@@ -1,6 +1,7 @@
 import stim
 import random
 import json
+import math
 from typing import List, Dict, Any
 
 def permute_stabilizers(generators: List[str], num_qubits: int) -> tuple[List[str], List[int]]:
@@ -55,7 +56,7 @@ def process_code_entry_identity_only(code_def: Dict[str, Any]) -> Dict:
     
     return entry
 
-def process_code_entry(code_def: Dict[str, Any], num_variations: int = 50) -> List[Dict]:
+def process_code_entry(code_def: Dict[str, Any], num_variations: int = 50, skip_identity: bool = False) -> List[Dict]:
     import math
     dataset = []
     
@@ -72,17 +73,22 @@ def process_code_entry(code_def: Dict[str, Any], num_variations: int = 50) -> Li
     used_permutations = set()
 
     # --- STEP 1: Add the Original (Identity Permutation) ---
-    identity_perm = list(range(n))
-    used_permutations.add(tuple(identity_perm))
-    
-    original_entry = {
-        "source_code": code_def["name"],
-        "d": code_def.get("d"),
-        "permutation": identity_perm,
-        "input_stabilizers": code_def["generators"],
-        "output_circuit": generate_naive_circuit(code_def["generators"]).replace("\n", "\\n")
-    }
-    dataset.append(original_entry)
+    if not skip_identity:
+        identity_perm = list(range(n))
+        used_permutations.add(tuple(identity_perm))
+        
+        original_entry = {
+            "source_code": code_def["name"],
+            "d": code_def.get("d"),
+            "permutation": identity_perm,
+            "input_stabilizers": code_def["generators"],
+            "output_circuit": generate_naive_circuit(code_def["generators"]).replace("\n", "\\n")
+        }
+        dataset.append(original_entry)
+    else:
+        # Still mark identity as used to avoid generating it in variations
+        identity_perm = list(range(n))
+        used_permutations.add(tuple(identity_perm))
 
     # --- STEP 2: Add Random Variations (ensuring uniqueness) ---
     attempts = 0
@@ -133,14 +139,16 @@ if __name__ == "__main__":
     
     # Set up argument parser
     parser = argparse.ArgumentParser(description='Generate quantum circuit dataset from benchmarks')
-    parser.add_argument('-n', '--num-variations', type=int, default=50,
-                        help='Number of variations per code (default: 50)')
+    parser.add_argument('-n', '--num-examples', type=int, default=5000,
+                        help='Total examples to generate across all codes (default: 5000)')
     parser.add_argument('-o', '--output', type=str, default='data/circuit_dataset.jsonl',
                         help='Output filename (default: data/circuit_dataset.jsonl)')
     parser.add_argument('-l', '--limit', type=int, default=None,
                         help='Limit number of codes to process (default: all)')
     parser.add_argument('--identity-only', action='store_true',
                         help='Generate only identity permutation circuits (no variations)')
+    parser.add_argument('--skip-identity', action='store_true',
+                        help='Skip identity permutation (useful for train/val split)')
     parser.add_argument('--verbose', action='store_true',
                         help='Print detailed progress information')
     
@@ -179,7 +187,37 @@ if __name__ == "__main__":
                 print(f"  ERROR: Failed to process {code_info['name']}: {str(e)}")
                 continue
     else:
-        print(f"\n=== Generating {args.num_variations} variations per code ===\n")
+        total_target = max(args.num_examples or 0, 0)
+        num_codes = len(benchmarks)
+        if num_codes == 0:
+            print("No codes found in benchmarks.json")
+            exit(0)
+
+        base = total_target // num_codes
+        remainder = total_target % num_codes
+
+        capacities = [math.factorial(code_info["physical_qubits"]) for code_info in benchmarks]
+        allocations = []
+        for idx, cap in enumerate(capacities):
+            desired = base + (1 if idx < remainder else 0)
+            allocations.append(min(cap, desired))
+
+        shortfall = total_target - sum(allocations)
+        if shortfall > 0:
+            remaining = [cap - alloc for cap, alloc in zip(capacities, allocations)]
+            while shortfall > 0 and any(r > 0 for r in remaining):
+                for idx in range(num_codes):
+                    if shortfall == 0:
+                        break
+                    if remaining[idx] > 0:
+                        allocations[idx] += 1
+                        remaining[idx] -= 1
+                        shortfall -= 1
+
+        if shortfall > 0:
+            print(f"WARNING: Could only allocate {total_target - shortfall} examples (requested {total_target})")
+
+        print(f"\n=== Generating ~{total_target} total examples across {num_codes} codes ===\n")
         for i, code_info in enumerate(benchmarks, 1):
             print(f"\n[{i}/{len(benchmarks)}] Processing: {code_info['name']}")
             print(f"  Physical qubits: {code_info['physical_qubits']}, "
@@ -187,9 +225,13 @@ if __name__ == "__main__":
                   f"Distance: {code_info['d']}")
             
             try:
-                code_data = process_code_entry(code_info, num_variations=args.num_variations)
+                code_target = allocations[i - 1]
+                if code_target == 0:
+                    print("  Skipping (allocation is 0)")
+                    continue
+                code_data = process_code_entry(code_info, num_variations=code_target, skip_identity=args.skip_identity)
                 all_training_data.extend(code_data)
-                print(f"  Generated {len(code_data)} variations")
+                print(f"  Target: {code_target}, Generated: {len(code_data)}")
                 
                 if args.verbose and code_data:
                     print(f"  Sample circuit length: {len(code_data[0]['output_circuit'])} chars")

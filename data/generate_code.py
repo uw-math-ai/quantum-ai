@@ -141,15 +141,15 @@ if __name__ == "__main__":
     # Ensure all codes have logical operators properly defined
     codes = [ensure_logicals_defined(code, name) for code, name in codes]
 
-    codes.append(
-        (qecc.StabilizerCode(
-            generators = ["XXXX", "ZZZZ"],
-            x_logicals = ["XIXI", "XXII"],
-            z_logicals = ["ZZII", "ZIZI"],
-            distance = 2,
-            n = 4
-        ), "4-Qubit Detector Code")
-    )
+    # codes.append(
+    #     (qecc.StabilizerCode(
+    #         generators = ["XXXX", "ZZZZ"],
+    #         x_logicals = ["XIXI", "XXII"],
+    #         z_logicals = ["ZZII", "ZIZI"],
+    #         distance = 2,
+    #         n = 4
+    #     ), "4-Qubit Detector Code")
+    # )
 
     # Generate concatenated codes
     # Only concatenate single logical qubit codes (k=1) to avoid complexity

@@ -1,0 +1,260 @@
+[
+    {
+        "name": "Perfect 5-Qubit Code",
+        "physical_qubits": 5,
+        "logical_qubits": 1,
+        "d": 3,
+        "generators": [
+            "XZZXI",
+            "IXZZX",
+            "XIXZZ",
+            "ZXIXZ"
+        ]
+    },
+    {
+        "name": "Steane",
+        "physical_qubits": 7,
+        "logical_qubits": 1,
+        "d": 3,
+        "generators": [
+            "XXIIXXI",
+            "XIXIXIX",
+            "IIIXXXX",
+            "ZZIIZZI",
+            "ZIZIZIZ",
+            "IIIZZZZ"
+        ]
+    },
+    {
+        "name": "Shor",
+        "physical_qubits": 9,
+        "logical_qubits": 1,
+        "d": 3,
+        "generators": [
+            "XXXXXXIII",
+            "XXXIIIXXX",
+            "ZZIIIIIII",
+            "ZIZIIIIII",
+            "IIIZZIIII",
+            "IIIZIZIII",
+            "IIIIIIZZI",
+            "IIIIIIZIZ"
+        ]
+    },
+    {
+        "name": "Tetrahedral",
+        "physical_qubits": 15,
+        "logical_qubits": 1,
+        "d": 3,
+        "generators": [
+            "XXXXXXXXIIIIIII",
+            "IXXIXXIIXXIXXII",
+            "IIXXIXXIIXXXIXI",
+            "IIIIXXXXIIIXXXX",
+            "ZZZZIIIIIIIIIII",
+            "IZZIZZIIIIIIIII",
+            "IIZZIZZIIIIIIII",
+            "IIIIZZZZIIIIIII",
+            "IZIIZIIIZIIIZII",
+            "IIZIIZIIIZIZIII",
+            "IIZZIIIIIZZIIII",
+            "IIIIZZIIIIIZZII",
+            "IIIIIZZIIIIZIZI",
+            "IIIIIIZZIIIIIZZ"
+        ]
+    },
+    {
+        "name": "Hamming",
+        "physical_qubits": 15,
+        "logical_qubits": 7,
+        "d": 3,
+        "generators": [
+            "IIIIIIIXXXXXXXX",
+            "IIIXXXXIIIIXXXX",
+            "IXXIIXXIIXXIIXX",
+            "XIXIXIXIXIXIXIX",
+            "IIIIIIIZZZZZZZZ",
+            "IIIZZZZIIIIZZZZ",
+            "IZZIIZZIIZZIIZZ",
+            "ZIZIZIZIZIZIZIZ"
+        ]
+    },
+    {
+        "name": "Carbon",
+        "physical_qubits": 12,
+        "logical_qubits": 2,
+        "d": 4,
+        "generators": [
+            "XXXIIIXXXIII",
+            "IIXXXIIIXXXI",
+            "XIIIXXXIIIXX",
+            "XXXXXXIIIIII",
+            "IIIIIIXXXXXX",
+            "IIZZZZIZIZII",
+            "ZIIIZIZZZIIZ",
+            "ZZZIIZZIIIZI",
+            "ZIIZZZIIZIZI",
+            "IZZIIIZZIZIZ"
+        ]
+    },
+    {
+        "name": "Iceberg Code m=2",
+        "physical_qubits": 4,
+        "logical_qubits": 2,
+        "d": 2,
+        "generators": [
+            "XXXX",
+            "ZZZZ"
+        ]
+    },
+    {
+        "name": "Iceberg Code m=3",
+        "physical_qubits": 6,
+        "logical_qubits": 4,
+        "d": 2,
+        "generators": [
+            "XXXXXX",
+            "ZZZZZZ"
+        ]
+    },
+    {
+        "name": "Iceberg Code m=4",
+        "physical_qubits": 8,
+        "logical_qubits": 6,
+        "d": 2,
+        "generators": [
+            "XXXXXXXX",
+            "ZZZZZZZZ"
+        ]
+    },
+    {
+        "name": "Hypercube Code l=1",
+        "physical_qubits": 6,
+        "logical_qubits": 4,
+        "d": 2,
+        "generators": [
+            "XXXXXX",
+            "ZZZZZZ"
+        ]
+    },
+    {
+        "name": "Hex Color Code d=3",
+        "physical_qubits": 7,
+        "logical_qubits": 1,
+        "d": 3,
+        "generators": [
+            "XXXXIII",
+            "XIXIXIX",
+            "IIXXXXI",
+            "ZZZZIII",
+            "ZIZIZIZ",
+            "IIZZZZI"
+        ]
+    },
+    {
+        "name": "Hex Color Code d=5",
+        "physical_qubits": 19,
+        "logical_qubits": 1,
+        "d": 5,
+        "generators": [
+            "IIXIIXIIXXIIIIIIIII",
+            "IIIIIIIIIIXIXIIIIXX",
+            "IIIIIIIIIIXXIXIIIIX",
+            "XXIIIIIIIIIIIIXXIII",
+            "XXIXXIXIIIIIIIIIXII",
+            "IIXIXIIIXIIIIIIIXII",
+            "IXIIIIXXIIIIIIIXIII",
+            "IIIXIIXXIIXXXIIIIII",
+            "IIIXXIIIXXIXIXIIIII",
+            "IIZIIZIIZZIIIIIIIII",
+            "IIIIIIIIIIZIZIIIIZZ",
+            "IIIIIIIIIIZZIZIIIIZ",
+            "ZZIIIIIIIIIIIIZZIII",
+            "ZZIZZIZIIIIIIIIIZII",
+            "IIZIZIIIZIIIIIIIZII",
+            "IZIIIIZZIIIIIIIZIII",
+            "IIIZIIZZIIZZZIIIIII",
+            "IIIZZIIIZZIZIZIIIII"
+        ]
+    },
+    {
+        "name": "Square Octagon Color Code d=3",
+        "physical_qubits": 7,
+        "logical_qubits": 1,
+        "d": 3,
+        "generators": [
+            "IIXIXXX",
+            "IXIXIXX",
+            "XXXIIXI",
+            "IIZIZZZ",
+            "IZIZIZZ",
+            "ZZZIIZI"
+        ]
+    },
+    {
+        "name": "Square Octagon Color Code d=5",
+        "physical_qubits": 17,
+        "logical_qubits": 1,
+        "d": 5,
+        "generators": [
+            "IIIIIXIIIXIXXIIII",
+            "IIIIIIIIXIXIIXIXI",
+            "IIIXIIIXIIIIIIXIX",
+            "IIXIIIXIIIIIIIXIX",
+            "IIIIXXXXXIXXIIIIX",
+            "IXIIXIIIIIXIIXIII",
+            "IIIIIIIIXXIXIIIXI",
+            "XIXXIIIIIIIIIIXII",
+            "IIIIIZIIIZIZZIIII",
+            "IIIIIIIIZIZIIZIZI",
+            "IIIZIIIZIIIIIIZIZ",
+            "IIZIIIZIIIIIIIZIZ",
+            "IIIIZZZZZIZZIIIIZ",
+            "IZIIZIIIIIZIIZIII",
+            "IIIIIIIIZZIZIIIZI",
+            "ZIZZIIIIIIIIIIZII"
+        ]
+    },
+    {
+        "name": "Rotated Surface Code d=3",
+        "physical_qubits": 9,
+        "logical_qubits": 1,
+        "d": 3,
+        "generators": [
+            "XXIXXIIII",
+            "IIIIXXIXX",
+            "IIXIIXIII",
+            "IIIXIIXII",
+            "IIIZZIZZI",
+            "IZZIZZIII",
+            "ZZIIIIIII",
+            "IIIIIIIZZ"
+        ]
+    },
+    {
+        "name": "(Iceberg Code m=2) * (Perfect 5-Qubit Code)",
+        "physical_qubits": 20,
+        "logical_qubits": 2,
+        "d": 6,
+        "generators": [
+            "XZZXIIIIIIIIIIIIIIII",
+            "IIIIIXZZXIIIIIIIIIII",
+            "IIIIIIIIIIXZZXIIIIII",
+            "IIIIIIIIIIIIIIIXZZXI",
+            "IXZZXIIIIIIIIIIIIIII",
+            "IIIIIIXZZXIIIIIIIIII",
+            "IIIIIIIIIIIXZZXIIIII",
+            "IIIIIIIIIIIIIIIIXZZX",
+            "XIXZZIIIIIIIIIIIIIII",
+            "IIIIIXIXZZIIIIIIIIII",
+            "IIIIIIIIIIXIXZZIIIII",
+            "IIIIIIIIIIIIIIIXIXZZ",
+            "ZXIXZIIIIIIIIIIIIIII",
+            "IIIIIZXIXZIIIIIIIIII",
+            "IIIIIIIIIIZXIXZIIIII",
+            "IIIIIIIIIIIIIIIZXIXZ",
+            "XXXXXXXXXXXXXXXXXXXX",
+            "ZZZZZZZZZZZZZZZZZZZZ"
+        ]
+    }
+]

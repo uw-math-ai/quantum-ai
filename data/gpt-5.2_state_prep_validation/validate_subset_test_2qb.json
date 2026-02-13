@@ -1,0 +1,22 @@
+[
+  {
+    "code_name": "Iceberg Code m=2",
+    "circuit": "R 0 1 2 3\nH 0\nCX 0 1 0 2 0 3",
+    "stabilized": [
+      "XXXX",
+      "ZZZZ"
+    ],
+    "not_stabilized": [],
+    "stabilizer_fraction": 1.0
+  },
+  {
+    "code_name": "4-Qubit Detector Code",
+    "circuit": "R 0 1 2 3\nH 0\nCX 0 1 0 2 0 3",
+    "stabilized": [
+      "XXXX",
+      "ZZZZ"
+    ],
+    "not_stabilized": [],
+    "stabilizer_fraction": 1.0
+  }
+]

@@ -115,6 +115,51 @@ def generate_ft_state_prep(stabilizers: list[str], attempts: int = 1, timeout: i
 
     return stim.Circuit(result["circuit"])
 
+def generate_state_prep(stabilizers: list[str], logical_qubits: int = 1,  attempts: int = 1, timeout: int | None = 60) -> stim.Circuit | None:
+    """
+    Generate a state preparation circuit for given stabilizers (without fault-tolerance requirement).
+    
+    Args:
+        stabilizers: List of stabilizer strings (e.g., ['XXXX', 'ZIZI'])
+        attempts: Number of circuit design iterations to try. Returns the best one.
+    
+    Returns:
+        stim.Circuit: The generated circuit or None if generation failed.
+    """
+    
+    # Format stabilizers for display
+    stabilizers_str = ", ".join(stabilizers)
+
+    result = {}
+    @define_tool(description="Return the final circuit as a string")
+    def return_result(params: CircuitParam) -> str:
+        nonlocal result
+        result = {
+            "circuit": params.circuit,
+            "data_qubits": params.data_qubits,
+            "flag_qubits": params.flag_qubits
+        }
+
+        return "Result received. Stop generation."
+    
+    prompt = f"""
+    Generate a Stim circuit to prepare the stabilizer state defined by the following stabilizers: {stabilizers_str}.
+    The code encodes {logical_qubits} logical qubits.
+    The circuit should prepare the logical |0⟩^{{⊗ {logical_qubits}}} state. This means that the final state must be
+    a +1 eigenstate of all given stabilizer generators and a +1 eigenstate of each logical Z_i operator for i = 1,...,{logical_qubits}.
+    Always verify the correctness of the circuit using the validate_circuit tool. Retry if any stabilizers are not preserved.
+    You have {attempts} attempts to generate the best possible circuit.
+    Call the return_result tool before ending with the best iteration.
+    """
+    print(prompt)
+
+    prompt_agent(prompt, tools=[validate_circuit, return_result], timeout=timeout)
+
+    # Check if result was populated by the agent
+    if not result or "circuit" not in result:
+        return None
+
+    return stim.Circuit(result["circuit"])
 
 # -------------------------
 # MAIN

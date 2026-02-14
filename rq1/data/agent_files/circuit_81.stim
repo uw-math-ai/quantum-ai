@@ -1,0 +1,7 @@
+Error: Stabilizer 76 length 84 != 81. String: IIIIIIIIIIIIIIIIIIIIIIIIIIIZIIZIIZIIZIIZIIZIIIIIIIIIIIZIIZIIZIIZIIZIIZIIZIIIIIIIIIII
+Truncated.
+Error: Some of the given stabilizers anticommute.
+For example:
+    stabilizers[8] = +________________________________________________________________________XXXXXX___
+anticommutes with
+    stabilizers[76] = +___________________________Z__Z__Z__Z__Z__Z___________Z__Z__Z__Z__Z__Z__Z________

@@ -1,3 +1,4 @@
+#%%
 """
 Verify that a quantum circuit prepares a state that is stabilized by given stabilizers.
 
@@ -176,7 +177,7 @@ def verify_with_custom_tableau(
     
     return all_preserved
 
-
+#%%
 if __name__ == '__main__':
     print("Example 1: 4-qubit GHZ state")
     print("=" * 60)

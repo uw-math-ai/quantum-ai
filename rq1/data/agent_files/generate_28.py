@@ -1,0 +1,48 @@
+import stim
+import sys
+
+stabilizers = [
+    "XXXXIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIXXXXIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIXXXXIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIXXXXIII",
+    "XIXIXIXIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIXIXIXIXIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIXIXIXIXIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIXIXIXIX",
+    "IIXXXXIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIXXXXIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIXXXXIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIXXXXI",
+    "ZZZZIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIZZZZIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIZZZZIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIZZZZIII",
+    "ZIZIZIZIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIZIZIZIZIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIZIZIZIZIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIZIZIZIZ",
+    "IIZZZZIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIZZZZIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIZZZZIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIZZZZI",
+    "IXXIXIIIXXIXIIIXXIXIIIXXIXII",
+    "IZZIZIIIZZIZIIIZZIZIIIZZIZII"
+]
+
+try:
+    # Use allow_underconstrained=True since we have 26 stabilizers for 28 qubits
+    tableau = stim.Tableau.from_stabilizers(
+        [stim.PauliString(s) for s in stabilizers], 
+        allow_underconstrained=True
+    )
+    
+    # Generate circuit using Gaussian elimination method
+    circuit = tableau.to_circuit(method="elimination")
+    
+    # Print the circuit to stdout so we can capture it
+    print(circuit)
+    
+except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
+    sys.exit(1)

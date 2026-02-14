@@ -1,1 +1,3 @@
 reinforcement_learning/data/*.jsonl
+.venv 
+__pycache__/

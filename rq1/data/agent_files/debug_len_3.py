@@ -1,0 +1,1 @@
+s = 'IIIIIIIIIIIIIIIIIIIIIIIIIIIZIIZIIZIIZIIZIIZIIIIIIIIIIIZIIZIIZIIZIIZIIZIIZIIIIIIIIIII'; print(len(s)); print(s.index('Z')); print(s.rindex('Z')); print(s[27:27+16]); print(s[27+16:27+16+11]); print(s[27+16+11:27+16+11+16])

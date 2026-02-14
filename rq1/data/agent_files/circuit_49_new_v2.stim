@@ -1,0 +1,5 @@
+Error: Some of the given stabilizers anticommute.
+For example:
+    stabilizers[6] = +__________________________________________X_XXX
+anticommutes with
+    stabilizers[34] = +___________________________________________Z_Z_ZZ

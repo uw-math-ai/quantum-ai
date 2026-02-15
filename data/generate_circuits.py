@@ -154,6 +154,8 @@ if __name__ == "__main__":
                         help='Skip identity permutation (useful for train/val split)')
     parser.add_argument('--verbose', action='store_true',
                         help='Print detailed progress information')
+    parser.add_argument('--max-qubits', type=int, default=None,
+                        help='Filter out codes with more than this many qubits')
     
     args = parser.parse_args()
     
@@ -164,6 +166,10 @@ if __name__ == "__main__":
     with open(json_path, 'r') as f:
         benchmarks = json.load(f)
     
+    if args.max_qubits:
+        benchmarks = [c for c in benchmarks if c["physical_qubits"] <= args.max_qubits]
+        print(f"Filtered to {len(benchmarks)} codes with <= {args.max_qubits} qubits")
+        
     print(f"Found {len(benchmarks)} codes in benchmarks.json")
     
     # Limit codes if requested

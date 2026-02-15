@@ -300,7 +300,14 @@ if __name__ == "__main__":
     # Load environment variables from .env file
     _load_env_from_tools()
 
-    test_stabilizers = ["XXX", "ZZI", "IZZ"]
+    test_stabilizers = [
+            "IIXIXXX",
+            "IXIXIXX",
+            "XXXIIXI",
+            "IIZIZZZ",
+            "IZIZIZZ",
+            "ZZZIIZI"
+        ]
     variants = _load_variants_from_env()
 
     if not variants:

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import Any, Optional, Literal
 
@@ -60,7 +58,7 @@ class CircuitBuilderEnv(gym.Env[npt.NDArray[np.integer[Any]], int]):
             _, k = action_decoded
             start = self.config.num_qubits - k
             self.flag_qubits = list(range(start, self.config.num_qubits))
-            self.circ.append("M", self.flag_qubits)
+            self.circ.append("M", self.flag_qubits) # type: ignore[arg-type]
             done = True
         elif len(action_decoded) == 2:
             # one-qubit gate

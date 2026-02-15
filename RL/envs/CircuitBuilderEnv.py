@@ -1,5 +1,8 @@
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Optional, Literal
+
+import sys
 
 import gymnasium as gym
 import numpy as np
@@ -8,12 +11,18 @@ from gymnasium import spaces
 
 import stim
 
+ROOT_DIR = Path(__file__).resolve().parents[2]
+REWARD_DIR = ROOT_DIR / "reinforcement_learning" / "reward"
+sys.path.insert(0, str(REWARD_DIR))
+
+from step_score import StepRewardModel
+
 @dataclass
 class CircuitBuilderConfig:
     one_qubit_gates: set[str] = field(default_factory=lambda: {"H", "X", "Y", "Z", "S"})
     two_qubit_gates: set[str] = field(default_factory=lambda: {"CNOT"})
     max_gates: int = 128
-    num_qubits: int = 16
+    num_qubits: int = 50
 
 class CircuitBuilderEnv(gym.Env[npt.NDArray[np.integer[Any]], int]):
     """Environment for building a stabilizer circuit"""
@@ -35,6 +44,9 @@ class CircuitBuilderEnv(gym.Env[npt.NDArray[np.integer[Any]], int]):
         tableau_cols = 2 * self.config.num_qubits + 1
         self.observation_space = spaces.MultiBinary((tableau_rows, tableau_cols))
         self.steps_taken = 0
+        self.reward_model = StepRewardModel(max_steps=config.max_gates)
+        self.prev_satisfied = 0
+        self.last_reward_details: dict[str, object] | None = None
 
     def _init_circuit(self, randomize: bool = False) -> stim.Circuit:
         if randomize:
@@ -47,13 +59,17 @@ class CircuitBuilderEnv(gym.Env[npt.NDArray[np.integer[Any]], int]):
         self.circ = self._init_circuit(options.get("randomize", False) if options else False)
             
         self.steps_taken = 0
+        self.prev_satisfied = 0
+        self.last_reward_details = None
+        self.reward_model.reset() 
         return self._to_obs()
 
     def step(self, action: int):
         done = False
-        reward = 0
+        reward = 0.0
 
         action_decoded = self.int_to_action(action)
+        invalid_action = False
         if len(action_decoded) == 2 and action_decoded[0] == "M":
             _, k = action_decoded
             start = self.config.num_qubits - k
@@ -68,22 +84,29 @@ class CircuitBuilderEnv(gym.Env[npt.NDArray[np.integer[Any]], int]):
         else:
             # two-qubit gate
             gate, control, target = action_decoded
-            self.steps_taken += 1
-            self.circ.append(gate, [control, target]) # type: ignore[arg-type]
+            if control == target:
+                invalid_action = True
+            else:
+                self.steps_taken += 1
+                self.circ.append(gate, [control, target]) # type: ignore[arg-type]
         
         if self.steps_taken >= self.config.max_gates:
             done = True
             # probably fail because no measurement
 
-        if done:
-            # TODO: calculate terminal condition
-            pass
-        else:
-            # TODO: calculate intermediate reward
-            self.circ
-            pass
+        reward, details = self.reward_model.score_step(
+            self.circ,
+            self.stabs,
+            self.prev_satisfied,
+            done,
+        )
+        if invalid_action:
+            reward -= 1.0
+            details["invalid_action"] = True
+        self.prev_satisfied = int(details.get("current_satisfied", self.prev_satisfied))
+        self.last_reward_details = details
 
-        return self._to_obs(), reward, done, False, {}
+        return self._to_obs(), reward, done, False, {"invalid_action": invalid_action}
 
     def action_to_int(self, action: tuple[str, int] | tuple[str, int, int] | tuple[Literal["M"], int]) -> int:
         """

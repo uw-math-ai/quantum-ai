@@ -33,14 +33,22 @@ class TrainingLogger:
             f.write(json.dumps(entry) + '\n')
         
         # Print to console
-        print(f"Episode {episode:4d} | "
-              f"Train: {metrics.get('train_mean_reward', 0):6.2f} "
-              f"(max: {metrics.get('train_max_reward', 0):6.2f}) | "
-              f"Valid: {metrics.get('syntax_valid_pct', 0):5.1f}%", end="")
-        
-        if 'val_mean_reward' in metrics:
+        print(
+            f"Episode {episode:4d} | "
+            f"Train: {metrics.get('train_mean_reward', 0):6.2f} "
+            f"(max: {metrics.get('train_max_reward', 0):6.2f})",
+            end="",
+        )
+
+        if "syntax_valid_pct" in metrics:
+            print(f" | Valid: {metrics['syntax_valid_pct']:5.1f}%", end="")
+
+        if "val_mean_reward" in metrics:
             print(f" | Val: {metrics['val_mean_reward']:6.2f}", end="")
-        
+
+        if "loss" in metrics:
+            print(f" | Loss: {metrics['loss']:.4f}", end="")
+
         print()
     
     def save_best_circuits(self, circuits: List[str], rewards: List[float], 

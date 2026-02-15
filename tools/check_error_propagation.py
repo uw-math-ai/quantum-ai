@@ -66,6 +66,9 @@ def propagate_fault(gate_list, loc_index, pauli, qubit):
     if len(suffix_circ) == 0:
         final_pauli = initial_pauli
     else:
+        if num_qubits > 0:
+            # Ensure the tableau width matches the full circuit width.
+            suffix_circ.append("I", [num_qubits - 1])
         tableau = stim.Tableau.from_circuit(suffix_circ, ignore_measurement=True)
         final_pauli = tableau(initial_pauli)
     
@@ -161,6 +164,28 @@ def check_fault_tolerance(circuit: str, data_qubits: list[int], flag_qubits: lis
         if r["data_weight"] > 1 and r["flag_weight"] < 1:
             return results, False
     return results, True
+
+def ft_score(circuit: str, data_qubits: list[int], flag_qubits: list[int], d: int = 1, p: float = 1.0) -> float:
+    '''Compute the fault-tolerance score based on weighted undetected faults.
+
+    FT = 1 - sum(weight(f)^p for undetected faults with weight(f) > floor((d-1)/2))
+             / sum(weight(f)^p for faults with weight(f) > floor((d-1)/2))
+    where weight(f) is the number of data-qubit errors and undetected means no X on any flag qubit.
+    '''
+    results = check_error_propagation(circuit, data_qubits, flag_qubits)
+    threshold = (d - 1) // 2
+    numerator = 0.0
+    denominator = 0.0
+    for r in results:
+        weight = r["data_weight"]
+        if weight > threshold:
+            weighted = float(weight ** p)
+            denominator += weighted
+            if r["flag_weight"] == 0:
+                numerator += weighted
+    if denominator == 0.0:
+        return 1.0
+    return 1.0 - (numerator / denominator)
 
 if __name__ == "__main__":
     data_qubits = [0, 1, 2, 3]

@@ -139,6 +139,9 @@ if __name__ == "__main__":
     
     # Set up argument parser
     parser = argparse.ArgumentParser(description='Generate quantum circuit dataset from benchmarks')
+    parser.add_argument('-b', '--benchmarks', type=str,
+                    default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'benchmarks.json'),
+                    help='Path to benchmarks JSON file (default: data/benchmarks.json)')
     parser.add_argument('-n', '--num-examples', type=int, default=5000,
                         help='Total examples to generate across all codes (default: 5000)')
     parser.add_argument('-o', '--output', type=str, default='data/circuit_dataset.jsonl',
@@ -155,7 +158,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Read benchmarks.json
-    json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'benchmarks.json')
+    json_path = args.benchmarks
     
     print(f"Reading benchmarks from: {json_path}")
     with open(json_path, 'r') as f:

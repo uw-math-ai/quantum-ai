@@ -53,6 +53,24 @@ def validate_circuit(circuit: CircuitParam) -> dict:
         "fault_tolerance": fault_tolerance_results
     }
 
+def _resolve_model_and_provider(model: str) -> tuple[str, dict | None]:
+    if model.startswith("ollama"):
+        base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+        if model in {"ollama", "ollama:", "ollama/"}:
+            resolved_model = os.getenv("OLLAMA_MODEL", "ministral-3:8b")
+        elif model.startswith("ollama:"):
+            resolved_model = model.split(":", 1)[1].strip()
+        else:
+            resolved_model = model.split("/", 1)[1].strip()
+
+        provider = {
+            "type": "openai",
+            "base_url": f"{base_url}/v1",
+        }
+        return resolved_model, provider
+
+    return model, None
+
 def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None = None, model: str = "gpt-4.1",
                  attachments: list[Attachment | dict] | None = None, timeout: int | None = 60) -> str:
     """Prompt the Copilot agent and return the response."""
@@ -64,13 +82,18 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
     async def run():
         client = CopilotClient({"auto_start": True})
         try:
-            session = await client.create_session({
-                "model": model,
+            resolved_model, provider = _resolve_model_and_provider(model)
+            session_config = {
+                "model": resolved_model,
                 "tools": tools,
                 "system_message": {
                     "content": system_message,
-                }
-            })
+                },
+            }
+            if provider:
+                session_config["provider"] = provider
+
+            session = await client.create_session(session_config)
 
             response = ""
 

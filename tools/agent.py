@@ -198,34 +198,17 @@ def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1,
         return {"results": result, "preserved": preserved, "total": len(result)}
 
     
-    prompt = f"""
-Task: generate a valid Stim circuit (see https://github.com/quantumlib/Stim/blob/main/doc/file_format_stim_circuit.md) that prepares the stabilizer state defined by these generators:
-{stabilizers_str}
+    with open("rq1/prompt.txt", "r") as f:
+        prompt_template = f.read()
 
-Requirements:
-- Act on exactly {qubits_count} data qubits, indexed 0..{qubits_count - 1}, starting from |0⟩^{{⊗ {qubits_count}}}.
-- The final quantum state on the data qubits must be a +1 eigenstate of every provided stabilizer generator.
-- You may use additional ancilla qubits if helpful (index them starting at {qubits_count} and above).
-- Produce a circuit that is valid Stim text and parses with stim.Circuit.
+    prompt = prompt_template.format(
+        stabilizers_str=stabilizers_str,
+        qubits_count=qubits_count,
+        qubits_count_less_1=qubits_count - 1,
+        attempts=attempts,
+        agent_files_dir=agent_files_dir
+    )
 
-Hints (optional approaches):
-1. Gaussian elimination on the stabilizer tableau: build the stabilizer tableau for the target generators and use row-reduction (over GF(2)) with Clifford operations to map it from the |0⟩^⊗n tableau to the target tableau.
-2. Graph-state decomposition with local Cliffords: convert the target stabilizer state into a graph state plus single-qubit Clifford corrections. First find the graph (adjacency matrix) such that the graph state is LC-equivalent to the target, then prepare it with H gates and CZ gates according to the adjacency matrix, and finally apply local Clifford gates to each qubit to rotate from the graph state to the desired stabilizer state.
-
-Tooling / output rules:
-- You may call check_stabilizers_tool to evaluate a candidate circuit. IMPORTANT: each call to check_stabilizers_tool counts as ONE attempt.
-- You have a total budget of {attempts} attempt(s) = at most {attempts} calls to check_stabilizers_tool.
-- Keep track of the best candidate you have seen so far (maximize number of stabilizers preserved; if tied, prefer the simpler/shorter circuit).
-- You should iteratively propose a circuit, call check_stabilizers_tool, then revise.
-- If all stabilizers are preserved (every result is true), you have found a correct circuit — immediately call final_circuit with it. You do NOT need to use all attempts.
-- When you are out of attempts (or cannot improve further), call final_circuit with the BEST circuit you found, even if it is not perfect.
-- Do NOT call or rely on any repository tools besides check_stabilizers_tool and final_circuit.
-- If you need to write any temporary or scratch files, write them into the directory: {agent_files_dir}
-- Do NOT output Markdown code fences, prose, or extra markers.
-- When you are ready, call final_circuit with ONLY the raw Stim circuit text in the 'stim_circuit' field.
-
-Do not end the conversation without calling final_circuit.
-"""
     print(prompt)
 
     prompt_agent(prompt, tools=[check_stabilizers_tool, final_circuit], model=model, timeout=timeout)

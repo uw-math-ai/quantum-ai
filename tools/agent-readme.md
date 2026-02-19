@@ -12,9 +12,9 @@ Follow the official installation guide: https://docs.github.com/en/copilot/how-t
 
 You need to authenticate using a Personal Access Token:
 
-1. Create a Personal Access Token on GitHub (with appropriate scopes)
-2. Create a `.env` file in the `tools/` directory
-3. Add the following line to the `.env` file:
+1. Create a Personal Access Token on GitHub (with appropriate scopes according to installation guide in [step 1](#1-install-copilot-cli))
+2. Create a file called `.env` in the `tools/` directory
+3. Add the following line to `.env`:
    ```
    GH_TOKEN=<your_personal_access_token>
    ```
@@ -55,8 +55,9 @@ The main entry point in `agent.py` is the `prompt_agent()` function, which sets 
 def prompt_agent(
     prompt: str,
     system_message: str = "",
-    tools: list[Tool] = [],
+    tools: list[Tool] | None = None,
     model: str = "gpt-4.1",
+    attachments: list[Attachment | dict] | None = None,
     timeout: int | None = 60
 ) -> str:
 ```
@@ -64,8 +65,9 @@ def prompt_agent(
 **Parameters:**
 - `prompt` - The user prompt/query to send to the agent
 - `system_message` - System instructions for the agent (optional, default: empty)
-- `tools` - List of Tool objects available to the agent (optional, default: empty list)
+- `tools` - List of Tool objects available to the agent (optional, default: None)
 - `model` - The model to use (default: "gpt-4.1")
+- `attachments` - List of Attachment objects or dicts to include with the prompt (optional, default: None)
 - `timeout` - Request timeout in seconds (default: 60)
 
 **Returns:**

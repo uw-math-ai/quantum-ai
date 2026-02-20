@@ -1,0 +1,60 @@
+Task: generate a valid Stim circuit (see https://github.com/quantumlib/Stim/blob/main/doc/file_format_stim_circuit.md) that is a STRICT improvement of the baseline circuit while preserving the same stabilizer behavior.
+
+Target stabilizers (must all be preserved): {stabilizers_str}
+
+Baseline circuit (optimize this while preserving stabilizers): {initial_circuit}
+
+Baseline metrics:
+- cx_count = {cx_count}
+- volume = {volume}
+- depth = {depth}
+
+Requirements:
+- Output must be valid Stim text and parse with stim.Circuit.
+- Use the same qubit indexing as the baseline circuit (do not renumber qubits).
+- The candidate must preserve ALL stabilizers in {stabilizers_str} according to check_stabilizers_tool.
+- The candidate must be STRICTLY more optimal than the baseline using lexicographic order on:
+   1. cx_count (primary)
+   2. volume (secondary)
+   3. depth (tertiary)
+- Do NOT introduce measurements, resets, or noise unless they already exist in the baseline and are required.
+- The final submission must be a single circuit text body (no Markdown fences, no prose, no extra markers).
+
+Optimization rule (lexicographic):
+- Candidate is strictly better if:
+   - cand.cx_count < base.cx_count, OR
+   - cand.cx_count == base.cx_count AND cand.volume < base.volume, OR
+   - cand.cx_count == base.cx_count AND cand.volume == base.volume AND cand.depth < base.depth.
+- If all three metrics are equal, it is NOT an improvement.
+
+Hints (safe optimization approaches):
+1. Cancellation / simplification:
+   - Cancel adjacent inverses and redundant gates (e.g., H H, X X, Z Z, S S S S).
+   - Remove dead code (gates on qubits that no longer affect anything).
+2. Commutation / reordering:
+   - Commute single-qubit Cliffords through two-qubit gates when valid to enable cancellations.
+   - Reorder commuting gates to reduce depth without changing functionality.
+3. Local Clifford normalization:
+   - Push single-qubit Cliffords toward the beginning/end to simplify the middle "entangling core".
+4. Two-qubit gate reductions:
+   - Identify CX/CZ patterns that can be rewritten to use fewer two-qubit gates while preserving the same stabilizer action.
+
+Tooling / output rules:
+- You may call check_stabilizers_tool to test a candidate circuit. IMPORTANT: each evaluated candidate counts as ONE attempt.
+- You may call evaluate_optimization to compare candidate metrics to the baseline.
+- You have a total budget of {attempts} attempt(s). Do not exceed {attempts} total candidate evaluations.
+- Keep track of the best VALID candidate you have seen so far:
+   - Valid = preserves ALL stabilizers.
+   - Best = strictly more optimal than the baseline; if multiple, pick the most optimal by the same lexicographic rule; if still tied, prefer shorter/simpler circuit text.
+- Iteration loop:
+   1. Propose a candidate rewrite of the baseline (or best-so-far).
+   2. Call check_stabilizers_tool. If any stabilizer fails, revise (do not submit).
+   3. If all stabilizers pass, call evaluate_optimization. If not strictly better, revise.
+   4. If strictly better, update best-so-far.
+- As soon as you have a candidate that preserves all stabilizers AND is strictly more optimal, you may submit immediately, and you do NOT need to use all attempts.
+- When you are out of attempts (or cannot improve further), call final_circuit with the BEST strictly-improved valid candidate you found.
+- Do NOT call or rely on any repository tools besides check_stabilizers_tool, evaluate_optimization, and final_circuit.
+- Do NOT output Markdown code fences, prose, or extra markers.
+- When you are ready, call final_circuit with ONLY the raw Stim circuit text in the 'stim_circuit' field.
+
+Do not end the conversation without calling final_circuit.

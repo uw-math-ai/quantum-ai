@@ -12,9 +12,9 @@ Follow the official installation guide: https://docs.github.com/en/copilot/how-t
 
 You need to authenticate using a Personal Access Token:
 
-1. Create a Personal Access Token on GitHub (with appropriate scopes)
-2. Create a `.env` file in the `tools/` directory
-3. Add the following line to the `.env` file:
+1. Create a Personal Access Token on GitHub (with appropriate scopes according to installation guide in [step 1](#1-install-copilot-cli))
+2. Create a file called `.env` in the `tools/` directory
+3. Add the following line to `.env`:
    ```
    GH_TOKEN=<your_personal_access_token>
    ```
@@ -36,6 +36,31 @@ The dependencies include:
 - `fastmcp` - Fast Model Context Protocol support
 - Additional quantum error correction tools
 
+### 4. (Optional) Set Up Ollama
+
+If you want to use local Ollama models, set up and verify your Ollama installation:
+
+```bash
+python tools/ollama_setup.py --model ministral-3:8b
+```
+
+**Important:** The Copilot SDK requires models that support tool calls. Recommended Ollama models:
+- `ministral-3:8b` (recommended - smaller, faster)
+- `ministral-3:14b` (larger, potentially more capable)
+
+Models like `llama3.1` or `deepseek-coder-v2` do **not** support tool calls and will not work with the Copilot SDK.
+
+This script will:
+- Check if Ollama is running
+- Pull the specified model if it's not already available
+- Verify the model works with a test query
+
+You can also set environment variables in your `.env` file:
+```
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=ministral-3:8b
+```
+
 ## Documentation References
 
 For detailed information on the Copilot SDK and API, refer to:
@@ -43,6 +68,7 @@ For detailed information on the Copilot SDK and API, refer to:
 - **Getting Started Guide**: https://github.com/github/copilot-sdk/blob/main/docs/getting-started.md
 - **Python SDK README**: https://github.com/github/copilot-sdk/blob/main/python/README.md
 - **GitHub Copilot CLI Docs**: https://docs.github.com/en/copilot/how-tos/copilot-cli/install-copilot-cli
+- **Ollama Quickstart**: https://docs.ollama.com/quickstart
 
 ## Usage
 
@@ -55,8 +81,9 @@ The main entry point in `agent.py` is the `prompt_agent()` function, which sets 
 def prompt_agent(
     prompt: str,
     system_message: str = "",
-    tools: list[Tool] = [],
+    tools: list[Tool] | None = None,
     model: str = "gpt-4.1",
+    attachments: list[Attachment | dict] | None = None,
     timeout: int | None = 60
 ) -> str:
 ```
@@ -64,8 +91,9 @@ def prompt_agent(
 **Parameters:**
 - `prompt` - The user prompt/query to send to the agent
 - `system_message` - System instructions for the agent (optional, default: empty)
-- `tools` - List of Tool objects available to the agent (optional, default: empty list)
-- `model` - The model to use (default: "gpt-4.1")
+- `tools` - List of Tool objects available to the agent (optional, default: None)
+- `model` - The model to use (default: "gpt-4.1"); for Ollama, prefix with `ollama:` (e.g., `ollama:ministral-3:8b`)
+- `attachments` - List of Attachment objects or dicts to include with the prompt (optional, default: None)
 - `timeout` - Request timeout in seconds (default: 60)
 
 **Returns:**

@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from check_stabilizers import check_stabilizers
 from check_error_propagation import check_fault_tolerance
+from circuit_metric import is_strictly_more_optimal, compute_metrics
 
 load_dotenv()
 
@@ -53,6 +54,24 @@ def validate_circuit(circuit: CircuitParam) -> dict:
         "fault_tolerance": fault_tolerance_results
     }
 
+def _resolve_model_and_provider(model: str) -> tuple[str, dict | None]:
+    if model.startswith("ollama"):
+        base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+        if model in {"ollama", "ollama:", "ollama/"}:
+            resolved_model = os.getenv("OLLAMA_MODEL", "ministral-3:8b")
+        elif model.startswith("ollama:"):
+            resolved_model = model.split(":", 1)[1].strip()
+        else:
+            resolved_model = model.split("/", 1)[1].strip()
+
+        provider = {
+            "type": "openai",
+            "base_url": f"{base_url}/v1",
+        }
+        return resolved_model, provider
+
+    return model, None
+
 def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None = None, model: str = "gpt-4.1",
                  attachments: list[Attachment | dict] | None = None, timeout: int | None = 60) -> str:
     """Prompt the Copilot agent and return the response."""
@@ -64,13 +83,18 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
     async def run():
         client = CopilotClient({"auto_start": True})
         try:
-            session = await client.create_session({
-                "model": model,
+            resolved_model, provider = _resolve_model_and_provider(model)
+            session_config = {
+                "model": resolved_model,
                 "tools": tools,
                 "system_message": {
                     "content": system_message,
-                }
-            })
+                },
+            }
+            if provider:
+                session_config["provider"] = provider
+
+            session = await client.create_session(session_config)
 
             response = ""
 
@@ -198,34 +222,17 @@ def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1,
         return {"results": result, "preserved": preserved, "total": len(result)}
 
     
-    prompt = f"""
-Task: generate a valid Stim circuit (see https://github.com/quantumlib/Stim/blob/main/doc/file_format_stim_circuit.md) that prepares the stabilizer state defined by these generators:
-{stabilizers_str}
+    with open("rq1/prompt.txt", "r") as f:
+        prompt_template = f.read()
 
-Requirements:
-- Act on exactly {qubits_count} data qubits, indexed 0..{qubits_count - 1}, starting from |0⟩^{{⊗ {qubits_count}}}.
-- The final quantum state on the data qubits must be a +1 eigenstate of every provided stabilizer generator.
-- You may use additional ancilla qubits if helpful (index them starting at {qubits_count} and above).
-- Produce a circuit that is valid Stim text and parses with stim.Circuit.
+    prompt = prompt_template.format(
+        stabilizers_str=stabilizers_str,
+        qubits_count=qubits_count,
+        qubits_count_less_1=qubits_count - 1,
+        attempts=attempts,
+        agent_files_dir=agent_files_dir
+    )
 
-Hints (optional approaches):
-1. Gaussian elimination on the stabilizer tableau: build the stabilizer tableau for the target generators and use row-reduction (over GF(2)) with Clifford operations to map it from the |0⟩^⊗n tableau to the target tableau.
-2. Graph-state decomposition with local Cliffords: convert the target stabilizer state into a graph state plus single-qubit Clifford corrections. First find the graph (adjacency matrix) such that the graph state is LC-equivalent to the target, then prepare it with H gates and CZ gates according to the adjacency matrix, and finally apply local Clifford gates to each qubit to rotate from the graph state to the desired stabilizer state.
-
-Tooling / output rules:
-- You may call check_stabilizers_tool to evaluate a candidate circuit. IMPORTANT: each call to check_stabilizers_tool counts as ONE attempt.
-- You have a total budget of {attempts} attempt(s) = at most {attempts} calls to check_stabilizers_tool.
-- Keep track of the best candidate you have seen so far (maximize number of stabilizers preserved; if tied, prefer the simpler/shorter circuit).
-- You should iteratively propose a circuit, call check_stabilizers_tool, then revise.
-- If all stabilizers are preserved (every result is true), you have found a correct circuit — immediately call final_circuit with it. You do NOT need to use all attempts.
-- When you are out of attempts (or cannot improve further), call final_circuit with the BEST circuit you found, even if it is not perfect.
-- Do NOT call or rely on any repository tools besides check_stabilizers_tool and final_circuit.
-- If you need to write any temporary or scratch files, write them into the directory: {agent_files_dir}
-- Do NOT output Markdown code fences, prose, or extra markers.
-- When you are ready, call final_circuit with ONLY the raw Stim circuit text in the 'stim_circuit' field.
-
-Do not end the conversation without calling final_circuit.
-"""
     print(prompt)
 
     prompt_agent(prompt, tools=[check_stabilizers_tool, final_circuit], model=model, timeout=timeout)
@@ -237,6 +244,144 @@ Do not end the conversation without calling final_circuit.
     print('done.')
     return result
 
+
+
+class OptimizeParam(BaseModel):
+    candidate: str = Field(description="Candidate Stim circuit")
+    baseline: str = Field(description="Baseline Stim circuit")
+
+
+def generate_optimized_circuit(
+    stabilizers: list[str],
+    initial_circuit: str,
+    *,
+    model: str,
+    attempts: int = 5,
+    timeout: int | None = 600,
+) -> stim.Circuit | None:
+    """
+    Optimize an existing Clifford circuit while preserving stabilizers.
+    Uses lexicographic rule: (cx_count, volume, depth).
+    """
+
+    stabilizers_str = ", ".join(stabilizers)
+    baseline_metrics = compute_metrics(initial_circuit).as_dict()
+
+    agent_files_dir = os.path.join("data", model, "agent_files")
+    os.makedirs(agent_files_dir, exist_ok=True)
+
+    result = None
+
+    @define_tool(description=(
+        "Check whether a candidate circuit preserves all stabilizers.\n"
+        "Returns dictionary of stabilizer -> bool and counts."
+    ))
+    def check_stabilizers_tool(params: CheckStabilizersParam) -> dict:
+        try:
+            _ = stim.Circuit(params.circuit)
+        except Exception as e:
+            return {"error": f"Failed to parse circuit: {e}"}
+
+        results = check_stabilizers(params.circuit, params.stabilizers)
+        preserved = sum(1 for v in results.values() if v)
+
+        print("".join(['.' if v else '!' for v in results.values()]))
+
+        return {
+            "results": results,
+            "preserved": preserved,
+            "total": len(results)
+        }
+
+    @define_tool(description=(
+    "Compare candidate circuit to baseline using lexicographic "
+    "optimization rule (cx_count, volume, depth)."
+))
+    def evaluate_optimization(params: OptimizeParam) -> dict:
+        try:
+            better, info = is_strictly_more_optimal(
+                candidate_text=params.candidate,
+                baseline_text=params.baseline,
+            )
+
+            cand = info["candidate"]
+            base = info["baseline"]
+
+            print(
+                f"[OPT] CX: {cand['cx_count']} (base {base['cx_count']}), "
+                f"VOL: {cand['volume']} (base {base['volume']}), "
+                f"DEPTH: {cand['depth']} (base {base['depth']}) "
+                f"{'✓' if better else '✗'}"
+            )
+
+            return info
+
+        except Exception as e:
+            return {"error": str(e)}
+    @define_tool(description=(
+        "Submit final optimized circuit.\n"
+        "Must preserve stabilizers and be strictly more optimal."
+    ))
+    def final_circuit(params: FinalCircuitParam) -> str:
+        nonlocal result
+
+        try:
+            parsed = stim.Circuit(params.stim_circuit)
+        except Exception as e:
+            return f"Failed to parse Stim circuit ({e}). Retry."
+
+        # Enforce stabilizer preservation
+        stab_results = check_stabilizers(params.stim_circuit, stabilizers)
+        if not all(stab_results.values()):
+            return "Circuit does not preserve all stabilizers. Retry."
+
+        # Enforce strict optimization
+        better, info = is_strictly_more_optimal(
+            candidate_text=params.stim_circuit,
+            baseline_text=initial_circuit,
+        )
+
+        if not better:
+            cand = info["candidate"]
+            base = info["baseline"]
+
+            print(
+                f"[FINAL REJECTED] "
+                f"CX {cand['cx_count']} vs {base['cx_count']}, "
+                f"VOL {cand['volume']} vs {base['volume']}, "
+                f"DEPTH {cand['depth']} vs {base['depth']}"
+            )
+
+            return "Circuit is not strictly more optimal. Retry."
+
+        result = parsed
+        return "Final optimized circuit accepted. Stop generation."
+
+    # -------------------------------------------------
+    # Prompt Construction
+    # -------------------------------------------------
+    with open("rq3/optimizer_prompt.txt", "r") as f:
+        prompt_template = f.read()
+
+    prompt = prompt_template.format(
+        stabilizers_str=stabilizers_str,
+        initial_circuit=initial_circuit,
+        cx_count=baseline_metrics["cx_count"],
+        volume=baseline_metrics["volume"],
+        depth=baseline_metrics["depth"],
+        attempts=attempts,
+    )
+
+    print(prompt)
+
+    prompt_agent(prompt, tools=[evaluate_optimization, check_stabilizers_tool, final_circuit], model=model, timeout=timeout)
+
+    # Check if result was populated by the agent
+    if not result:
+        return None
+
+    print('done.')
+    return result
 # -------------------------
 # MAIN
 # -------------------------
@@ -260,7 +405,59 @@ def main():
     result = generate_state_prep(stabilizers, model=model, attempts=attempts, timeout=6000)
     print(result)
 
+
+
+def main_optimizer():
+    # ---- Target stabilizers (same set you used above, or swap as needed) ----
+    stabilizers = [
+        "XZZXI",
+        "IXZZX",
+        "XIXZZ",
+        "ZXIXZ",
+    ]
+
+    # ---- Pick the model + run settings ----
+    model = "claude-opus-4.6"
+    attempts = 10
+    timeout = 6000
+
+    # ---- Provide an initial/baseline circuit to optimize ----
+    # Option A: generate a baseline circuit first (recommended for quick testing)
+    baseline_circuit = generate_state_prep(
+        stabilizers,
+        model=model,
+        attempts=attempts,
+        timeout=timeout,
+    )
+    if baseline_circuit is None:
+        print("Failed to generate baseline circuit; cannot optimize.")
+        return
+
+    initial_circuit_text = str(baseline_circuit)
+
+    # Option B: if you already have a baseline circuit string, use it instead:
+    # initial_circuit_text = """H 0
+    # CX 0 1
+    # ..."""
+
+    # ---- Run optimizer ----
+    optimized = generate_optimized_circuit(
+        stabilizers=stabilizers,
+        initial_circuit=initial_circuit_text,
+        model=model,
+        attempts=attempts,
+        timeout=timeout,
+    )
+
+    if optimized is None:
+        print("No strictly better circuit found.")
+        print("Baseline metrics:", compute_metrics(initial_circuit_text).as_dict())
+        return
+
+    print("Optimized circuit metrics:", compute_metrics(str(optimized)).as_dict())
+    print(optimized)
 #%%
 if __name__ == "__main__":
-    main()
+    # main()
+    main_optimizer()
 # %%

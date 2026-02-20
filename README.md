@@ -8,7 +8,7 @@ See the [research poster](AI-Driven%20Quantum%20Error%20Correction%20Circuit%20S
 
 | # | Question | Metric |
 |---|----------|--------|
-| **RQ1** | Can an agent generate stabilizer circuits reliably? | % fault-tolerant |
+| **RQ1** | Can an agent generate stabilizer circuits reliably? | % stabilizer preservation |
 | **RQ2** | Can an agent make a circuit fault-tolerant? | Median FT score |
 | **RQ3** | Can an agent optimize without breaking FT? | Circuit volume |
 | **RQ4** | Does training/fine-tuning an LLM improve results? | Same as above |

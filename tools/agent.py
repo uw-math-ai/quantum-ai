@@ -115,7 +115,8 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
 
     return asyncio.run(run())
 
-def generate_ft_state_prep(stabilizers: list[str], attempts: int = 1, timeout: int | None = 60) -> stim.Circuit | None:
+def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str, 
+    distance: int, qubits: list[int], attempts: int = 1, timeout: int | None = 60) -> stim.Circuit | None:
     """
     Generate a fault-tolerant state preparation circuit for given stabilizers.
     
@@ -143,13 +144,29 @@ def generate_ft_state_prep(stabilizers: list[str], attempts: int = 1, timeout: i
         return "Result received. Stop generation."
     
     prompt = f"""
-Generate a fault-tolerant Stim circuit to prepare the stabilizer state defined by the following stabilizers: {stabilizers_str}.
-Use flag qubits as needed to ensure fault-tolerance.
-Always verify the correctness and fault-tolerance of the circuit using the validate_circuit tool. Retry if any stabilizers are not preserved or if the circuit is not fault-tolerant.
-You have {attempts} attempts to generate the best possible circuit.
-Dont' try to write or evaluate any code in the repo, just print the stim circuit between "---OUTPUT---" marks.
-
-Call the return_result tool before ending with the best iteration."""
+    You are a quantum error correction assistant.
+    Consider the following inputs and do not proceed unless all are provided:
+        A quantum circuit {non_ft_circuit} described in Stim format, which prepares a state that is not necessarily fault-tolerant.
+        The data qubits in the circuit {qubits}
+        The distance of the code being prepared {distance}
+    Once all inputs are provided, convert the given Stim circuit into a fault-tolerant version of the same circuit,
+    using the following definition of fault tolerance (based on https://arxiv.org/pdf/quant-ph/0504218):
+    Fault-tolerant requirements:
+        Faults must not propagate beyond the qubit they are attached to (error weight must not exceed 1).
+        Each ancilla qubit may interact with only one qubit in the data block.
+        Measuring ancilla qubits in the X basis must yield an overall parity of 0.
+    Transformation guidelines:
+        Do not change the structure of the original circuit. You may add ancillas, but do not remove or reorder gates on the original data qubits. 
+        Introduce additional ancilla qubits if necessary to prevent multi-qubit error propagation.
+        Ensure all ancilla-data interactions are strictly one-to-one.
+        Preserve the logical action of the original circuit on the data qubits.
+        Explicitly include X-basis measurements of ancilla qubits and enforce even parity.
+    Output format requirements:
+        Output only the final fault-tolerant Stim circuit.
+        The output must be a plain string, for example:
+        \"CX 0 3
+        MX 3\"
+    Do not include explanations, comments, validation notes, or analysis—only the fault-tolerant Stim circuit string."""
 
     prompt_agent(prompt, tools=[validate_circuit, return_result], timeout=timeout)
 

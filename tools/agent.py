@@ -132,16 +132,34 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
     stabilizers_str = ", ".join(stabilizers)
 
     result = {}
-    @define_tool(description="Return the final circuit as a string")
-    def return_result(params: CircuitParam) -> str:
-        nonlocal result
-        result = {
-            "circuit": params.circuit,
-            "data_qubits": params.data_qubits,
-            "flag_qubits": params.flag_qubits
-        }
+    # @define_tool(description="Return the final circuit as a string")
+    # def return_result(params: CircuitParam) -> str:
+    #     nonlocal result
+    #     result = {
+    #         "circuit": params.circuit,
+    #         "data_qubits": params.data_qubits,
+    #         "flag_qubits": params.flag_qubits
+    #     }
 
-        return "Result received. Stop generation."
+    #     return "Result received. Stop generation."
+
+    @define_tool(description=(
+        "Submit the final fault-tolerant Stim circuit.\n"
+        "Input must contain a single field 'stim_circuit' with raw Stim text.\n"
+        "No markdown, no commentary."
+    ))
+    def return_result(params: FinalCircuitParam) -> str:
+        nonlocal result
+        try:
+            parsed = stim.Circuit(params.stim_circuit)
+        except Exception as e:
+            return f"Failed to parse Stim circuit ({e}). Retry."
+
+        result = {
+            "circuit": params.stim_circuit
+        }
+        return "Final circuit received. Stop generation."
+
     
     prompt = f"""
     You are a quantum error correction assistant.
@@ -149,6 +167,7 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
         A quantum circuit {non_ft_circuit} described in Stim format, which prepares a state that is not necessarily fault-tolerant.
         The data qubits in the circuit {qubits}
         The distance of the code being prepared {distance}
+        The circuit stabilizers {stabilizers_str}
     Once all inputs are provided, convert the given Stim circuit into a fault-tolerant version of the same circuit,
     using the following definition of fault tolerance (based on https://arxiv.org/pdf/quant-ph/0504218):
     Fault-tolerant requirements:
@@ -156,11 +175,12 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
         Each ancilla qubit may interact with only one qubit in the data block.
         Measuring ancilla qubits in the X basis must yield an overall parity of 0.
     Transformation guidelines:
-        Do not change the structure of the original circuit. You may add ancillas, but do not remove or reorder gates on the original data qubits. 
+        Do not change the structure of the original circuit. You may add ancillas, but do not reorder gates on the original data qubits. 
         Introduce additional ancilla qubits if necessary to prevent multi-qubit error propagation.
         Ensure all ancilla-data interactions are strictly one-to-one.
         Preserve the logical action of the original circuit on the data qubits.
         Explicitly include X-basis measurements of ancilla qubits and enforce even parity.
+        Ensure that the final circuit preserves the original stabilizers of the code.
     Output format requirements:
         Output only the final fault-tolerant Stim circuit.
         The output must be a plain string, for example:
@@ -169,7 +189,7 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
     Do not include explanations, comments, validation notes, or analysis—only the fault-tolerant Stim circuit string."""
 
     prompt_agent(prompt, tools=[validate_circuit, return_result], timeout=timeout)
-
+    
     # Check if result was populated by the agent
     if not result or "circuit" not in result:
         return None

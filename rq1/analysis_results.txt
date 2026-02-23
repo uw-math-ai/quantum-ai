@@ -1,0 +1,228 @@
+
+====================================================================================================
+  1. OVERVIEW: PER-AGENT, PER-CONFIGURATION STATISTICS
+====================================================================================================
+
+  Config: attempts=1, timeout=900s
+  Agent                       Complete    Perfect     Avg SR     Med SR   Avg Time   Med Time
+  -----------------------  --------  --------  --------  --------  --------  --------
+  claude-opus-4.6            163/192    153/192      83.3%    100.0%    370.9s    137.5s
+  gemini-3-pro-preview       160/192    139/192      80.0%    100.0%    456.5s    291.9s
+  gpt5.2                     161/192    154/192      83.3%    100.0%    370.1s    140.4s
+
+  Config: attempts=15, timeout=300s
+  Agent                       Complete    Perfect     Avg SR     Med SR   Avg Time   Med Time
+  -----------------------  --------  --------  --------  --------  --------  --------
+  claude-opus-4.6             51/192     48/192      26.1%      0.0%    252.3s    302.3s
+  gemini-3-pro-preview        68/192     67/192      35.4%      0.0%    250.1s    302.3s
+  gpt5.2                      51/192     46/192      25.5%      0.0%    252.9s    302.3s
+
+  Config: attempts=15, timeout=900s
+  Agent                       Complete    Perfect     Avg SR     Med SR   Avg Time   Med Time
+  -----------------------  --------  --------  --------  --------  --------  --------
+  claude-opus-4.6            144/192    140/192      74.7%    100.0%    440.4s    236.0s
+  gemini-3-pro-preview       134/192    123/192      69.0%    100.0%   1189.8s    398.8s
+  gpt5.2                     139/192    137/192      72.4%    100.0%    439.7s    230.3s
+
+====================================================================================================
+  2. ACCURACY: PERFECT-SOLVE RATE BY CONFIG
+====================================================================================================
+
+  Config                                   claude-opus-4.6      gemini-3-pro-preview                    gpt5.2
+  ----------------------------  -----------------------  -----------------------  -----------------------
+  att=1, to=900s                                   79.7%                   72.4%                   80.2%
+  att=15, to=300s                                  25.0%                   34.9%                   24.0%
+  att=15, to=900s                                  72.9%                   64.1%                   71.4%
+
+====================================================================================================
+  3. COMPLETENESS: CIRCUIT RETURNED (not timed out)
+====================================================================================================
+
+  Config                                   claude-opus-4.6      gemini-3-pro-preview                    gpt5.2
+  ----------------------------  -----------------------  -----------------------  -----------------------
+  att=1, to=900s                                   84.9%                   83.3%                   83.9%
+  att=15, to=300s                                  26.6%                   35.4%                   26.6%
+  att=15, to=900s                                  75.0%                   69.8%                   72.4%
+
+====================================================================================================
+  4. PERFORMANCE: MEAN ELAPSED TIME (seconds)
+====================================================================================================
+
+  Config                                   claude-opus-4.6      gemini-3-pro-preview                    gpt5.2
+  ----------------------------  -----------------------  -----------------------  -----------------------
+  att=1, to=900s                                  370.9s                  456.5s                  370.1s
+  att=15, to=300s                                 252.3s                  250.1s                  252.9s
+  att=15, to=900s                                 440.4s                 1189.8s                  439.7s
+
+====================================================================================================
+  5. HEAD-TO-HEAD: BEST CONFIG (attempts=15, timeout=900s)
+====================================================================================================
+
+  Benchmarks where agents differ (showing success_rate | elapsed):
+
+  Benchmark                                                    claude-opus-4.6      gemini-3-pro-preview                    gpt5.2
+  ------------------------------------------------  -----------------------  -----------------------  -----------------------
+  Hex Color Code d=3                                         50% |   113.4s        100% |    97.5s        100% |    27.2s
+  4-Qubit Detector Code                                     100% |    22.7s          0% |   902.5s        100% |    30.8s
+  (Perfect 5-Qubit Code) * (Golay)                            0% |   902.8s        100% |   425.4s        100% |   427.5s
+  (Perfect 5-Qubit Code) * (Hex Color Code d=7)               0% |   902.5s        100% |   671.0s          0% |   901.5s
+  (Perfect 5-Qubit Code) * (Square Octagon Color C          100% |   265.0s          0% |   901.6s        100% |   216.6s
+  (Perfect 5-Qubit Code) * (Rotated Surface Code d          100% |   238.6s         99% |   739.1s          0% |   902.5s
+  (Steane) * (Tetrahedral)                                    0% |   902.6s        100% |   855.6s        100% |   397.7s
+  (Steane) * (Golay)                                          0% |   902.5s        100% |   840.1s          0% |   901.6s
+  (Steane) * (Square Octagon Color Code d=5)                100% |   875.6s        100% |   837.0s          0% |   902.5s
+  (Steane) * (Rotated Surface Code d=5)                       0% |   902.5s         84% |   569.0s          0% |   902.7s
+  (Shor) * (Shor)                                           100% |   189.6s          0% |  9575.6s        100% |   152.6s
+  (Shor) * (Tetrahedral)                                      0% |   905.9s        100% |   793.5s        100% |   644.7s
+  (Shor) * (Square Octagon Color Code d=5)                    0% |   902.4s        100% |   359.0s          0% |   902.4s
+  (Shor) * (Rotated Surface Code d=3)                       100% |   253.8s          0% |   902.5s        100% |   191.8s
+  (Tetrahedral) * (Steane)                                  100% |   729.0s        100% |   293.3s          0% |   902.5s
+  (Tetrahedral) * (Shor)                                    100% |   380.7s        100% |   617.2s          0% |   902.4s
+  (Tetrahedral) * (Hex Color Code d=3)                      100% |   356.1s        100% |   485.0s          0% |   902.5s
+  (Tetrahedral) * (Rotated Surface Code d=3)                100% |   670.9s          0% |   902.4s        100% |   459.1s
+  (Hamming) * (Steane)                                        0% |   901.5s        100% |   319.9s        100% |   760.8s
+  (Hamming) * (Shor)                                        100% |   448.6s          0% |   902.4s        100% |   855.2s
+  (Hamming) * (Square Octagon Color Code d=3)               100% |   411.0s          0% |   902.4s        100% |   255.4s
+  (Hamming) * (Rotated Surface Code d=3)                    100% |   813.5s         99% |   668.3s        100% |   433.3s
+  (Carbon) * (Shor)                                         100% |   893.4s        100% |   339.5s          0% |   902.5s
+  (Carbon) * (Tetrahedral)                                    0% |   902.9s        100% |   736.8s          0% |   902.5s
+  (Carbon) * (Hex Color Code d=3)                           100% |   197.8s          0% |   524.9s        100% |   202.2s
+  (Carbon) * (Square Octagon Color Code d=3)                100% |   183.0s          0% |    55.4s        100% |   222.7s
+  (Carbon) * (Rotated Surface Code d=3)                       0% |   902.4s         99% |   332.6s          0% |   902.4s
+  (Iceberg Code m=2) * (Golay)                              100% |   267.9s         99% |   443.2s        100% |   270.8s
+  (Iceberg Code m=2) * (Square Octagon Color Code             0% |   902.4s          0% |   903.5s        100% |   380.0s
+  (Iceberg Code m=3) * (Shor)                               100% |    82.8s        100% |   166.2s          0% |  8700.5s
+  (Iceberg Code m=3) * (Golay)                              100% |   609.1s         93% |   553.1s        100% |   716.6s
+  (Iceberg Code m=3) * (Hex Color Code d=5)                 100% |   400.7s          0% |   902.4s        100% |   352.5s
+  (Iceberg Code m=3) * (Square Octagon Color Code           100% |   235.0s          0% |   902.5s          0% |   902.6s
+  (Iceberg Code m=4) * (Tetrahedral)                          0% |   902.4s          0% |   901.4s        100% |   699.2s
+  (Iceberg Code m=4) * (Golay)                                0% |   902.5s        100% |   503.5s          0% |   902.4s
+  (Iceberg Code m=4) * (Square Octagon Color Code             0% |   902.3s          0% |   902.4s        100% |   434.2s
+  (Iceberg Code m=4) * (Rotated Surface Code d=3)           100% |   163.7s          0% |   902.4s        100% |   220.3s
+  (Hypercube Code l=1) * (Golay)                            100% |   440.1s          0% |   902.5s        100% |   523.9s
+  (Hypercube Code l=1) * (Hex Color Code d=5)               100% |   832.8s         99% |   832.6s        100% |   424.7s
+  (Hypercube Code l=1) * (Rotated Surface Code d=3          100% |    86.0s          0% |   901.4s        100% |    91.4s
+  (Hex Color Code d=3) * (Tetrahedral)                        0% |   902.4s         97% |   578.5s        100% |   230.3s
+  (Hex Color Code d=3) * (Golay)                              0% |   902.4s         99% |   756.8s          0% |   902.5s
+  (Hex Color Code d=3) * (Hex Color Code d=5)                98% |   783.4s        100% |   728.1s        100% |   895.7s
+  (Hex Color Code d=3) * (Square Octagon Color Cod           99% |   801.5s          0% |   904.6s        100% |   475.4s
+  (Hex Color Code d=5) * (Steane)                           100% |   450.7s          0% |   902.5s          0% |   902.7s
+  (Square Octagon Color Code d=3) * (Tetrahedral)           100% |   297.6s          0% |   905.1s        100% |   412.5s
+  (Square Octagon Color Code d=3) * (Hex Color Cod           99% |   667.8s         83% |   576.5s          0% |   901.8s
+  (Square Octagon Color Code d=3) * (Square Octago          100% |   654.9s          0% |   903.3s        100% |   367.9s
+  (Square Octagon Color Code d=3) * (Rotated Surfa            0% |   902.4s        100% |   896.6s          0% |   903.0s
+  (Square Octagon Color Code d=5) * (Steane)                100% |   493.2s          0% |   902.5s        100% |   527.4s
+  (Square Octagon Color Code d=5) * (Shor)                  100% |   721.1s          0% |   902.4s        100% |   853.3s
+  (Square Octagon Color Code d=5) * (Hex Color Cod          100% |   530.1s          0% |   901.6s        100% |   419.5s
+  (Square Octagon Color Code d=5) * (Square Octago          100% |   452.8s          0% |   902.6s          0% |   902.4s
+  (Rotated Surface Code d=3) * (Steane)                     100% |   135.1s          0% |    88.9s        100% |   156.3s
+  (Rotated Surface Code d=3) * (Shor)                       100% |   218.4s          0% |   351.7s        100% |   177.4s
+  (Rotated Surface Code d=3) * (Tetrahedral)                100% |   590.5s        100% |   558.0s          0% |   902.6s
+  (Rotated Surface Code d=3) * (Square Octagon Col            0% |   902.5s        100% |   699.2s          0% |   903.0s
+  (Rotated Surface Code d=5) * (Perfect 5-Qubit Co          100% |   412.5s          0% | 129284.2s         99% |   760.7s
+  (Rotated Surface Code d=5) * (Hex Color Code d=3            0% |   902.4s        100% |   317.2s          0% |   902.6s
+  (4-Qubit Detector Code) * (Golay)                         100% |   271.5s          0% |   884.1s        100% |   209.2s
+  (4-Qubit Detector Code) * (Square Octagon Color           100% |   515.9s          0% |   902.7s          0% |   902.6s
+  (4-Qubit Detector Code) * (Rotated Surface Code           100% |   262.1s        100% |   375.1s         99% |   734.2s
+
+  Win counts (best success_rate, tiebreak by speed):
+    claude-opus-4.6          :   80 / 192
+    gemini-3-pro-preview     :   35 / 192
+    gpt5.2                   :   77 / 192
+
+====================================================================================================
+  6. DIFFICULTY ANALYSIS: SUCCESS RATE BY STABILIZER COUNT
+====================================================================================================
+
+  Stab. range         claude-opus-4.6 (perf/tot) gemini-3-pro-preview (perf/tot)              gpt5.2 (perf/tot)
+  -------------  ----------------------------  ----------------------------  ----------------------------
+    1-4              6/6    (avg 100%)          5/6    (avg 83%)          6/6    (avg 100%)      
+    5-10             6/7    (avg 93%)          7/7    (avg 100%)          7/7    (avg 100%)      
+   11-20             6/6    (avg 100%)          6/6    (avg 100%)          6/6    (avg 100%)      
+   21-50            51/51   (avg 100%)         50/51   (avg 98%)         50/51   (avg 98%)      
+   51-100           46/48   (avg 96%)         35/48   (avg 75%)         45/48   (avg 96%)      
+  101-200           25/74   (avg 38%)         20/74   (avg 39%)         23/74   (avg 32%)      
+
+====================================================================================================
+  7. FAILURE ANALYSIS: BENCHMARKS FAILED BY ALL AGENTS (best config)
+====================================================================================================
+
+  Found 33 benchmarks unsolved by any agent:
+
+  Benchmark                                                    claude-opus-4.6      gemini-3-pro-preview                    gpt5.2
+  ------------------------------------------------  -----------------------  -----------------------  -----------------------
+  (Perfect 5-Qubit Code) * (Square Octagon Color C                0/154 (0%)              0/154 (0%)              0/154 (0%)
+  (Steane) * (Hex Color Code d=5)                                 0/132 (0%)              0/132 (0%)              0/132 (0%)
+  (Steane) * (Rotated Surface Code d=5)                           0/174 (0%)           146/174 (84%)              0/174 (0%)
+  (Shor) * (Hex Color Code d=5)                                   0/170 (0%)              0/170 (0%)              0/170 (0%)
+  (Carbon) * (Rotated Surface Code d=3)                           0/106 (0%)           105/106 (99%)              0/106 (0%)
+  (Golay) * (Perfect 5-Qubit Code)                                0/114 (0%)              0/114 (0%)              0/114 (0%)
+  (Golay) * (Steane)                                              0/160 (0%)              0/160 (0%)              0/160 (0%)
+  (Golay) * (Hex Color Code d=3)                                  0/160 (0%)              0/160 (0%)              0/160 (0%)
+  (Golay) * (Square Octagon Color Code d=3)                       0/160 (0%)              0/160 (0%)              0/160 (0%)
+  (Iceberg Code m=2) * (Hex Color Code d=7)                       0/146 (0%)              0/146 (0%)              0/146 (0%)
+  (Iceberg Code m=2) * (Rotated Surface Code d=5)                  0/98 (0%)               0/98 (0%)               0/98 (0%)
+  (Iceberg Code m=2) * (Rotated Surface Code d=7)                 0/194 (0%)              0/194 (0%)              0/194 (0%)
+  (Iceberg Code m=3) * (Square Octagon Color Code                 0/182 (0%)              0/182 (0%)              0/182 (0%)
+  (Iceberg Code m=3) * (Rotated Surface Code d=5)                 0/146 (0%)              0/146 (0%)              0/146 (0%)
+  (Iceberg Code m=4) * (Hex Color Code d=5)                       0/146 (0%)              0/146 (0%)              0/146 (0%)
+  (Hypercube Code l=1) * (Square Octagon Color Cod                0/182 (0%)              0/182 (0%)              0/182 (0%)
+  (Hypercube Code l=1) * (Rotated Surface Code d=5                0/146 (0%)              0/146 (0%)              0/146 (0%)
+  (Hypercube Code l=2) * (Perfect 5-Qubit Code)                   0/164 (0%)              0/164 (0%)              0/164 (0%)
+  (Hex Color Code d=3) * (Golay)                                  0/160 (0%)           159/160 (99%)              0/160 (0%)
+  (Hex Color Code d=3) * (Rotated Surface Code d=5                0/174 (0%)              0/174 (0%)              0/174 (0%)
+  (Hex Color Code d=5) * (Shor)                                   0/170 (0%)              0/170 (0%)              0/170 (0%)
+  (Hex Color Code d=5) * (Hex Color Code d=3)                     0/132 (0%)              0/132 (0%)              0/132 (0%)
+  (Hex Color Code d=5) * (Rotated Surface Code d=3                0/170 (0%)              0/170 (0%)              0/170 (0%)
+  (Hex Color Code d=7) * (Perfect 5-Qubit Code)                   0/184 (0%)              0/184 (0%)              0/184 (0%)
+  (Square Octagon Color Code d=3) * (Golay)                       0/160 (0%)              0/160 (0%)              0/160 (0%)
+  (Square Octagon Color Code d=3) * (Hex Color Cod             131/132 (99%)           109/132 (83%)              0/132 (0%)
+  (Square Octagon Color Code d=5) * (Rotated Surfa                0/152 (0%)              0/152 (0%)              0/152 (0%)
+  (Square Octagon Color Code d=7) * (Perfect 5-Qub                0/154 (0%)              0/154 (0%)              0/154 (0%)
+  (Rotated Surface Code d=3) * (Hex Color Code d=5                0/170 (0%)              0/170 (0%)              0/170 (0%)
+  (Rotated Surface Code d=5) * (Steane)                           0/174 (0%)              0/174 (0%)              0/174 (0%)
+  (Rotated Surface Code d=5) * (Square Octagon Col                0/174 (0%)              0/174 (0%)              0/174 (0%)
+  (4-Qubit Detector Code) * (Hex Color Code d=7)                  0/146 (0%)              0/146 (0%)              0/146 (0%)
+  (4-Qubit Detector Code) * (Rotated Surface Code                 0/194 (0%)              0/194 (0%)              0/194 (0%)
+
+====================================================================================================
+  8. IMPACT OF CONFIGURATION (attempts / timeout)
+====================================================================================================
+
+  claude-opus-4.6:
+  Config                                 Perfect    Completed     Avg SR   Avg Time
+  ---------------------------------  --------  ----------  --------  --------
+  attempts=1, timeout=900s             153/192    163/192        83.3%    370.9s
+  attempts=15, timeout=300s             48/192     51/192        26.1%    252.3s
+  attempts=15, timeout=900s            140/192    144/192        74.7%    440.4s
+
+  gemini-3-pro-preview:
+  Config                                 Perfect    Completed     Avg SR   Avg Time
+  ---------------------------------  --------  ----------  --------  --------
+  attempts=1, timeout=900s             139/192    160/192        80.0%    456.5s
+  attempts=15, timeout=300s             67/192     68/192        35.4%    250.1s
+  attempts=15, timeout=900s            123/192    134/192        69.0%   1189.8s
+
+  gpt5.2:
+  Config                                 Perfect    Completed     Avg SR   Avg Time
+  ---------------------------------  --------  ----------  --------  --------
+  attempts=1, timeout=900s             154/192    161/192        83.3%    370.1s
+  attempts=15, timeout=300s             46/192     51/192        25.5%    252.9s
+  attempts=15, timeout=900s            137/192    139/192        72.4%    439.7s
+
+====================================================================================================
+  9. OVERALL RANKING
+====================================================================================================
+
+  Aggregated across all 3 configurations (3 configs ├ù 192 benchmarks):
+
+  Rank   Agent                       Perfect Rate   Completion     Avg SR   Avg Time
+  ----  -----------------------  ------------  ----------  --------  --------
+  1      claude-opus-4.6                  59.2%       62.2%     61.4%    354.5s
+  2      gpt5.2                           58.5%       60.9%     60.4%    354.3s
+  3      gemini-3-pro-preview             57.1%       62.8%     61.5%    632.1s
+
+====================================================================================================
+  WINNER: claude-opus-4.6
+====================================================================================================
+

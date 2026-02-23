@@ -1,0 +1,10 @@
+Agent,Config,N,Perfect Solve Rate,Completion Rate,Avg Success Rate,Avg Elapsed (s),Median Elapsed (s)
+Claude Opus 4.6,"1 attempt(s), 900s timeout",192,153/192 (79.7%),163/192 (84.9%),0.833,370.9,137.7
+Claude Opus 4.6,"15 attempt(s), 300s timeout",192,48/192 (25.0%),51/192 (26.6%),0.261,252.3,302.3
+Claude Opus 4.6,"15 attempt(s), 900s timeout",192,140/192 (72.9%),144/192 (75.0%),0.747,440.4,236.9
+GPT-5.2,"1 attempt(s), 900s timeout",192,154/192 (80.2%),161/192 (83.9%),0.833,370.1,140.8
+GPT-5.2,"15 attempt(s), 300s timeout",192,46/192 (24.0%),51/192 (26.6%),0.255,252.9,302.3
+GPT-5.2,"15 attempt(s), 900s timeout",192,137/192 (71.4%),139/192 (72.4%),0.724,439.7,230.3
+Gemini 3 Pro Preview,"1 attempt(s), 900s timeout",192,139/192 (72.4%),160/192 (83.3%),0.800,456.5,293.2
+Gemini 3 Pro Preview,"15 attempt(s), 300s timeout",192,67/192 (34.9%),68/192 (35.4%),0.354,250.1,302.3
+Gemini 3 Pro Preview,"15 attempt(s), 900s timeout",192,123/192 (64.1%),134/192 (69.8%),0.690,1189.8,400.6

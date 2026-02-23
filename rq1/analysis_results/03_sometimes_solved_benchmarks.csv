@@ -1,0 +1,41 @@
+Code Name,Qubits,Generators,Distance,Tensor Product,Solved By
+(4-Qubit Detector Code) * (Hex Color Code d=7),148,146,14,Yes,"Claude Opus 4.6, Gemini 3 Pro Preview"
+(4-Qubit Detector Code) * (Rotated Surface Code d=5),100,98,10,Yes,"Claude Opus 4.6, Gemini 3 Pro Preview"
+(4-Qubit Detector Code) * (Square Octagon Color Code d=7),124,122,14,Yes,"Claude Opus 4.6, Gemini 3 Pro Preview"
+(Carbon) * (Rotated Surface Code d=3),108,106,12,Yes,"GPT-5.2, Gemini 3 Pro Preview"
+(Carbon) * (Shor),108,106,12,Yes,"Claude Opus 4.6, Gemini 3 Pro Preview"
+(Carbon) * (Tetrahedral),180,178,12,Yes,Gemini 3 Pro Preview
+(Golay) * (Hex Color Code d=3),161,160,21,Yes,"Claude Opus 4.6, GPT-5.2"
+(Golay) * (Perfect 5-Qubit Code),115,114,21,Yes,"Claude Opus 4.6, GPT-5.2"
+(Golay) * (Square Octagon Color Code d=3),161,160,21,Yes,"GPT-5.2, Gemini 3 Pro Preview"
+(Golay) * (Steane),161,160,21,Yes,"Claude Opus 4.6, GPT-5.2"
+(Hamming) * (Rotated Surface Code d=3),135,128,9,Yes,"Claude Opus 4.6, GPT-5.2"
+(Hex Color Code d=3) * (Golay),161,160,21,Yes,Claude Opus 4.6
+(Hex Color Code d=3) * (Square Octagon Color Code d=5),119,118,15,Yes,"Claude Opus 4.6, GPT-5.2"
+(Hex Color Code d=3) * (Tetrahedral),105,104,9,Yes,"Claude Opus 4.6, GPT-5.2"
+(Hex Color Code d=5) * (Hex Color Code d=3),133,132,15,Yes,"Claude Opus 4.6, GPT-5.2"
+(Hex Color Code d=5) * (Shor),171,170,15,Yes,Gemini 3 Pro Preview
+(Hypercube Code l=1) * (Golay),138,134,14,Yes,"Claude Opus 4.6, GPT-5.2"
+(Hypercube Code l=1) * (Rotated Surface Code d=5),150,146,10,Yes,Claude Opus 4.6
+(Iceberg Code m=2) * (Rotated Surface Code d=5),100,98,10,Yes,Gemini 3 Pro Preview
+(Iceberg Code m=3) * (Golay),138,134,14,Yes,"Claude Opus 4.6, GPT-5.2"
+(Iceberg Code m=3) * (Rotated Surface Code d=5),150,146,10,Yes,"Claude Opus 4.6, Gemini 3 Pro Preview"
+(Iceberg Code m=4) * (Golay),184,178,14,Yes,Gemini 3 Pro Preview
+(Perfect 5-Qubit Code) * (Hex Color Code d=7),185,184,21,Yes,Gemini 3 Pro Preview
+(Perfect 5-Qubit Code) * (Rotated Surface Code d=5),125,124,15,Yes,Claude Opus 4.6
+(Perfect 5-Qubit Code) * (Square Octagon Color Code d=5),85,84,15,Yes,"Claude Opus 4.6, GPT-5.2"
+(Rotated Surface Code d=3) * (Shor),81,80,9,Yes,"Claude Opus 4.6, GPT-5.2"
+(Rotated Surface Code d=5) * (Hex Color Code d=3),175,174,15,Yes,"GPT-5.2, Gemini 3 Pro Preview"
+(Rotated Surface Code d=5) * (Perfect 5-Qubit Code),125,124,15,Yes,"Claude Opus 4.6, GPT-5.2"
+(Shor) * (Hex Color Code d=5),171,170,15,Yes,Gemini 3 Pro Preview
+(Shor) * (Square Octagon Color Code d=5),153,152,15,Yes,Gemini 3 Pro Preview
+(Square Octagon Color Code d=3) * (Golay),161,160,21,Yes,GPT-5.2
+(Square Octagon Color Code d=3) * (Hex Color Code d=5),133,132,15,Yes,"Claude Opus 4.6, GPT-5.2"
+(Square Octagon Color Code d=3) * (Rotated Surface Code d=5),175,174,15,Yes,Gemini 3 Pro Preview
+(Square Octagon Color Code d=3) * (Tetrahedral),105,104,9,Yes,"Claude Opus 4.6, GPT-5.2"
+(Square Octagon Color Code d=5) * (Rotated Surface Code d=3),153,152,15,Yes,"GPT-5.2, Gemini 3 Pro Preview"
+(Square Octagon Color Code d=7) * (Perfect 5-Qubit Code),155,154,21,Yes,Gemini 3 Pro Preview
+(Steane) * (Golay),161,160,21,Yes,Gemini 3 Pro Preview
+(Steane) * (Hex Color Code d=5),133,132,15,Yes,Claude Opus 4.6
+(Tetrahedral) * (Rotated Surface Code d=3),135,134,9,Yes,"Claude Opus 4.6, GPT-5.2"
+Hex Color Code d=3,7,6,3,No,"GPT-5.2, Gemini 3 Pro Preview"

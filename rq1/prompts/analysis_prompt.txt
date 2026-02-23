@@ -1,0 +1,52 @@
+We ran a benchmark that asked different agents (chat-gpt, gemini-3, claude-ops) to generate state preperation quantum circuits that satisfy ceratin a group of stabilizers (given a generator set). The actual prompt given to the agent is in prompt.txt. The agent had the ability to try a few attempts before returning a final answer (which was not necessarily correct) and it also had a timeout if it didn't return a valid answer (you can see when the agent failed, because the result had no final circuit). We ran the agent with different number of attempts and different timeouts.
+Results of the benchmark are in rq1/data/<agent>/2602*.json files.
+The list of stabilizer generator sets used for the benchmark are found in data/benchmark.json
+
+Please analyze the results of the quantum state-preparation circuit benchmark in detail. The results are in CSV/JSON files, with each agent (e.g., Claude Opus 4.6, Gemini 3 Pro Preview, GPT-5.2) evaluated on a set of stabilizer codes (base codes and tensor product codes), under different configurations (number of attempts, timeout).
+
+Your analysis should include:
+
+1. **Overall Agent Comparison**
+   - For each agent and configuration, provide tables of:
+     - Perfect solve rate (all stabilizers preserved)
+     - Completion rate (any valid circuit returned)
+     - Average success rate (fraction of stabilizers preserved)
+     - Average elapsed time
+   - Aggregate these statistics across all configurations and benchmarks.
+
+2. **Difficulty Frontier**
+   - Analyze how success rate varies with stabilizer count, code type (base vs tensor product), and code distance.
+   - Provide tables showing, for different stabilizer count ranges, how many benchmarks are solvable by any agent and by all agents.
+   - Identify the “hard” and “soft” frontiers (maximum stabilizer count solved by all/any agent).
+
+3. **What Makes Circuits Hard**
+   - Identify which code features (e.g., code distance, tensor product structure, high-weight stabilizers) are most predictive of difficulty.
+   - List benchmarks that are never solved by any agent, and summarize their properties.
+
+4. **Impact of Attempts and Timeout**
+   - Statistically compare results for 1 attempt vs 15 attempts (with the same timeout), and for 300s vs 900s timeout (with the same number of attempts).
+   - Report net changes in perfect solve rate, and provide p-values or statistical significance if possible.
+   - Interpret whether more attempts or longer timeouts help or hurt performance, and why.
+
+5. **Unique Agent Strengths**
+   - List benchmarks uniquely solved by each agent.
+   - Summarize which agents are strongest in which regimes (e.g., large codes, high distance, base codes).
+
+6. **Summary of Trends and Recommendations**
+   - Summarize the main trends and findings in bullet points.
+   - Provide actionable recommendations for improving agent performance or prompt design.
+
+7. **Output**
+   - Include all summary tables in markdown.
+   - Output CSVs for detailed and summary statistics.
+   - Provide a concise executive summary and a detailed findings section, similar in depth and style to the previous key_findings.md.
+
+Be quantitative, use tables, and provide clear, actionable insights.
+
+Let's analyze the results and define which agent is best in terms of accuracy/performance/completeness.
+
+Focus on what seem to be the limits, are there any type of circuits that are harder to implement/not possible currently?
+How about the number of attempts? 1 attempt means that the agent generated the circuit at a first try, so basically the LLM did all the work, multiple tries imply that by using reasoning the agent can come up with better results... are there statistical differences between 1 attempt and 15 attempts + more time?
+again, i'm looking to know trends and what circuits are possible/not for an agent
+
+Make sure to generate files with the detailed results of the analysis, and also a key findings file with the summary and explanation of the results.

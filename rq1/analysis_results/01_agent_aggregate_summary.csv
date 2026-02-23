@@ -1,0 +1,4 @@
+Agent,Total Runs,Perfect Solves,Perfect Solve Rate,Completions,Completion Rate,Avg Success Rate,Avg Elapsed (s)
+Claude Opus 4.6,576,341,59.2%,358,62.2%,0.614,354.5
+GPT-5.2,576,337,58.5%,351,60.9%,0.604,354.3
+Gemini 3 Pro Preview,576,329,57.1%,362,62.8%,0.615,632.1

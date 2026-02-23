@@ -1,0 +1,35 @@
+===== LINEAR REGRESSION ON LOG(RUNTIME) =====
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:            log_runtime   R-squared:                       0.729
+Model:                            OLS   Adj. R-squared:                  0.684
+Method:                 Least Squares   F-statistic:                     16.49
+Date:                Sun, 22 Feb 2026   Prob (F-statistic):           2.47e-10
+Time:                        20:49:44   Log-Likelihood:                -25.530
+No. Observations:                  51   AIC:                             67.06
+Df Residuals:                      43   BIC:                             82.51
+Df Model:                           7                                         
+Covariance Type:            nonrobust                                         
+=========================================================================================
+                            coef    std err          t      P>|t|      [0.025      0.975]
+-----------------------------------------------------------------------------------------
+const                     3.1278      0.346      9.030      0.000       2.429       3.826
+logical_qubits           -0.1510      0.055     -2.735      0.009      -0.262      -0.040
+physical_qubits          -0.0525      0.025     -2.065      0.045      -0.104      -0.001
+n_stabilizers             0.0985      0.031      3.214      0.002       0.037       0.160
+distance                 -0.0441      0.078     -0.564      0.576      -0.202       0.114
+total_gates               0.0024      0.003      0.846      0.403      -0.003       0.008
+weighted_gate_count      -0.0035      0.002     -1.983      0.054      -0.007    5.91e-05
+avg_stabilizer_weight     0.1030      0.086      1.199      0.237      -0.070       0.276
+max_stabilizer_weight     0.0635      0.020      3.111      0.003       0.022       0.105
+==============================================================================
+Omnibus:                        3.970   Durbin-Watson:                   1.783
+Prob(Omnibus):                  0.137   Jarque-Bera (JB):                3.632
+Skew:                           0.581   Prob(JB):                        0.163
+Kurtosis:                       2.401   Cond. No.                     1.44e+17
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The smallest eigenvalue is 1.23e-27. This might indicate that there are
+strong multicollinearity problems or that the design matrix is singular.

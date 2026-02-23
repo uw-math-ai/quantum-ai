@@ -1,45 +1,50 @@
 import stim
-import sys
+import os
 
-def analyze_stabilizers(filename):
+def load_stabilizers(filename):
     with open(filename, 'r') as f:
         lines = [line.strip() for line in f if line.strip()]
+    return lines
 
-    num_qubits = len(lines[0])
-    print(f"Number of qubits: {num_qubits}")
-    print(f"Number of stabilizers: {len(lines)}")
-
-    # Check length consistency
-    for i, line in enumerate(lines):
-        if len(line) != num_qubits:
-            print(f"Error: Stabilizer {i} has length {len(line)}, expected {num_qubits}")
-            return
-
-    # Check commutativity
-    paulis = [stim.PauliString(line) for line in lines]
+def check_commutativity(stabilizers):
+    # Convert to stim.PauliString
+    paulis = [stim.PauliString(s) for s in stabilizers]
+    num_stabs = len(paulis)
+    
     anticommuting_pairs = []
-    for i in range(len(paulis)):
-        for j in range(i + 1, len(paulis)):
+    for i in range(num_stabs):
+        for j in range(i + 1, num_stabs):
             if not paulis[i].commutes(paulis[j]):
                 anticommuting_pairs.append((i, j))
-    
-    if anticommuting_pairs:
-        print(f"Found {len(anticommuting_pairs)} anticommuting pairs.")
-        for i, j in anticommuting_pairs[:10]:
-            print(f"  {i} and {j} anticommute")
-        if len(anticommuting_pairs) > 10:
-            print("  ...")
-    else:
-        print("All stabilizers commute.")
+                
+    return anticommuting_pairs
 
-    # Check for independent generators if they commute
-    if not anticommuting_pairs:
-        tableau = stim.Tableau.from_stabilizers(paulis, allow_underconstrained=True)
-        print(f"Stabilizers are consistent and independent (or underconstrained).")
-        print(f"Tableau shape: {len(tableau)} qubits")
+def main():
+    filename = r'C:\Users\anpaz\Repos\quantum-ai\rq1\data\gemini-3-pro-preview\agent_files\stabilizers.txt'
+    stabilizers = load_stabilizers(filename)
+    
+    print(f"Loaded {len(stabilizers)} stabilizers.")
+    
+    anticommuting = check_commutativity(stabilizers)
+    
+    if not anticommuting:
+        print("All stabilizers commute.")
+    else:
+        print(f"Found {len(anticommuting)} anticommuting pairs.")
+        for i, j in anticommuting[:10]:
+            print(f"  {i} and {j} anticommute")
+        if len(anticommuting) > 10:
+            print("  ...")
+
+    # Check for independent generators
+    # Convert to tableau and Gaussian eliminate
+    try:
+        t = stim.Tableau.from_stabilizers([stim.PauliString(s) for s in stabilizers], allow_redundant=True, allow_underconstrained=True)
+        print("Stabilizers are consistent (can form a state).")
+        print(f"Number of qubits: {len(stabilizers[0])}")
+        print(f"Rank (independent stabilizers): {len(t)}")
+    except Exception as e:
+        print(f"Error checking consistency: {e}")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        analyze_stabilizers(sys.argv[1])
-    else:
-        print("Usage: python analyze_stabs.py <filename>")
+    main()

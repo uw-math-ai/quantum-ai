@@ -1,0 +1,9 @@
+Reading stabilizers...
+Number of stabilizers: 146
+Number of qubits (length of first stabilizer): 152
+Generating circuit using stim.Tableau.from_stabilizers...
+Error generating circuit: Some of the given stabilizers anticommute.
+For example:
+    stabilizers[7] = +_______________________________________________________________________________________________________________________________________X__X__XX_________
+anticommutes with
+    stabilizers[119] = +_____________________________________________________________________________________________________________________________________Z_Z___Z_______Z____

@@ -1,0 +1,19 @@
+import stim
+
+s14 = "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXXXXXXIII"
+s119 = "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZIZ"
+
+p14 = stim.PauliString(s14)
+p119 = stim.PauliString(s119)
+
+print(f"s14 len: {len(s14)}")
+print(f"s119 len: {len(s119)}")
+
+print(f"Commutes: {p14.commutes(p119)}")
+
+# Check overlap
+for i in range(len(s14)):
+    c1 = s14[i]
+    c2 = s119[i]
+    if c1 != 'I' and c2 != 'I':
+        print(f"Overlap at {i}: {c1} {c2}")

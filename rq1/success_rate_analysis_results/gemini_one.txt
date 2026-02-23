@@ -1,0 +1,29 @@
+
+===== FRACTIONAL LOGIT RESULTS =====
+
+                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:           success_rate   No. Observations:                  160
+Model:                            GLM   Df Residuals:                      151
+Model Family:                Binomial   Df Model:                            8
+Link Function:                  logit   Scale:                          1.0000
+Method:                          IRLS   Log-Likelihood:                -13.088
+Date:                Sun, 22 Feb 2026   Deviance:                       20.270
+Time:                        20:36:54   Pearson chi2:                     53.8
+No. Iterations:                    20   Pseudo R-squ. (CS):             0.1459
+Covariance Type:                  HC3                                         
+=========================================================================================
+                            coef    std err          z      P>|z|      [0.025      0.975]
+-----------------------------------------------------------------------------------------
+const                     9.5947      2.494      3.846      0.000       4.706      14.484
+logical_qubits            2.5823        nan        nan        nan         nan         nan
+physical_qubits          -1.2477        nan        nan        nan         nan         nan
+n_stabilizers             1.1308        nan        nan        nan         nan         nan
+distance                  0.6096      0.185      3.291      0.001       0.247       0.973
+total_gates              -0.0042      0.013     -0.333      0.739      -0.029       0.021
+weighted_gate_count       0.0068      0.008      0.869      0.385      -0.009       0.022
+avg_stabilizer_weight    -1.9583      0.515     -3.801      0.000      -2.968      -0.949
+max_stabilizer_weight     0.0530      0.048      1.095      0.273      -0.042       0.148
+=========================================================================================
+
+McFadden Pseudo R-squared: 0.4249

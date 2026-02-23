@@ -1,2 +1,5 @@
 gymnasium>=0.29.1
 numpy>=1.24.0
+llama-index-core
+github-copilot-sdk
+python-dotenv

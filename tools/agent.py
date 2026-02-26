@@ -8,6 +8,7 @@ from copilot.tools import define_tool
 from copilot import CopilotClient
 from copilot.generated.session_events import SessionEventType, SessionEvent
 from pydantic import BaseModel, Field
+from pathlib import Path
 
 from check_stabilizers import check_stabilizers
 from check_error_propagation import check_fault_tolerance
@@ -293,8 +294,8 @@ def generate_optimized_circuit(
     initial_circuit: str,
     *,
     model: str,
-    attempts: int = 5,
-    timeout: int | None = 600,
+    attempts: int = 10,
+    timeout: int | None = 6000,
 ) -> stim.Circuit | None:
     """
     Optimize an existing Clifford circuit while preserving stabilizers.
@@ -304,8 +305,9 @@ def generate_optimized_circuit(
     stabilizers_str = ", ".join(stabilizers)
     baseline_metrics = compute_metrics(initial_circuit).as_dict()
 
-    agent_files_dir = os.path.join("data", model, "agent_files")
-    os.makedirs(agent_files_dir, exist_ok=True)
+    repo_root = Path(__file__).resolve().parents[1] 
+    agent_files_dir = repo_root / "rq3" / "data" / "agent_files"
+    agent_files_dir.mkdir(parents=True, exist_ok=True)
 
     result = None
 
@@ -397,7 +399,7 @@ def generate_optimized_circuit(
     # -------------------------------------------------
     # Prompt Construction
     # -------------------------------------------------
-    with open("rq3/optimizer_prompt.txt", "r") as f:
+    with open("rq3/optimizer_prompt2.txt", "r") as f:
         prompt_template = f.read()
 
     prompt = prompt_template.format(

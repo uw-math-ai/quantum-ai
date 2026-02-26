@@ -1,0 +1,80 @@
+Task: generate a valid Stim circuit (see https://github.com/quantumlib/Stim/blob/main/doc/file_format_stim_circuit.md) that is a STRICT improvement of the baseline circuit while preserving the same stabilizer behavior.
+
+Target stabilizers (must all be preserved): 
+```
+{stabilizers_str}
+```
+
+Baseline circuit (optimize this while preserving stabilizers): 
+```
+{initial_circuit}
+```
+
+Baseline metrics:
+- cx_count = {cx_count}
+- volume = {volume}
+- depth = {depth}
+
+Requirements:
+- Output must be valid Stim text and parse with stim.Circuit.
+- Use the same qubit indexing as the baseline circuit (temporary internal relabeling is allowed only if mapped back before tool calls/final submission).
+- The candidate must preserve ALL stabilizers in {stabilizers_str} according to check_stabilizers_tool.
+- The candidate must be STRICTLY more optimal than the baseline using lexicographic order on:
+   1. cx_count (primary)
+   2. volume (secondary)
+   3. depth (tertiary)
+- Do NOT introduce measurements, resets, or noise unless they already exist in the baseline and are required.
+- The final submission must be a single circuit text body (no Markdown fences, no prose, no extra markers).
+
+Optimization rule (lexicographic):
+- Candidate is strictly better if:
+   - cand.cx_count < base.cx_count, OR
+   - cand.cx_count == base.cx_count AND cand.volume < base.volume, OR
+   - cand.cx_count == base.cx_count AND cand.volume == base.volume AND cand.depth < base.depth.
+- If all three metrics are equal, it is NOT an improvement.
+
+## Strategies to try (individually and optionally in combinations)
+Try these as a toolbox, not a fixed single path. Use judgment to determine which strategies are valid.
+- Tableau/stabilizer Gaussian-elimination-based synthesis (baseline / resynthesis)
+- Reordering of stabilizer generators before synthesis
+- Qubit permutation / relabeling search (random and heuristic)
+- Local Clifford normalization / canonicalization before synthesis
+- Graph-state / LC-equivalent transformations (if applicable), then synthesize and map back
+- CNOT network resynthesis / cancellation passes
+- Gate commutation + cancellation + peephole simplification
+- Layering / scheduling improvements to reduce depth
+- Randomized restarts (different seeds/orderings)
+- Hybrid approach: synthesize -> simplify -> resynthesize sub-blocks -> simplify again
+
+Search policy:
+- Try simple/local rewrites first, then structural resynthesis methods, then hybrids.
+- Try strategies individually before combinations.
+- Keep only valid improvements.
+- Never treat metric improvement as proof of correctness; stabilizer verification is required first.
+
+
+Tooling / attempt-budget rules:
+- You may call check_stabilizers_tool to test a candidate circuit. Check stabilizers BEFORE evaluating optimization.
+- You may call evaluate_optimization to compare candidate metrics to the baseline.
+- IMPORTANT: each call to evaluate_optimization counts as ONE attempt.
+- You have a total budget of {attempts} attempt(s) = at most {attempts} calls to evaluate_optimization.
+- Keep track of the best VALID candidate seen so far:
+  - Valid = preserves all stabilizers.
+  - Best = strictly more optimal than the baseline by the lexicographic rule.
+- Do NOT call or rely on repository tools besides check_stabilizers_tool, evaluate_optimization, and final_circuit.
+- If you need temporary/scratch files, write them into: {agent_files_dir}
+
+Required workflow:
+1. Start from the baseline circuit as the current reference.
+2. Propose a candidate rewrite (from baseline or best-so-far).
+3. Call check_stabilizers_tool on the candidate.
+4. If all stabilizers pass, call evaluate_optimization (this uses one attempt).
+5. If strictly better, update best-so-far.
+6. Repeat until attempts are exhausted or no further progress is likely.
+7. Call final_circuit with the BEST strictly-improved valid candidate found.
+8. If no strictly-improved valid candidate is found, still call final_circuit with the best valid candidate attempt (the harness may reject it).
+
+Output / submission rules:
+- Do NOT output Markdown code fences, prose, or extra markers.
+- When ready, call final_circuit with ONLY the raw Stim circuit text in the 'stim_circuit' field.
+- Do not end the conversation without calling final_circuit.

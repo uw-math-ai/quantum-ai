@@ -1,11 +1,12 @@
-# circuit_metrics.py
+# circuit_metric.py
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, Iterator, Union
+
 import stim
 
-DEFAULT_VOLUME_GATES = frozenset({"H", "S", "X", "Z", "CX"})
+DEFAULT_VOLUME_GATES = frozenset({"H", "S", "X", "Z", "CX", "CZ"})
 
 
 @dataclass(frozen=True)
@@ -26,8 +27,21 @@ class CircuitMetrics:
         }
 
 
-def _iter_instructions(circuit: stim.Circuit) -> Iterable[stim.CircuitInstruction]:
-    yield from circuit
+StimItem = Union[stim.CircuitInstruction, stim.CircuitRepeatBlock]
+
+
+def _iter_instructions(circuit: stim.Circuit) -> Iterator[stim.CircuitInstruction]:
+    """
+    Iterates over instructions in a circuit, recursively expanding REPEAT blocks.
+    """
+    for item in circuit:
+        # Stim yields either CircuitInstruction or CircuitRepeatBlock.
+        if isinstance(item, stim.CircuitRepeatBlock):
+            body = item.body_copy()
+            for _ in range(item.repeat_count):
+                yield from _iter_instructions(body)
+        else:
+            yield item
 
 
 def _qubit_targets(inst: stim.CircuitInstruction) -> list[int]:
@@ -37,6 +51,8 @@ def _qubit_targets(inst: stim.CircuitInstruction) -> list[int]:
 def compute_metrics(
     circuit_text: str,
     volume_gates: frozenset[str] = DEFAULT_VOLUME_GATES,
+    *,
+    tick_is_barrier: bool = True,
 ) -> CircuitMetrics:
     circuit = stim.Circuit(circuit_text)
 
@@ -45,47 +61,62 @@ def compute_metrics(
     one_qubit = 0
     two_qubit = 0
 
-    # greedy depth: last layer per qubit
+    # Greedy depth: last scheduled layer per qubit.
     last_layer: dict[int, int] = {}
     depth = 0
+
+    # If tick_is_barrier, enforce that operations after a TICK occur strictly after prior layers.
+    tick_floor = 1
 
     for inst in _iter_instructions(circuit):
         name = inst.name
 
-        if name in {"TICK", "QUBIT_COORDS", "SHIFT_COORDS", "DETECTOR", "OBSERVABLE_INCLUDE"}:
+        if name in {"QUBIT_COORDS", "SHIFT_COORDS", "DETECTOR", "OBSERVABLE_INCLUDE"}:
+            continue
+
+        if name == "TICK":
+            if tick_is_barrier:
+                # Next ops must start after everything scheduled so far.
+                tick_floor = max(tick_floor, depth + 1)
             continue
 
         qubits = _qubit_targets(inst)
         if not qubits:
             continue
 
-        # Expand into per-gate operations (important for Stim "packed" instructions)
+        # Expand into per-gate operations (important for Stim "packed" instructions).
         ops: list[tuple[int, ...]] = []
-        if name == "CX":
-            # CX targets come in pairs
+        if name in {"CX", "CZ", "SWAP"}:
             if len(qubits) % 2 != 0:
-                raise ValueError(f"Malformed CX instruction with odd #qubit targets: {qubits}")
+                raise ValueError(
+                    f"Malformed {name} instruction with odd #qubit targets: {qubits}"
+                )
             for i in range(0, len(qubits), 2):
                 ops.append((qubits[i], qubits[i + 1]))
         else:
             for q in qubits:
                 ops.append((q,))
 
-        # Counting
+        # Counting: one-/two-qubit counts are structural; volume is gate-set-defined.
+        for op in ops:
+            if len(op) == 1:
+                one_qubit += 1
+            elif len(op) == 2:
+                two_qubit += 1
+
         if name in volume_gates:
             volume += len(ops)
             if name == "CX":
                 cx_count += len(ops)
-                two_qubit += len(ops)
-            else:
-                one_qubit += len(ops)
 
-        # Depth scheduling per op (lets disjoint ops in same instruction parallelize)
+        # Depth scheduling per op (lets disjoint ops in same instruction parallelize).
         for op in ops:
             uq = set(op)
-            layer = 1
+
+            layer = tick_floor if tick_is_barrier else 1
             for q in uq:
                 layer = max(layer, last_layer.get(q, 0) + 1)
+
             for q in uq:
                 last_layer[q] = layer
             depth = max(depth, layer)
@@ -103,18 +134,27 @@ def is_strictly_more_optimal(
     candidate_text: str,
     baseline_text: str,
     volume_gates: frozenset[str] = DEFAULT_VOLUME_GATES,
+    *,
+    tick_is_barrier: bool = True,
 ) -> tuple[bool, dict]:
-    cand = compute_metrics(candidate_text, volume_gates=volume_gates)
-    base = compute_metrics(baseline_text, volume_gates=volume_gates)
-
-    better = (
-        (cand.cx_count, cand.volume, cand.depth)
-        < (base.cx_count, base.volume, base.depth)
+    cand = compute_metrics(
+        candidate_text,
+        volume_gates=volume_gates,
+        tick_is_barrier=tick_is_barrier,
     )
+    base = compute_metrics(
+        baseline_text,
+        volume_gates=volume_gates,
+        tick_is_barrier=tick_is_barrier,
+    )
+
+    better = (cand.cx_count, cand.volume, cand.depth) < (base.cx_count, base.volume, base.depth)
 
     return better, {
         "candidate": cand.as_dict(),
         "baseline": base.as_dict(),
         "better": better,
         "comparison_rule": "lexicographic: (cx_count, volume, depth)",
+        "tick_is_barrier": tick_is_barrier,
+        "volume_gates": sorted(volume_gates),
     }

@@ -10,11 +10,6 @@ Baseline circuit (optimize this while preserving stabilizers):
 {initial_circuit}
 ```
 
-Baseline metrics:
-- cx_count = {cx_count}
-- volume = {volume}
-- depth = {depth}
-
 Requirements:
 - Output must be valid Stim text and parse with stim.Circuit.
 - Use the same qubit indexing as the baseline circuit (temporary internal relabeling is allowed only if mapped back before tool calls/final submission).

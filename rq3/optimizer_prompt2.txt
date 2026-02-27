@@ -38,8 +38,6 @@ Try these as a toolbox, not a fixed single path. Use judgment to determine which
 - CNOT network resynthesis / cancellation passes
 - Gate commutation + cancellation + peephole simplification
 - Layering / scheduling improvements to reduce depth
-- Randomized restarts (different seeds/orderings)
-- Hybrid approach: synthesize -> simplify -> resynthesize sub-blocks -> simplify again
 
 Search policy:
 - Try simple/local rewrites first, then structural resynthesis methods, then hybrids.

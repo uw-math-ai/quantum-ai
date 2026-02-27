@@ -9,6 +9,8 @@ from copilot import CopilotClient
 from copilot.generated.session_events import SessionEventType, SessionEvent
 from pydantic import BaseModel, Field
 from pathlib import Path
+import json
+
 
 from check_stabilizers import check_stabilizers
 from check_error_propagation import check_fault_tolerance
@@ -405,10 +407,8 @@ def generate_optimized_circuit(
     prompt = prompt_template.format(
         stabilizers_str=stabilizers_str,
         initial_circuit=initial_circuit,
-        cx_count=baseline_metrics["cx_count"],
-        volume=baseline_metrics["volume"],
-        depth=baseline_metrics["depth"],
         attempts=attempts,
+        agent_files_dir=str(agent_files_dir),
     )
 
     print(prompt)
@@ -446,55 +446,131 @@ def main():
 
 
 
-def main_optimizer():
-    # ---- Target stabilizers (same set you used above, or swap as needed) ----
-    stabilizers = [
-        "XZZXI",
-        "IXZZX",
-        "XIXZZ",
-        "ZXIXZ",
-    ]
+def iter_jsonl(path: Path):
+    """Yield dict per JSONL line, skipping blanks."""
+    with path.open("r", encoding="utf-8") as f:
+        for line_num, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                yield line_num, json.loads(line)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Bad JSON on line {line_num}: {e}") from e
 
-    # ---- Pick the model + run settings ----
+
+def normalize_stim_text(stim_text: str) -> str:
+    """
+    Your dataset stores circuits with '\\n'. Convert to real newlines.
+    If it's already real newlines, this is harmless.
+    """
+    return stim_text.replace("\\n", "\n").strip() + "\n"
+
+
+def main_optimizer():
+    dataset_path = Path("data") / "circuit_dataset.jsonl"
+    if not dataset_path.exists():
+        raise FileNotFoundError(f"Dataset not found: {dataset_path.resolve()}")
+
     model = "claude-opus-4.6"
     attempts = 10
     timeout = 6000
 
-    # ---- Provide an initial/baseline circuit to optimize ----
-    # Option A: generate a baseline circuit first (recommended for quick testing)
-    # baseline_circuit = generate_state_prep(
-    #     stabilizers,
-    #     model=model,
-    #     attempts=attempts,
-    #     timeout=timeout,
-    # )
-    # if baseline_circuit is None:
-    #     print("Failed to generate baseline circuit; cannot optimize.")
-    #     return
+    
+    out_dir = Path("rq3") / "data" / model
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "optimized_results.jsonl"
 
-    initial_circuit_text = "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2"
+    total = 0
+    improved = 0
+    failed = 0
 
-    # Option B: if you already have a baseline circuit string, use it instead:
-    # initial_circuit_text = """H 0
-    # CX 0 1
-    # ..."""
+    with out_path.open("w", encoding="utf-8") as out_f:
+        for line_num, rec in iter_jsonl(dataset_path):
+            total += 1
 
-    # ---- Run optimizer ----
-    optimized = generate_optimized_circuit(
-        stabilizers=stabilizers,
-        initial_circuit=initial_circuit_text,
-        model=model,
-        attempts=attempts,
-        timeout=timeout,
-    )
+            source = rec.get("source_code", f"line_{line_num}")
+            stabilizers = rec["input_stabilizers"]
+            baseline_text = normalize_stim_text(rec["output_circuit"])
 
-    if optimized is None:
-        print("No strictly better circuit found.")
-        print("Baseline metrics:", compute_metrics(initial_circuit_text).as_dict())
-        return
+            # sanity: baseline parses
+            try:
+                _ = stim.Circuit(baseline_text)
+            except Exception as e:
+                failed += 1
+                out_f.write(json.dumps({
+                    "line": line_num,
+                    "source_code": source,
+                    "status": "baseline_parse_error",
+                    "error": str(e),
+                }) + "\n")
+                continue
 
-    print("Optimized circuit metrics:", compute_metrics(str(optimized)).as_dict())
-    print(optimized)
+            base_metrics = compute_metrics(baseline_text).as_dict()
+            print(f"\n[{total}] {source} | base: {base_metrics}")
+
+            try:
+                opt_circ = generate_optimized_circuit(
+                    stabilizers=stabilizers,
+                    initial_circuit=baseline_text,
+                    model=model,
+                    attempts=attempts,
+                    timeout=timeout,
+                )
+            except Exception as e:
+                failed += 1
+                out_f.write(json.dumps({
+                    "line": line_num,
+                    "source_code": source,
+                    "status": "optimizer_exception",
+                    "error": str(e),
+                    "baseline_metrics": base_metrics,
+                }) + "\n")
+                continue
+
+            if opt_circ is None:
+                # Your harness may return None if no result ever accepted
+                out_f.write(json.dumps({
+                    "line": line_num,
+                    "source_code": source,
+                    "status": "no_result",
+                    "baseline_metrics": base_metrics,
+                }) + "\n")
+                continue
+
+            opt_text = str(opt_circ)
+            opt_metrics = compute_metrics(opt_text).as_dict()
+
+            is_strict = (
+                (opt_metrics["cx_count"], opt_metrics["volume"], opt_metrics["depth"])
+                < (base_metrics["cx_count"], base_metrics["volume"], base_metrics["depth"])
+            )
+
+            if is_strict:
+                improved += 1
+                status = "improved"
+            else:
+                status = "not_strictly_better"
+
+            print(f"    -> opt:  {opt_metrics}  [{status}]")
+
+            out_f.write(json.dumps({
+                "line": line_num,
+                "source_code": source,
+                "d": rec.get("d"),
+                "permutation": rec.get("permutation"),
+                "input_stabilizers": stabilizers,
+                "baseline_circuit": baseline_text,
+                "optimized_circuit": opt_text,
+                "baseline_metrics": base_metrics,
+                "optimized_metrics": opt_metrics,
+                "status": status,
+                "model": model,
+                "attempts": attempts,
+            }) + "\n")
+
+    print(f"\nDONE. total={total} improved={improved} failed={failed} results={out_path.resolve()}")
+
 #%%
 if __name__ == "__main__":
     # main()

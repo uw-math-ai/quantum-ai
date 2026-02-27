@@ -13,7 +13,7 @@ Baseline circuit (optimize this while preserving stabilizers):
 Requirements:
 - Output must be valid Stim text and parse with stim.Circuit.
 - Use the same qubit indexing as the baseline circuit (temporary internal relabeling is allowed only if mapped back before tool calls/final submission).
-- The candidate must preserve ALL stabilizers in {stabilizers_str} according to check_stabilizers_tool.
+- The candidate must preserve ALL stabilizers in the target stabilizers according to check_stabilizers_tool.
 - The candidate must be STRICTLY more optimal than the baseline using lexicographic order on:
    1. cx_count (primary)
    2. volume (secondary)
@@ -38,12 +38,6 @@ Try these as a toolbox, not a fixed single path. Use judgment to determine which
 - CNOT network resynthesis / cancellation passes
 - Gate commutation + cancellation + peephole simplification
 - Layering / scheduling improvements to reduce depth
-
-Search policy:
-- Try simple/local rewrites first, then structural resynthesis methods, then hybrids.
-- Try strategies individually before combinations.
-- Keep only valid improvements.
-- Never treat metric improvement as proof of correctness; stabilizer verification is required first.
 
 
 Tooling / attempt-budget rules:

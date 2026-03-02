@@ -1,7 +1,7 @@
 """
 LATS (Language Agent Tree Search) for Quantum Circuit Generation.
 
-Uses llama-index's official LATS implementation with tools that wrap
+Uses llama-index's deprecated but functional LATSAgentWorker with tools that wrap
 the CircuitBuilderEnv gym environment.
 
 Source paper: https://arxiv.org/pdf/2310.04406v2.pdf
@@ -10,9 +10,13 @@ Source paper: https://arxiv.org/pdf/2310.04406v2.pdf
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import warnings
 
 import numpy as np
 import gymnasium as gym
+
+# Suppress deprecation warnings from llama-index
+warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 # Add parent directories to path
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -29,7 +33,7 @@ import mqt.qecc.codes as qecc
 
 class CircuitBuilderLATSAgent:
     """
-    LATS agent wrapper for CircuitBuilderEnv using llama-index's official implementation.
+    LATS agent wrapper for CircuitBuilderEnv using llama-index's LATSAgentWorker.
     
     Creates tools that interface with the gym environment and uses LATS
     for tree search-based exploration.
@@ -376,10 +380,32 @@ def run_lats_example():
         max_rollouts=10,
         verbose=True
     )
+
+    with open("./RL/LATS/prompt.txt", "r") as f:
+        custom_prompt = f.read()
+        custom_prompt = custom_prompt.format(
+            stabilizers_str=", ".join(code.stabs_as_pauli_strings()),
+            qubits_count=env_config.num_data_qubits,
+            max_data_qubit=env_config.num_data_qubits - 1,
+            max_flag_qubit=env.total_qubits - 1,
+            one_qubit_gates=", ".join(env_config.one_qubit_gates),
+            two_qubit_gates=", ".join(env_config.two_qubit_gates),
+            max_gates=env_config.max_gates,
+            num_data_qubits=env_config.num_data_qubits,
+            num_flag_qubits=env_config.num_flag_qubits,
+            target_stab_count=len(code.stabs_as_pauli_strings()),
+            step_penalty=env_config.rewards.step_penalty,
+            stabs_preserved_score_scale=env_config.rewards.stabs_preserved_score_scale,
+            ft_score_scale=env_config.rewards.ft_score_scale,
+            success_reward=env_config.rewards.success_reward,
+            failure_penalty=env_config.rewards.failure_penalty,
+            code_distance=code.distance if code.distance is not None else 1,
+            ft_score_p=env_config.rewards.ft_score_p,
+        )
     
     # Run agent
     print("Starting LATS agent...")
-    results = agent.run()
+    results = agent.run(custom_prompt)
     
     print("\n" + "="*60)
     print("RESULTS")

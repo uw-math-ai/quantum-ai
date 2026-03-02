@@ -1,15 +1,16 @@
-import json
+def get_stabs_for_tool():
+    path = r'data\gemini-3-pro-preview\agent_files\stabilizers_fixed_final.txt'
+    with open(path, 'r') as f:
+        lines = [line.strip() for line in f if line.strip()]
+    
+    indices = [0, 34, 43, 51, 109, 152]
+    selected = [lines[i] for i in indices]
+    
+    # Also print the circuit content to a file so I can copy it easily if needed?
+    # No, I just need the text.
+    
+    print("STABILIZERS_FOR_TOOL")
+    print(selected)
 
-with open(r'data/gemini-3-pro-preview/agent_files/circuit_optimized.stim', 'r') as f:
-    circuit_str = f.read()
-
-with open(r'data/gemini-3-pro-preview/agent_files/stabs.txt', 'r') as f:
-    stabs = [line.strip() for line in f if line.strip()]
-
-# Format as JSON object for the tool
-data = {
-    'circuit': circuit_str,
-    'stabilizers': stabs
-}
-
-print(json.dumps(data))
+if __name__ == "__main__":
+    get_stabs_for_tool()

@@ -1,0 +1,16 @@
+Agent,Code Name,Qubits,Generators,Distance,Tensor Product
+Claude Opus 4.6,(Hex Color Code d=3) * (Golay),161,160,21,Yes
+Claude Opus 4.6,(Hypercube Code l=1) * (Rotated Surface Code d=5),150,146,10,Yes
+Claude Opus 4.6,(Perfect 5-Qubit Code) * (Rotated Surface Code d=5),125,124,15,Yes
+Claude Opus 4.6,(Steane) * (Hex Color Code d=5),133,132,15,Yes
+GPT-5.2,(Square Octagon Color Code d=3) * (Golay),161,160,21,Yes
+Gemini 3 Pro Preview,(Carbon) * (Tetrahedral),180,178,12,Yes
+Gemini 3 Pro Preview,(Hex Color Code d=5) * (Shor),171,170,15,Yes
+Gemini 3 Pro Preview,(Iceberg Code m=2) * (Rotated Surface Code d=5),100,98,10,Yes
+Gemini 3 Pro Preview,(Iceberg Code m=4) * (Golay),184,178,14,Yes
+Gemini 3 Pro Preview,(Perfect 5-Qubit Code) * (Hex Color Code d=7),185,184,21,Yes
+Gemini 3 Pro Preview,(Shor) * (Hex Color Code d=5),171,170,15,Yes
+Gemini 3 Pro Preview,(Shor) * (Square Octagon Color Code d=5),153,152,15,Yes
+Gemini 3 Pro Preview,(Square Octagon Color Code d=3) * (Rotated Surface Code d=5),175,174,15,Yes
+Gemini 3 Pro Preview,(Square Octagon Color Code d=7) * (Perfect 5-Qubit Code),155,154,21,Yes
+Gemini 3 Pro Preview,(Steane) * (Golay),161,160,21,Yes

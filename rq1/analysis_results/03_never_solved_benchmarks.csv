@@ -1,0 +1,15 @@
+Code Name,Qubits,Generators,Distance,Tensor Product,Max Weight
+(Iceberg Code m=2) * (Hex Color Code d=7),148,146,14,Yes,28
+(Perfect 5-Qubit Code) * (Square Octagon Color Code d=7),155,154,21,Yes,28
+(Hypercube Code l=2) * (Perfect 5-Qubit Code),180,164,12,Yes,60
+(Hex Color Code d=5) * (Rotated Surface Code d=3),171,170,15,Yes,18
+(Rotated Surface Code d=3) * (Hex Color Code d=5),171,170,15,Yes,20
+(Steane) * (Rotated Surface Code d=5),175,174,15,Yes,28
+(Hex Color Code d=3) * (Rotated Surface Code d=5),175,174,15,Yes,28
+(Rotated Surface Code d=5) * (Steane),175,174,15,Yes,12
+(Rotated Surface Code d=5) * (Square Octagon Color Code d=3),175,174,15,Yes,12
+(Iceberg Code m=3) * (Square Octagon Color Code d=7),186,182,14,Yes,42
+(Hypercube Code l=1) * (Square Octagon Color Code d=7),186,182,14,Yes,42
+(Hex Color Code d=7) * (Perfect 5-Qubit Code),185,184,21,Yes,30
+(Iceberg Code m=2) * (Rotated Surface Code d=7),196,194,14,Yes,36
+(4-Qubit Detector Code) * (Rotated Surface Code d=7),196,194,14,Yes,36

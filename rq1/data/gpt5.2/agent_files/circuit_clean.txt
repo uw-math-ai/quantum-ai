@@ -1,0 +1,5 @@
+Padding stabilizer 8 (length 151) with 2 'I's at the BEGINNING
+Padding stabilizer 80 (length 151) with 2 'I's at the BEGINNING
+Circuit generated successfully.
+Verifying locally...
+Local verification PASSED.

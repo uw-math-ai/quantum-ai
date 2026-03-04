@@ -24,8 +24,7 @@ Requirements:
 Optimization rule (lexicographic):
 - Candidate is strictly better if:
    - cand.cx_count < base.cx_count, OR
-   - cand.cx_count == base.cx_count AND cand.volume < base.volume, OR
-   - cand.cx_count == base.cx_count AND cand.volume == base.volume AND cand.depth < base.depth.
+   - cand.cx_count == base.cx_count AND cand.volume < base.volume
 - If all three metrics are equal, it is NOT an improvement.
 
 ## Strategies to try (individually and optionally in combinations)
@@ -57,10 +56,9 @@ Required workflow:
 1. Start from the baseline circuit as the current reference.
 2. Propose a candidate rewrite (from baseline or best-so-far).
 3. Call evaluate_optimization on the candidate — this checks stabilizers AND metrics in one step (uses one attempt).
-4. If valid == true AND better == true, update best-so-far.
-5. Repeat until attempts are exhausted or no further progress is likely.
-6. Call final_circuit with the BEST strictly-improved valid candidate found.
-7. If no strictly-improved valid candidate is found, still call final_circuit with the best valid candidate attempt (the harness may reject it).
+4. If valid == true AND better == true, immediately call final_circuit with that candidate and stop.
+5. If not, repeat until attempts are exhausted.
+6. If no strictly-improved valid candidate is found after all attempts, still call final_circuit with the best valid candidate attempt (the harness may reject it).
 
 Output / submission rules:
 - Do NOT output Markdown code fences, prose, or extra markers.

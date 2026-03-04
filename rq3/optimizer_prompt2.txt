@@ -13,7 +13,7 @@ Baseline circuit (optimize this while preserving stabilizers):
 Requirements:
 - Output must be valid Stim text and parse with stim.Circuit.
 - Use the same qubit indexing as the baseline circuit (temporary internal relabeling is allowed only if mapped back before tool calls/final submission).
-- The candidate must preserve ALL stabilizers in the target stabilizers according to check_stabilizers_tool.
+- The candidate must preserve ALL stabilizers in the target stabilizers according to evaluate_optimization (valid must be true).
 - The candidate must be STRICTLY more optimal than the baseline using lexicographic order on:
    1. cx_count (primary)
    2. volume (secondary)
@@ -41,25 +41,26 @@ Try these as a toolbox, not a fixed single path. Use judgment to determine which
 
 
 Tooling / attempt-budget rules:
-- You may call check_stabilizers_tool to test a candidate circuit. Check stabilizers BEFORE evaluating optimization.
-- You may call evaluate_optimization to compare candidate metrics to the baseline.
-- IMPORTANT: each call to evaluate_optimization counts as ONE attempt.
+- You may call evaluate_optimization to test a candidate circuit. It checks BOTH stabilizer preservation AND optimization metrics in a single call.
+  - The response includes 'valid' (true/false), 'preserved_stabilizers' (int), and 'better' (true/false).
+  - A candidate is VALID only when valid == true (all stabilizers preserved).
+  - A candidate is an IMPROVEMENT only when valid == true AND better == true.
+- IMPORTANT: each candidate circuit counts as ONE attempt.
 - You have a total budget of {attempts} attempt(s) = at most {attempts} calls to evaluate_optimization.
 - Keep track of the best VALID candidate seen so far:
-  - Valid = preserves all stabilizers.
-  - Best = strictly more optimal than the baseline by the lexicographic rule.
-- Do NOT call or rely on repository tools besides check_stabilizers_tool, evaluate_optimization, and final_circuit.
+  - Valid = preserves all stabilizers (valid == true).
+  - Best = strictly more optimal than the baseline by the lexicographic rule (better == true).
+- Do NOT call or rely on repository tools besides evaluate_optimization and final_circuit.
 - If you need temporary/scratch files, write them into: {agent_files_dir}
 
 Required workflow:
 1. Start from the baseline circuit as the current reference.
 2. Propose a candidate rewrite (from baseline or best-so-far).
-3. Call check_stabilizers_tool on the candidate.
-4. If all stabilizers pass, call evaluate_optimization (this uses one attempt).
-5. If strictly better, update best-so-far.
-6. Repeat until attempts are exhausted or no further progress is likely.
-7. Call final_circuit with the BEST strictly-improved valid candidate found.
-8. If no strictly-improved valid candidate is found, still call final_circuit with the best valid candidate attempt (the harness may reject it).
+3. Call evaluate_optimization on the candidate — this checks stabilizers AND metrics in one step (uses one attempt).
+4. If valid == true AND better == true, update best-so-far.
+5. Repeat until attempts are exhausted or no further progress is likely.
+6. Call final_circuit with the BEST strictly-improved valid candidate found.
+7. If no strictly-improved valid candidate is found, still call final_circuit with the best valid candidate attempt (the harness may reject it).
 
 Output / submission rules:
 - Do NOT output Markdown code fences, prose, or extra markers.

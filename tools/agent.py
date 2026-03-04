@@ -27,7 +27,6 @@ class CircuitParam(BaseModel):
 
 class CheckStabilizersParam(BaseModel):
     circuit: str = Field(description="The Stim circuit description as a string")
-    stabilizers: list[str] = Field(description="List of stabilizer strings (e.g. ['XXXX', 'ZIZI'])")
 
 
 class FinalCircuitParam(BaseModel):
@@ -256,7 +255,7 @@ def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1,
         except Exception as e:
             return {"error": f"Failed to parse circuit: {e}"}
 
-        result = check_stabilizers(params.circuit, params.stabilizers)
+        result = check_stabilizers(params.circuit, stabilizers)
         print("".join(['.' if s else '!' for s in result.values()]))
         preserved = sum(1 for ok in result.values() if ok)
         return {"results": result, "preserved": preserved, "total": len(result)}
@@ -288,7 +287,6 @@ def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1,
 
 class OptimizeParam(BaseModel):
     candidate: str = Field(description="Candidate Stim circuit")
-    baseline: str = Field(description="Baseline Stim circuit")
 
 
 def generate_optimized_circuit(
@@ -298,10 +296,16 @@ def generate_optimized_circuit(
     model: str,
     attempts: int = 10,
     timeout: int | None = 6000,
-) -> stim.Circuit | None:
+) -> dict:
     """
     Optimize an existing Clifford circuit while preserving stabilizers.
     Uses lexicographic rule: (cx_count, volume, depth).
+
+    Returns:
+        dict with keys:
+            'circuit': stim.Circuit | None  – the accepted optimized circuit, or None if none accepted.
+            'evaluations': list[dict]       – intermediate results from each evaluate_optimization call,
+                each containing 'circuit', 'preserved_stabilizers', 'candidate', 'baseline', 'better'.
     """
 
     stabilizers_str = ", ".join(stabilizers)
@@ -312,56 +316,110 @@ def generate_optimized_circuit(
     agent_files_dir.mkdir(parents=True, exist_ok=True)
 
     result = None
+    evaluations = []
 
     @define_tool(description=(
-        "Check whether a candidate circuit preserves all stabilizers.\n"
-        "Returns dictionary of stabilizer -> bool and counts."
+        "Evaluate a candidate Stim circuit for correctness AND optimization.\n\n"
+        "This is the primary evaluation tool. It performs two checks in order:\n\n"
+        "1. STABILIZER PRESERVATION – simulates the circuit with a TableauSimulator\n"
+        "   to verify that every target stabilizer has expectation +1. If any\n"
+        "   stabilizer is not preserved the circuit is INVALID and cannot be\n"
+        "   submitted via final_circuit.\n\n"
+        "2. OPTIMIZATION COMPARISON – compares the candidate against the baseline\n"
+        "   using a strict lexicographic rule on three integer metrics:\n"
+        "     a. cx_count  – number of CX (CNOT) gates (primary, most important).\n"
+        "     b. volume    – total gate count in the volume gate set\n"
+        "                    (CX, CY, CZ, H, S, SQRT_X, etc.).\n"
+        "     c. depth     – circuit depth (longest chain of dependent gates).\n"
+        "   A candidate is 'strictly better' only when the tuple\n"
+        "   (cand.cx_count, cand.volume, cand.depth) is lexicographically less than\n"
+        "   the baseline tuple. Equal tuples are NOT an improvement.\n\n"
+        "Input:\n"
+        "  - candidate: raw Stim circuit text (no Markdown fences). Must be\n"
+        "    parseable by stim.Circuit.\n\n"
+        "Output (on success):\n"
+        "  {\n"
+        "    'preserved_stabilizers': <int>  (number of stabilizers preserved out of total),\n"
+        "    'valid': true/false             (true when ALL stabilizers are preserved),\n"
+        "    'candidate': { 'cx_count': int, 'volume': int, 'depth': int, ... },\n"
+        "    'baseline':  { 'cx_count': int, 'volume': int, 'depth': int, ... },\n"
+        "    'better': true/false\n"
+        "  }\n\n"
+        "Output (on parse / error): { 'error': <string> }\n\n"
+        "Usage guidance:\n"
+        "  - Call this tool to check every candidate circuit before submitting\n"
+        "    via final_circuit.\n"
+        "  - A circuit must have valid == true AND better == true to be\n"
+        "    accepted by final_circuit.\n"
+        "  - Focus optimization efforts on reducing cx_count first; only then\n"
+        "    try to reduce volume or depth."
     ))
-    def check_stabilizers_tool(params: CheckStabilizersParam) -> dict:
+    def evaluate_optimization(params: OptimizeParam) -> dict:
         try:
-            _ = stim.Circuit(params.circuit)
+            parsed = stim.Circuit(params.candidate)
         except Exception as e:
             return {"error": f"Failed to parse circuit: {e}"}
 
-        results = check_stabilizers(params.circuit, params.stabilizers)
-        preserved = sum(1 for v in results.values() if v)
+        # --- stabilizer check ---
+        stab_results = check_stabilizers(params.candidate, stabilizers)
+        preserved = sum(1 for v in stab_results.values() if v)
+        all_preserved = preserved == len(stab_results)
 
-        print("".join(['.' if v else '!' for v in results.values()]))
+        print("".join(['.' if v else '!' for v in stab_results.values()]))
 
-        return {
-            "results": results,
-            "preserved": preserved,
-            "total": len(results)
+        # --- optimization comparison ---
+        better, info = is_strictly_more_optimal(
+            candidate_text=params.candidate,
+            baseline_text=initial_circuit,
+        )
+
+        cand = info["candidate"]
+        base = info["baseline"]
+
+        print(
+            f"[OPT] CX: {cand['cx_count']} (base {base['cx_count']}), "
+            f"VOL: {cand['volume']} (base {base['volume']}), "
+            f"DEPTH: {cand['depth']} (base {base['depth']}) "
+            f"{'✓' if better else '✗'} | "
+            f"stabilizers: {preserved}/{len(stab_results)} "
+            f"{'✓' if all_preserved else '✗'}"
+        )
+
+        result = {
+            "preserved_stabilizers": preserved,
+            "valid": all_preserved,
+            "candidate": cand,
+            "baseline": base,
+            "better": better,
         }
 
+        # Track this evaluation for intermediate results
+        evaluations.append({
+            "circuit": params.candidate,
+            **result,
+        })
+
+        return result
+    
+
     @define_tool(description=(
-    "Compare candidate circuit to baseline using lexicographic "
-    "optimization rule (cx_count, volume, depth)."
-))
-    def evaluate_optimization(params: OptimizeParam) -> dict:
-        try:
-            better, info = is_strictly_more_optimal(
-                candidate_text=params.candidate,
-                baseline_text=params.baseline,
-            )
-
-            cand = info["candidate"]
-            base = info["baseline"]
-
-            print(
-                f"[OPT] CX: {cand['cx_count']} (base {base['cx_count']}), "
-                f"VOL: {cand['volume']} (base {base['volume']}), "
-                f"DEPTH: {cand['depth']} (base {base['depth']}) "
-                f"{'✓' if better else '✗'}"
-            )
-
-            return info
-
-        except Exception as e:
-            return {"error": str(e)}
-    @define_tool(description=(
-        "Submit final optimized circuit.\n"
-        "Must preserve stabilizers and be strictly more optimal."
+        "Submit the final optimized Stim circuit for acceptance.\n\n"
+        "This tool performs TWO automatic validation checks before accepting:\n"
+        "  1. Stabilizer preservation – every target stabilizer must be satisfied.\n"
+        "  2. Strict optimization     – the circuit must be lexicographically better \n"
+        "     than the baseline on (cx_count, volume, depth).\n\n"
+        "If either check fails the submission is REJECTED and you should keep \n"
+        "iterating. The tool returns a message indicating success or failure.\n\n"
+        "Input:\n"
+        "  - stim_circuit: raw Stim circuit text (no Markdown fences, no prose).\n"
+        "    Must be parseable by stim.Circuit.\n\n"
+        "Output:\n"
+        "  - On success: 'Final optimized circuit accepted. Stop generation.'\n"
+        "  - On failure: a description of what went wrong (stabilizers or metrics).\n\n"
+        "Best practice:\n"
+        "  - Always call evaluate_optimization first to verify that\n"
+        "    valid == true AND better == true before submitting here.\n"
+        "  - Only call this tool with your final answer."
     ))
     def final_circuit(params: FinalCircuitParam) -> str:
         nonlocal result
@@ -393,10 +451,10 @@ def generate_optimized_circuit(
                 f"DEPTH {cand['depth']} vs {base['depth']}"
             )
 
-            return "Circuit is not strictly more optimal. Retry."
+            return "Circuit is NOT strictly more optimal."
 
         result = parsed
-        return "Final optimized circuit accepted. Stop generation."
+        return "Final optimized circuit accepted."
 
     # -------------------------------------------------
     # Prompt Construction
@@ -413,14 +471,16 @@ def generate_optimized_circuit(
 
     print(prompt)
 
-    prompt_agent(prompt, tools=[evaluate_optimization, check_stabilizers_tool, final_circuit], model=model, timeout=timeout)
+    prompt_agent(prompt, tools=[evaluate_optimization, final_circuit], model=model, timeout=timeout)
 
     # Check if result was populated by the agent
     if not result:
-        return None
+        return {"circuit": None, "evaluations": evaluations}
 
     print('done.')
-    return result
+    return {"circuit": result, "evaluations": evaluations}
+
+
 # -------------------------
 # MAIN
 # -------------------------
@@ -510,7 +570,7 @@ def main_optimizer():
             print(f"\n[{total}] {source} | base: {base_metrics}")
 
             try:
-                opt_circ = generate_optimized_circuit(
+                opt_result = generate_optimized_circuit(
                     stabilizers=stabilizers,
                     initial_circuit=baseline_text,
                     model=model,
@@ -528,6 +588,9 @@ def main_optimizer():
                 }) + "\n")
                 continue
 
+            opt_circ = opt_result["circuit"]
+            intermediate_evaluations = opt_result["evaluations"]
+
             if opt_circ is None:
                 # Your harness may return None if no result ever accepted
                 out_f.write(json.dumps({
@@ -535,6 +598,7 @@ def main_optimizer():
                     "source_code": source,
                     "status": "no_result",
                     "baseline_metrics": base_metrics,
+                    "evaluations": intermediate_evaluations,
                 }) + "\n")
                 continue
 
@@ -567,6 +631,7 @@ def main_optimizer():
                 "status": status,
                 "model": model,
                 "attempts": attempts,
+                "evaluations": intermediate_evaluations,
             }) + "\n")
 
     print(f"\nDONE. total={total} improved={improved} failed={failed} results={out_path.resolve()}")

@@ -153,15 +153,28 @@ def check_error_propagation(circuit: str, data_qubits: list[int], flag_qubits: l
                 })
     return results
 
-def check_fault_tolerance(circuit: str, data_qubits: list[int], flag_qubits: list[int]) -> tuple[list, bool]:
+# def check_fault_tolerance(circuit: str, data_qubits: list[int], flag_qubits: list[int], distance: int) -> tuple[list, bool]:
+#     '''Check if the circuit is fault-tolerant against single-qubit Pauli faults.
+#     A circuit is fault-tolerant if:
+#         - Every single-qubit Pauli fault causes at most one data qubit error without flagging.
+#         - Every single-qubit Pauli fault that causes more than one data qubit error causes at least one flag qubit to have an X error.
+#     '''
+#     results = check_error_propagation(circuit, data_qubits, flag_qubits)
+#     for r in results:
+#         if r["data_weight"] > (distance - 1) // 2 and r["flag_weight"] < 1:
+#             return results, False
+#     return results, True
+
+def check_fault_tolerance(circuit: str, data_qubits: list[int], flag_qubits: list[int], d: int = 3) -> tuple[list, bool]:
     '''Check if the circuit is fault-tolerant against single-qubit Pauli faults.
     A circuit is fault-tolerant if:
         - Every single-qubit Pauli fault causes at most one data qubit error without flagging.
         - Every single-qubit Pauli fault that causes more than one data qubit error causes at least one flag qubit to have an X error.
     '''
     results = check_error_propagation(circuit, data_qubits, flag_qubits)
+    threshold = (d - 1) // 2
     for r in results:
-        if r["data_weight"] > 1 and r["flag_weight"] < 1:
+        if r["data_weight"] > threshold and r["flag_weight"] < 1:
             return results, False
     return results, True
 
@@ -193,13 +206,41 @@ if __name__ == "__main__":
     all_qubits = data_qubits + flag_qubits
 
     # Stim circuit
-    circuit = """
-        CX 0 1
-        CX 1 2
-        CX 2 3
-    """
+    # circuit = """
+    #     CX 0 1
+    #     CX 1 2
+    #     CX 2 3
+    # """
+    # circuit = """
+    # H 5 6 7
+    # CX 2 0 0 2 2 0
+    # H 0 4
+    # CX 0 3 0 4 5 0
+    # H 2
+    # CX 2 0 3 1 1 3 3 1 6 1
+    # H 1 2 4
+    # CX 1 2 1 4
+    # H 3
+    # CX 3 1 7 3
+    # H 3
+    # CX 2 3
+    # H 4
+    # CX 4 2 4 3 3 4 4 3
+    # H 3
+    # CX 3 4
+    # H 4
+    # CX 4 3
+    # H 2
+    # S 2 2
+    # H 2
+    # S 0 0 2 2
+    # H 5 6 7
+    # M 5 6 7
+    # """
 
     results = check_error_propagation(circuit, data_qubits, flag_qubits)
+    info, ft = check_fault_tolerance(circuit, data_qubits, flag_qubits)
+    print(ft)
 
     print("loc | gate   | fault  | data_w | flag_w | final_paulis (truncated)")
     for r in results:

@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "<string>", line 134, in <module>
+ValueError: Some of the given stabilizers anticommute.
+For example:
+    stabilizers[26] = +___________________________________________________________________________________X__X__X__X_______________________________
+anticommutes with
+    stabilizers[70] = +__________________________________________________________________________Z__Z_______Z______Z_______________________________

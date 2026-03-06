@@ -1,0 +1,66 @@
+Task: generate a valid Stim circuit (see https://github.com/quantumlib/Stim/blob/main/doc/file_format_stim_circuit.md) that is a STRICT improvement of the baseline circuit while preserving the same stabilizer behavior.
+
+Target stabilizers (must all be preserved): 
+```
+{stabilizers_str}
+```
+
+Baseline circuit (optimize this while preserving stabilizers): 
+```
+{initial_circuit}
+```
+
+Requirements:
+- Output must be valid Stim text and parse with stim.Circuit.
+- Use the same qubit indexing as the baseline circuit (temporary internal relabeling is allowed only if mapped back before tool calls/final submission).
+- The candidate must preserve ALL stabilizers in the target stabilizers according to evaluate_optimization (valid must be true).
+- The candidate must be STRICTLY more optimal than the baseline using lexicographic order on:
+   1. cx_count (primary)
+   2. volume (secondary)
+   3. depth (tertiary)
+- Do NOT introduce measurements, resets, or noise unless they already exist in the baseline and are required.
+- The final submission must be a single circuit text body (no Markdown fences, no prose, no extra markers).
+
+Optimization rule (lexicographic):
+- Candidate is strictly better if:
+   - cand.cx_count < base.cx_count, OR
+   - cand.cx_count == base.cx_count AND cand.volume < base.volume
+- If all three metrics are equal, it is NOT an improvement.
+
+## Strategies to try (individually and optionally in combinations)
+Try these as a toolbox, not a fixed single path. Use judgment to determine which strategies are valid.
+- Tableau/stabilizer Gaussian-elimination-based synthesis (baseline / resynthesis)
+- Reordering of stabilizer generators before synthesis
+- Qubit permutation / relabeling search (random and heuristic)
+- Local Clifford normalization / canonicalization before synthesis
+- Graph-state / LC-equivalent transformations (if applicable), then synthesize and map back
+- CNOT network resynthesis / cancellation passes
+- Gate commutation + cancellation + peephole simplification
+- Layering / scheduling improvements to reduce depth
+
+
+Tooling / attempt-budget rules:
+- You may call evaluate_optimization to test a candidate circuit. It checks BOTH stabilizer preservation AND optimization metrics in a single call.
+  - The response includes 'valid' (true/false), 'preserved_stabilizers' (int), and 'better' (true/false).
+  - A candidate is VALID only when valid == true (all stabilizers preserved).
+  - A candidate is an IMPROVEMENT only when valid == true AND better == true.
+- IMPORTANT: each candidate circuit counts as ONE attempt.
+- You have a total budget of {attempts} attempt(s) = at most {attempts} calls to evaluate_optimization.
+- Keep track of the best VALID candidate seen so far:
+  - Valid = preserves all stabilizers (valid == true).
+  - Best = strictly more optimal than the baseline by the lexicographic rule (better == true).
+- Do NOT call or rely on repository tools besides evaluate_optimization and final_circuit.
+- If you need temporary/scratch files, write them into: {agent_files_dir}
+
+Required workflow:
+1. Start from the baseline circuit as the current reference.
+2. Propose a candidate rewrite (from baseline or best-so-far).
+3. Call evaluate_optimization on the candidate — this checks stabilizers AND metrics in one step (uses one attempt).
+4. If valid == true AND better == true, immediately call final_circuit with that candidate and stop.
+5. If not, repeat until attempts are exhausted.
+6. If no strictly-improved valid candidate is found after all attempts, still call final_circuit with the best valid candidate attempt (the harness may reject it).
+
+Output / submission rules:
+- Do NOT output Markdown code fences, prose, or extra markers.
+- When ready, call final_circuit with ONLY the raw Stim circuit text in the 'stim_circuit' field.
+- Do not end the conversation without calling final_circuit.

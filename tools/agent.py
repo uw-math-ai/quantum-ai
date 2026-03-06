@@ -456,7 +456,7 @@ def generate_optimized_circuit(
     baseline_metrics = compute_metrics(initial_circuit).as_dict()
 
     repo_root = Path(__file__).resolve().parents[1] 
-    agent_files_dir = repo_root / "rq3" / "data" / "agent_files"
+    agent_files_dir = repo_root / "rq3" / "data" / model / "agent_files"
     agent_files_dir.mkdir(parents=True, exist_ok=True)
 
     result = None

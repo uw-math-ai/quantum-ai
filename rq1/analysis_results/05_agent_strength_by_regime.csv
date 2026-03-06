@@ -1,0 +1,22 @@
+Regime,Agent,Perfect Solves,Perfect Rate,Avg Success,Best in Regime
+Small codes (<=10 qubits),Claude Opus 4.6,10/11,90.9%,0.985,
+Small codes (<=10 qubits),GPT-5.2,11/11,100.0%,1.000,
+Small codes (<=10 qubits),Gemini 3 Pro Preview,11/11,100.0%,1.000,***
+Medium codes (11-25 qubits),Claude Opus 4.6,10/10,100.0%,1.000,***
+Medium codes (11-25 qubits),GPT-5.2,10/10,100.0%,1.000,
+Medium codes (11-25 qubits),Gemini 3 Pro Preview,10/10,100.0%,1.000,
+Large codes (>25 qubits),Claude Opus 4.6,142/171,83.0%,0.847,***
+Large codes (>25 qubits),GPT-5.2,138/171,80.7%,0.835,
+Large codes (>25 qubits),Gemini 3 Pro Preview,137/171,80.1%,0.891,
+Base codes,Claude Opus 4.6,23/24,95.8%,0.993,
+Base codes,GPT-5.2,24/24,100.0%,1.000,
+Base codes,Gemini 3 Pro Preview,24/24,100.0%,1.000,***
+Tensor product codes,Claude Opus 4.6,139/168,82.7%,0.844,***
+Tensor product codes,GPT-5.2,135/168,80.4%,0.832,
+Tensor product codes,Gemini 3 Pro Preview,134/168,79.8%,0.889,
+Low distance (d<=3),Claude Opus 4.6,12/13,92.3%,0.987,
+Low distance (d<=3),GPT-5.2,13/13,100.0%,1.000,
+Low distance (d<=3),Gemini 3 Pro Preview,13/13,100.0%,1.000,***
+High distance (d>=6),Claude Opus 4.6,145/174,83.3%,0.850,***
+High distance (d>=6),GPT-5.2,141/174,81.0%,0.838,
+High distance (d>=6),Gemini 3 Pro Preview,140/174,80.5%,0.893,

@@ -1,0 +1,5 @@
+Agent,N,Baseline Perfect,Treatment Perfect,Gained,Lost,Net Change,p-value (McNemar),Baseline Avg Success,Treatment Avg Success,Delta Avg Success,Baseline Avg Time (s),Treatment Avg Time (s)
+Claude Opus 4.6,192,48/192 (25.0%),140/192 (72.9%),92,0,+92,0.0000,0.261,0.747,+0.486,252.3,440.4
+GPT-5.2,192,46/192 (24.0%),137/192 (71.4%),91,0,+91,0.0000,0.255,0.724,+0.469,252.9,439.7
+Gemini 3 Pro Preview,192,67/192 (34.9%),123/192 (64.1%),59,3,+56,0.0000,0.354,0.690,+0.336,250.1,1189.8
+ALL AGENTS,576,161/576 (28.0%),400/576 (69.4%),242,3,+239,0.0000,0.290,0.720,+0.430,251.8,690.0

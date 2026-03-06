@@ -1,0 +1,6 @@
+Agent,Total Perfect Solves,Max Stabilizers Solved,Max Qubits Solved,Max Distance Solved
+Claude Opus 4.6,162,160,161,21
+GPT-5.2,159,174,175,21
+Gemini 3 Pro Preview,158,184,185,21
+ANY AGENT,178,184,185,21
+ALL AGENTS,138,152,153,21

@@ -15,17 +15,17 @@ import mqt.qecc.codes as qecc
 ROOT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT_DIR))
 
-from tools.check_error_propagation import ft_score
+from tools.check_error_propagation import ft_score, check_fault_tolerance
 from tools.check_stabilizers import check_stabilizers
 
 @dataclass
 class CircuitBuilderRewards:
-    failure_penalty: float = -1.0
-    success_reward: float = 1.0
-    step_penalty: float = -0.01
-    ft_score_p: float = 1.0
-    ft_score_scale: float = 1.0
-    dst_score_scale: float = 1.0
+    failure_penalty: float = -100.0
+    success_reward: float = 100.0
+    step_penalty: float = -0.1
+    ft_score_p: float = 1.
+    ft_score_scale: float = 1.
+    stabs_preserved_score_scale: float = 1.
 
 @dataclass
 class CircuitBuilderConfig:
@@ -77,14 +77,16 @@ class CircuitBuilderEnv(gym.Env[npt.NDArray[np.integer[Any]], int]):
         if randomize:
             return stim.Tableau.random(self.total_qubits).to_circuit()
         else:
-            return stim.Tableau(self.total_qubits).to_circuit()
+            return stim.Circuit()
 
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict[str, Any]] = None):
         super().reset(seed=seed)
         self.circ = self._init_circuit(options.get("randomize", False) if options else False)
         self.steps_taken = 0
         self.last_ft_score = 0.
-        self.last_dst = 0.
+        self.proportion_stab_preserved = 0.
+        self.last_stabilizer_count = 0  # Track preserved stabilizers for reward
+        self.target_stab_count = len(self.stab_code.stabs_as_pauli_strings())
         return self._to_obs()
 
     def step(self, action: int):
@@ -126,30 +128,33 @@ class CircuitBuilderEnv(gym.Env[npt.NDArray[np.integer[Any]], int]):
         else:
             reward += self.config.rewards.step_penalty
 
+            # # PRIMARY: Check stabilizer preservation every step for immediate feedback
+            # Handle empty or partial circuit by ensuring tableau includes all data qubits
+            stabilizers = check_stabilizers(str(self.circ), self.stab_code.stabs_as_pauli_strings())
+            preserved_count = sum(1 for v in stabilizers.values() if v)
+            proportion_preserved = preserved_count / self.target_stab_count if self.target_stab_count > 0 else 1.0
+            reward += (proportion_preserved - self.proportion_stab_preserved) * self.config.rewards.stabs_preserved_score_scale
+            self.proportion_stab_preserved = proportion_preserved
+            details["stabilizers_preserved"] = preserved_count
+            details["stabilizers_preservation"] = stabilizers
+            details["proportion_preserved"] = proportion_preserved
+            
+            # SECONDARY: Track fault tolerance and distance to target for additional shaping
             ft = ft_score(str(self.circ), list(range(self.config.num_data_qubits)),
                           self.flag_qubits,
                           p=self.config.rewards.ft_score_p,
                           d = self.stab_code.distance if self.stab_code.distance is not None else 1)
-            dst = _tableau_distance(
-                self.stab_tableau,
-                stim.Tableau.from_circuit(self.circ, ignore_measurement=True),
-                self.data_qubit_idx,
-            )
-
-            reward += (ft - self.last_ft_score) * self.config.rewards.ft_score_scale # higher ft_score is better
-            reward += (self.last_dst - dst) * self.config.rewards.dst_score_scale
+            reward += (ft - self.last_ft_score) * self.config.rewards.ft_score_scale
             self.last_ft_score = ft
-            self.last_dst = dst
             details["ft_score"] = ft
-            details["distance"] = dst
+            
+            # Termination: penalty if not all stabilizers preserved, bonus if all are
             if done:
-                stabilizers = check_stabilizers(str(self.circ), self.stab_code.stabs_as_pauli_strings())
-                if not all(stabilizers.values()):
-                    reward += self.config.rewards.failure_penalty
-                else:
+                _, is_ft = check_fault_tolerance(str(self.circ), self.data_qubits, self.flag_qubits, d=self.stab_code.distance if self.stab_code.distance is not None else 3)
+                if preserved_count == self.target_stab_count and is_ft:
                     reward += self.config.rewards.success_reward
-                
-                details["stabilizers_preservation"] = stabilizers
+                else:
+                    reward += self.config.rewards.failure_penalty
         
         return self._to_obs(), reward, done, False, details
 
@@ -214,13 +219,22 @@ class CircuitBuilderEnv(gym.Env[npt.NDArray[np.integer[Any]], int]):
         return "M"
 
     def render(self):
+        if self.circ.num_qubits == 0:
+            return "<Empty circuit>"
+
         if self.render_mode == "string":
             return str(self.circ)
         elif self.render_mode == "diagram":
             return self.circ.diagram()
 
     def _to_obs(self) -> npt.NDArray[np.int8]:
-        return _tableau_to_np(stim.Tableau.from_circuit(self.circ, ignore_measurement=True))
+        circ_copy = self.circ.copy()
+        circ_copy.append("H", [self.config.num_data_qubits - 1])
+        circ_copy.append("H", [self.config.num_data_qubits - 1])
+        return _tableau_to_np(stim.Tableau.from_circuit(circ_copy, ignore_measurement=True))
+
+    def _obs_to_str(self) -> str:
+        return str(self.circ)
     
 def _tableau_to_np(tableau: stim.Tableau) -> npt.NDArray[np.int8]:
     xs, zs, xs2, zs2, px, pz = tableau.to_numpy()
@@ -263,6 +277,7 @@ if __name__ == "__main__":
     env = CircuitBuilderEnv(code, config = CircuitBuilderConfig(max_gates=64, num_data_qubits=5, num_flag_qubits=2), render_mode="string")
     obs = env.reset(options={"randomize": False })
     print(env.circ.num_qubits)
+    env.step(env.action_to_int(("H", 0)))
     print(env.render())
     for action_int in range(env.action_space.n):
         action = env.int_to_action(action_int)

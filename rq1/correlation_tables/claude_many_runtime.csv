@@ -1,0 +1,9 @@
+feature,pearson_correlation
+logical_qubits,-0.1673284348961882
+physical_qubits,0.7090151326988602
+n_stabilizers,0.7064243546010809
+distance,0.6219764821861993
+total_gates,0.555840698092612
+weighted_gate_count,0.573614278768569
+avg_stabilizer_weight,0.026471808993308303
+max_stabilizer_weight,0.5663105647117319

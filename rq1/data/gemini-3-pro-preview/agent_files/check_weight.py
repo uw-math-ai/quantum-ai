@@ -1,0 +1,11 @@
+s38 = "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIIIIXXIIIIIIIXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII"
+s92 = "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZIIIIZZIIIIIIIZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII"
+
+print(f"Weight of 38: {s38.count('X')}")
+print(f"Weight of 92: {s92.count('Z')}")
+
+indices_38 = [i for i, c in enumerate(s38) if c == 'X']
+indices_92 = [i for i, c in enumerate(s92) if c == 'Z']
+
+print(f"Indices 38: {indices_38}")
+print(f"Indices 92: {indices_92}")

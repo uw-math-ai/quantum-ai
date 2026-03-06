@@ -1,0 +1,7 @@
+Code Type,Agent,Benchmarks,Perfect Solves,Perfect Solve Rate,Avg Success Rate
+Base Code,Claude Opus 4.6,24,23,95.8%,0.993
+Base Code,Gemini 3 Pro Preview,24,24,100.0%,1.000
+Base Code,GPT-5.2,24,24,100.0%,1.000
+Tensor Product,Claude Opus 4.6,168,139,82.7%,0.844
+Tensor Product,Gemini 3 Pro Preview,168,134,79.8%,0.889
+Tensor Product,GPT-5.2,168,135,80.4%,0.832

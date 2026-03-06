@@ -1,0 +1,72 @@
+import stim
+import numpy as np
+
+stabilizers = [
+    "XZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXI",
+    "IXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZX",
+    "XIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZ",
+    "ZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIII",
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZ",
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
+]
+
+def check_commutativity(stabs):
+    try:
+        paulis = []
+        for s in stabs:
+            paulis.append(stim.PauliString(s))
+        
+        bad = []
+        for i in range(len(paulis)):
+            for j in range(i + 1, len(paulis)):
+                if not paulis[i].commutes(paulis[j]):
+                    bad.append((i, j))
+        return bad
+    except Exception as e:
+        print(f"Error checking commutativity: {e}")
+        return []
+
+bad_pairs = check_commutativity(stabilizers)
+
+if bad_pairs:
+    print(f"Found {len(bad_pairs)} anticommuting pairs:")
+    for i, j in bad_pairs[:10]:
+        print(f"  {i} vs {j}")
+else:
+    print("All stabilizers commute.")
+    try:
+        t = stim.Tableau.from_stabilizers([stim.PauliString(s) for s in stabilizers], allow_underconstrained=True)
+        c = t.to_circuit()
+        print("Circuit generated successfully.")
+        with open("circuit_40.stim", "w") as f:
+            f.write(str(c))
+    except Exception as e:
+        print(f"Stim failed: {e}")

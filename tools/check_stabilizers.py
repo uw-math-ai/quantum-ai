@@ -1,4 +1,5 @@
 import stim
+import re
 
 def check_stabilizers(circuit: str, stabilizers: list[str]) -> dict[str, bool]:
     """Check if the given stabilizers are preserved by the circuit.
@@ -10,6 +11,7 @@ def check_stabilizers(circuit: str, stabilizers: list[str]) -> dict[str, bool]:
     Returns:
         A dictionary mapping each stabilizer to a boolean indicating if it is preserved.
     """
+    circuit = preprocess_stim_text(circuit)
     circ = stim.Circuit(circuit)
     sim = stim.TableauSimulator()
     sim.do(circ)
@@ -20,6 +22,36 @@ def check_stabilizers(circuit: str, stabilizers: list[str]) -> dict[str, bool]:
         expectation = sim.peek_observable_expectation(pauli)
         results[stabilizer] = expectation > 0
     return results
+
+def preprocess_stim_text(raw: str) -> str:
+    """
+    Normalize a Stim circuit string so Stim can parse it reliably.
+    - Converts literal '\\n' sequences into real newlines.
+    - Strips leading/trailing whitespace per line.
+    - Removes empty lines.
+    - Collapses internal whitespace to single spaces.
+    - (Optional) removes comment lines starting with '#'.
+    """
+    if raw is None:
+        return ""
+
+    text = raw.strip()
+
+    # If the user wrote "\\n" inside a triple-quoted string, turn it into actual newlines.
+    text = text.replace("\\n", "\n")
+
+    lines = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            continue
+        # collapse runs of whitespace to a single space
+        line = re.sub(r"\s+", " ", line)
+        lines.append(line)
+
+    return "\n".join(lines) + ("\n" if lines else "")
 
 if __name__ == "__main__":
     # Example: Check if a circuit prepares the |0000⟩ + |1111⟩ state (4-qubit GHZ)

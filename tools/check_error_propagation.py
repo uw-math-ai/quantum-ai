@@ -153,7 +153,7 @@ def check_error_propagation(circuit: str, data_qubits: list[int], flag_qubits: l
                 })
     return results
 
-# def check_fault_tolerance(circuit: str, data_qubits: list[int], flag_qubits: list[int], distance: int) -> tuple[list, bool]:
+# def check_fault_tolerance(circuit: str, data_qubits: list[int], flag_qubits: list[int], d: int = 3, distance: int) -> tuple[list, bool]:
 #     '''Check if the circuit is fault-tolerant against single-qubit Pauli faults.
 #     A circuit is fault-tolerant if:
 #         - Every single-qubit Pauli fault causes at most one data qubit error without flagging.
@@ -178,7 +178,7 @@ def check_fault_tolerance(circuit: str, data_qubits: list[int], flag_qubits: lis
             return results, False
     return results, True
 
-def ft_score(circuit: str, data_qubits: list[int], flag_qubits: list[int], d: int = 1, p: float = 1.0) -> float:
+def ft_score(circuit: str, data_qubits: list[int], flag_qubits: list[int], d: int = 3, p: float = 1.0) -> float:
     '''Compute the fault-tolerance score based on weighted undetected faults.
 
     FT = 1 - sum(weight(f)^p for undetected faults with weight(f) > floor((d-1)/2))

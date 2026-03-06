@@ -1,64 +1,67 @@
 import stim
+import sys
 
-def load_stabilizers(filename):
-    with open(filename, 'r') as f:
-        lines = f.readlines()
-    return [line.strip() for line in lines if line.strip()]
+def main():
+    with open("data/gemini-3-pro-preview/agent_files/stabilizers_76.txt", "r") as f:
+        lines = [line.strip() for line in f if line.strip()]
 
-def check_commutativity(stabilizers):
+    print(f"Loaded {len(lines)} stabilizers.")
+    
+    # Check length
+    lengths = set(len(line) for line in lines)
+    print(f"Lengths: {lengths}")
+    
+    if len(lengths) != 1:
+        print("Error: Stabilizers have different lengths.")
+        return
+
+    n_qubits = list(lengths)[0]
+    print(f"Number of qubits: {n_qubits}")
+
+    # Check for consistency
     try:
-        paulis = [stim.PauliString(s) for s in stabilizers]
-    except Exception as e:
-        print(f"Error parsing stabilizers: {e}")
-        return []
-
-    n = len(paulis)
-    anticommuting_pairs = []
-    for i in range(n):
-        for j in range(i + 1, n):
-            if not paulis[i].commutes(paulis[j]):
-                anticommuting_pairs.append((i, j))
-    return anticommuting_pairs
-
-def solve(stabilizers):
-    try:
-        paulis = [stim.PauliString(s) for s in stabilizers]
-        # Using allow_underconstrained=True because we might have fewer than N stabilizers
-        # Using allow_redundant=True in case some are dependent
-        tableau = stim.Tableau.from_stabilizers(paulis, allow_underconstrained=True, allow_redundant=True)
-        circuit = tableau.to_circuit("elimination")
-        return circuit
+        pauli_strings = [stim.PauliString(line) for line in lines]
+        tableau = stim.Tableau.from_stabilizers(pauli_strings, allow_redundant=True, allow_underconstrained=True)
+        print("Stabilizers are consistent.")
     except Exception as e:
         print(f"Error creating tableau: {e}")
-        return None
+        return
 
-if __name__ == "__main__":
-    filename = r"C:\Users\anpaz\Repos\quantum-ai\rq1\data\gemini-3-pro-preview\agent_files\stabilizers.txt"
+    # Check independence
     try:
-        stabilizers = load_stabilizers(filename)
-    except FileNotFoundError:
-        print(f"File not found: {filename}")
-        exit(1)
+        tableau_strict = stim.Tableau.from_stabilizers(pauli_strings, allow_redundant=False, allow_underconstrained=True)
+        print("Stabilizers are independent.")
+    except Exception as e:
+        print(f"Stabilizers are NOT independent: {e}")
 
-    print(f"Loaded {len(stabilizers)} stabilizers.")
+    # Generate circuit
+    # If underconstrained, we might need to add Z stabilizers to fill the rest?
+    # The prompt says "Act on exactly 76 data qubits".
+    # If the tableau is underconstrained, to_circuit() will prepare the state stabilized by the given stabilizers 
+    # and Z on the remaining degrees of freedom (init to 0).
     
-    anticommuting = check_commutativity(stabilizers)
-    if anticommuting:
-        print(f"Found {len(anticommuting)} anticommuting pairs.")
-        for i, j in anticommuting[:10]:
-            print(f"  {i} vs {j}")
-            print(f"  Stabilizer {i}: {stabilizers[i]}")
-            print(f"  Stabilizer {j}: {stabilizers[j]}")
+    circuit = tableau.to_circuit()
+    print("Circuit generated.")
+    
+    # Verify circuit locally
+    sim = stim.TableauSimulator()
+    sim.do(circuit)
+    
+    all_good = True
+    for i, s in enumerate(pauli_strings):
+        if sim.measure_observable(s) != 0: # 0 means +1 eigenvalue, 1 means -1
+            print(f"Stabilizer {i} failed!")
+            all_good = False
+            break
+            
+    if all_good:
+        print("Local verification passed!")
     else:
-        print("All stabilizers commute.")
+        print("Local verification FAILED!")
+
+    # Save circuit to file
+    with open("data/gemini-3-pro-preview/agent_files/circuit_76.stim", "w") as f:
+        f.write(str(circuit))
         
-    circuit = solve(stabilizers)
-    if circuit:
-        print("\nGenerated Circuit:")
-        # print(circuit) # Don't print to stdout, it might be huge
-        output_file = r"C:\Users\anpaz\Repos\quantum-ai\rq1\data\gemini-3-pro-preview\agent_files\circuit_76.stim"
-        with open(output_file, "w") as f:
-            f.write(str(circuit))
-        print(f"Circuit saved to {output_file}")
-    else:
-        print("Failed to generate circuit.")
+if __name__ == "__main__":
+    main()

@@ -3,3 +3,4 @@ reinforcement_learning/data/*.jsonl
 __pycache__/
 claude-sonnet-4.5/
 Cordelia's prompt scratchwork
+**/.env

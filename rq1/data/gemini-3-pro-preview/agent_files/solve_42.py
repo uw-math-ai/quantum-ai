@@ -1,52 +1,65 @@
 import stim
 
-def solve():
-    with open("data/gemini-3-pro-preview/agent_files/stabilizers_42.txt", "r") as f:
-        lines = [line.strip() for line in f if line.strip()]
+stabilizers = [
+    "XXXXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIXXXXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIXXXXIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIXXXXIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIXXXXIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXXXXIII", 
+    "XIXIXIXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIXIXIXIXIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIXIXIXIXIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIXIXIXIXIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXIXIXIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXIXIX", 
+    "IIXXXXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIXXXXIIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIXXXXIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIXXXXIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXXXXIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXXXXI", 
+    "ZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIZZZZIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIZZZZIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZIII", 
+    "ZIZIZIZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIZIZIZIZIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIZIZIZIZIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIZIZIZIZIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIZIZIZIZIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZIZIZIZ", 
+    "IIZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIZZZZIIIIIIIIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIZZZZIIIIIIIIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZIIIIIIII", 
+    "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZI", 
+    "IXXIXIIIXXIXIIIXXIXIIIXXIXIIIXXIXIIIXXIXII", 
+    "IZZIZIIIZZIZIIIZZIZIIIZZIZIIIZZIZIIIZZIZII"
+]
 
-    stabilizers = []
-    for line in lines:
-        try:
-            stabilizers.append(stim.PauliString(line))
-        except Exception as e:
-            print(f"Error parsing stabilizer: {line}, {e}")
-            return
+print(f"Num stabilizers: {len(stabilizers)}")
+ps = [stim.PauliString(s) for s in stabilizers]
 
+anticommuting = []
+for i in range(len(ps)):
+    for j in range(i + 1, len(ps)):
+        if not ps[i].commutes(ps[j]):
+            anticommuting.append((i, j))
+
+if anticommuting:
+    print(f"Found {len(anticommuting)} anticommuting pairs.")
+    for i, j in anticommuting[:10]:
+        print(f"  {i} vs {j}")
+else:
+    print("All stabilizers commute.")
     try:
-        # Create a tableau from the stabilizers
-        # allow_underconstrained=True is needed because we have 38 stabilizers for 42 qubits
-        tableau = stim.Tableau.from_stabilizers(stabilizers, allow_underconstrained=True)
+        t = stim.Tableau.from_stabilizers(ps, allow_underconstrained=True)
+        c = t.to_circuit()
+        print("Generated circuit.")
+        print(c)
     except Exception as e:
-        print(f"Error creating tableau: {e}")
-        # If from_stabilizers fails, it might be due to inconsistencies.
-        # Let's check for inconsistencies if that happens, but first try this.
-        return
-
-    # Generate circuit
-    circuit = tableau.to_circuit("elimination")
-    
-    # Verify the circuit
-    # We can simulate the circuit and check if the output state is stabilized by the generators.
-    # Since we have a Clifford circuit and stabilizer state, we can use the tableau simulator.
-    
-    sim = stim.TableauSimulator()
-    sim.do(circuit)
-    
-    all_good = True
-    for i, stab in enumerate(stabilizers):
-        # measure_expectation returns +1, -1, or 0 (if random)
-        expectation = sim.peek_observable_expectation(stab)
-        if expectation != 1:
-            print(f"Stabilizer {i} not satisfied: {stab}, expectation: {expectation}")
-            all_good = False
-            
-    if all_good:
-        print("Circuit verified locally!")
-        print("---CIRCUIT START---")
-        print(circuit)
-        print("---CIRCUIT END---")
-    else:
-        print("Circuit failed verification.")
-
-if __name__ == "__main__":
-    solve()
+        print(f"Error generating circuit: {e}")

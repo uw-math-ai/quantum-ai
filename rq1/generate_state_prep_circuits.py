@@ -17,7 +17,8 @@ def generate_circuits_from_benchmarks(
     output_path: str | None = None,
     model: str = "claude-sonnet-4.5",
     attempts: int = 3,
-    timeout: int = 60
+    timeout: int = 60,
+    prompt_file: str = "rq1/prompts/state_prep_prompt4.txt"
 ) -> list[dict]:
     """
     Generate state preparation circuits for all stabilizer groups in benchmarks.
@@ -45,6 +46,7 @@ def generate_circuits_from_benchmarks(
     metadata = {
         "benchmarks_path": benchmarks_path,
         "model": model,
+        "prompt_path": prompt_file,
         "attempts": attempts,
         "timeout": timeout,
         "started_at": datetime.now().isoformat(),
@@ -72,6 +74,7 @@ def generate_circuits_from_benchmarks(
                     model=model,
                     attempts=attempts,
                     timeout=timeout,
+                    prompt_file=prompt_file,
                 )
                 
                 if circuit is not None:
@@ -155,6 +158,11 @@ def main():
         default=300,
         help="Timeout in seconds for each generation"
     )
+    parser.add_argument(
+        "--prompt-file",
+        default="rq1/prompts/state_prep_prompt4.txt",
+        help="Path to the prompt template file (default: rq1/prompts/state_prep_prompt4.txt)"
+    )
     
     args = parser.parse_args()
     
@@ -163,7 +171,8 @@ def main():
         output_path=args.output,
         model=args.model,
         attempts=args.attempts,
-        timeout=args.timeout
+        timeout=args.timeout,
+        prompt_file=args.prompt_file
     )
 
 

@@ -1,6 +1,7 @@
 {
   "metadata": {
     "benchmarks_path": "..\\data\\benchmarks.json",
+    "prompt_path": "rq1\\prompts\\state_prep_prompt4.txt",
     "model": "claude-opus-4.6",
     "attempts": 15,
     "timeout": 300,

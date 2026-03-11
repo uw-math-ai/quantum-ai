@@ -332,7 +332,7 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
     return result, all_candidates
 
 
-def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1, timeout: int | None = 600) -> stim.Circuit | None:
+def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1, timeout: int | None = 600, prompt_file: str = "rq1/prompts/state_prep_prompt4.txt") -> stim.Circuit | None:
     """
     Generate a state preparation circuit for given stabilizers (without fault-tolerance requirement).
     
@@ -395,7 +395,7 @@ def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1,
         return {"results": result, "preserved": preserved, "total": len(result)}
 
     
-    with open("rq1/prompt.txt", "r") as f:
+    with open(prompt_file, "r") as f:
         prompt_template = f.read()
 
     prompt = prompt_template.format(

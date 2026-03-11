@@ -1,5 +1,7 @@
 Generate a Stim circuit to prepare the stabilizer state defined by the following stabilizers: {stabilizers_str}.
 The circuit should prepare the logical |0⟩ state that is stabilized by the given generators.
+Act on exactly {qubits_count} data qubits, indexed 0..{qubits_count_less_1}, starting from |0⟩^{{⊗ {qubits_count}}}.
 Always verify the correctness of the circuit using the validate_circuit tool. Retry if any stabilizers are not preserved.
 You have {attempts} attempts to generate the best possible circuit.
 Call the return_result tool before ending with the best iteration.
+- If you need to write any temporary or scratch files, write them into the directory: {agent_files_dir}

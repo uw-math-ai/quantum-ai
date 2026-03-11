@@ -1,24 +1,25 @@
 import stim
 
-def main():
-    try:
-        with open("target_stabilizers_119.txt", "r") as f:
-            lines = [line.strip() for line in f if line.strip()]
-        
-        stabilizers = [stim.PauliString(line) for line in lines]
-        print(f"Loaded {len(stabilizers)} stabilizers.")
-        
-        tableau = stim.Tableau.from_stabilizers(stabilizers, allow_redundant=True, allow_underconstrained=True)
-        print("Tableau created.")
-        
-        circuit = tableau.to_circuit(method='graph_state')
-        print("Graph state circuit created.")
-        print(circuit)
+print("Stim version:", stim.__version__)
 
-    except Exception as e:
-        print(f"Error: {e}")
-        import traceback
-        traceback.print_exc()
+stabs = ["XX", "ZZ"]
+try:
+    t = stim.Tableau.from_stabilizers(stabs, allow_redundant=True, allow_underconstrained=True)
+    print("Small example success")
+except Exception as e:
+    print("Small example failed:", e)
 
-if __name__ == "__main__":
-    main()
+try:
+    print("Trying without kwargs:")
+    t = stim.Tableau.from_stabilizers(stabs)
+    print("Without kwargs success")
+except Exception as e:
+    print("Without kwargs failed:", e)
+
+try:
+    print("Trying with PauliString:")
+    ps = [stim.PauliString(s) for s in stabs]
+    t = stim.Tableau.from_stabilizers(ps, allow_redundant=True, allow_underconstrained=True)
+    print("With PauliString success")
+except Exception as e:
+    print("With PauliString failed:", e)

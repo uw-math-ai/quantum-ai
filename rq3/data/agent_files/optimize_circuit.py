@@ -1,138 +1,42 @@
 import stim
-import sys
+import os
 
-def count_cx(circuit):
-    count = 0
-    for op in circuit:
-        if op.name == "CX" or op.name == "CNOT":
-            count += len(op.targets_copy()) // 2
-        elif op.name == "CZ":
-            count += len(op.targets_copy()) // 2
-    return count
+baseline_str = """
+H 0
+CX 0 12 0 16
+H 4
+CX 4 0 12 1 1 12 12 1 1 25
+H 24
+CX 20 1 24 1 16 2 2 16 16 2 2 20
+H 8
+CX 4 2 8 2 24 2 20 3 3 20 20 3 3 25 8 3 24 4 4 24 24 4
+H 5 6 7 9 10 11 12 16 20
+CX 4 5 4 6 4 7 4 9 4 10 4 11 4 12 4 16 4 20 4 25 4 26 4 27 8 4 24 4 8 5 5 8 8 5 24 6 6 24 24 6 8 7 7 8 8 7 7 9 7 13 7 17 12 7 12 8 8 12 12 8 8 9 8 17 8 25 8 26 9 13 9 17 9 21 9 25 9 26 13 10 10 13 13 10 10 21 26 11 11 26 26 11 11 17 11 21 11 25 21 12 12 21 21 12 17 13 13 17 17 13 24 14 14 24 24 14 14 17 14 18 14 24 16 14 16 15 15 16 16 15 15 17 15 18 15 25 17 16 16 17 17 16 16 18 16 22 16 24 16 25 24 17 17 24 24 17 17 22 25 18 18 25 25 18 18 22 18 25 19 18 27 18 22 19 19 22 22 19 22 19 27 19 25 20 20 25 25 20 22 20 27 20 21 22 21 24 21 26 21 27 25 21 25 22 22 25 25 22 22 25 22 26 26 23 23 26 26 23 23 24 23 25 23 26 24 26 25 26 27 25 27 26
+"""
+baseline_str = baseline_str.strip()
 
-def load_stabilizers(filename):
-    with open(filename, 'r') as f:
-        lines = [line.strip() for line in f if line.strip()]
-    # Parse stabilizers
-    stabilizers = []
-    for line in lines:
-        stabilizers.append(stim.PauliString(line))
-    return stabilizers
+with open("baseline.stim", "w") as f:
+    f.write(baseline_str)
 
-def verify_stabilizers(circuit, stabilizers):
-    # Tableau simulation
-    sim = stim.TableauSimulator()
-    sim.do(circuit)
-    
-    # Check each stabilizer
-    for stab in stabilizers:
-        if sim.peek_observable_expectation(stab) != 1:
-            return False
-    return True
+c_base = stim.Circuit(baseline_str)
+# print(f"Baseline CX: {c_base.num_combining_operations}")
+# print(f"Baseline Volume: {len(c_base)}")
 
-def synthesize_from_tableau(stabilizers):
-    # Create a Tableau from the stabilizers
-    # This assumes the stabilizers form a complete set or we can extend them?
-    # Actually, stim.Tableau.from_stabilizers is what we want
-    try:
-        tableau = stim.Tableau.from_stabilizers(stabilizers, allow_underconstrained=True)
-        # Convert to circuit using graph state method which is often efficient for CX count
-        # method='graph_state' usually produces H and CZ gates.
-        # We can then decompose CZ to CX.
-        # However, CZ count is the metric for graph state.
-        # 1 CZ = 1 CX + 2 H (or just 1 CX if we have H's around).
-        # Let's try 'elimination' as well.
-        
-        circuit_graph = tableau.to_circuit(method="graph_state")
-        circuit_elim = tableau.to_circuit(method="elimination")
-        
-        return [circuit_graph, circuit_elim]
-    except Exception as e:
-        print(f"Synthesis failed: {e}")
-        return []
+sim = stim.TableauSimulator()
+sim.do(c_base)
+current_tableau = sim.current_inverse_tableau().inverse()
 
-def convert_cz_to_cx(circuit):
-    # Convert CZ to CX + H
-    # CZ a b = H b CX a b H b
-    # But we want to optimize.
-    # Actually, let's just do a naive conversion and rely on the fact that graph states are efficient.
-    # Or better: CZ 0 1 is equivalent to CX 0 1 surrounded by basis changes.
-    # stim has no direct CZ->CX conversion in python API easily without manual replacement.
-    # But let's look at the circuit.
-    
-    new_circuit = stim.Circuit()
-    for op in circuit:
-        if op.name == "CZ":
-            targets = op.targets_copy()
-            for i in range(0, len(targets), 2):
-                t1 = targets[i]
-                t2 = targets[i+1]
-                # CZ t1 t2 = H t2 CX t1 t2 H t2
-                new_circuit.append("H", [t2])
-                new_circuit.append("CX", [t1, t2])
-                new_circuit.append("H", [t2])
-        else:
-            new_circuit.append(op)
-    return new_circuit
+c_graph = current_tableau.to_circuit(method="graph_state")
+c_elim = current_tableau.to_circuit(method="elimination")
 
-def main():
-    baseline_path = "my_baseline.stim"
-    stabilizers_path = "my_stabilizers.txt"
-    
-    with open(baseline_path, 'r') as f:
-        baseline_text = f.read()
-    baseline = stim.Circuit(baseline_text)
-    
-    stabilizers = load_stabilizers(stabilizers_path)
-    
-    print(f"Baseline CX count: {count_cx(baseline)}")
-    
-    if not verify_stabilizers(baseline, stabilizers):
-        print("WARNING: Baseline does not preserve stabilizers!")
-    else:
-        print("Baseline preserves stabilizers.")
+# print(f"Graph State Ops: {c_graph.num_combining_operations}")
+# print(f"Elimination Ops: {c_elim.num_combining_operations}")
 
-    print(f"Number of qubits in stabilizers: {len(stabilizers[0])}")
-    
-    candidates = synthesize_from_tableau(stabilizers)
-    
-    best_circuit = None
-    min_cx = count_cx(baseline)
-    
-    print(f"Generated {len(candidates)} candidates.")
-    
-    for i, cand in enumerate(candidates):
-        # Convert CZ to CX if needed (graph state output uses CZ)
-        # Check if it has CZ
-        has_cz = any(op.name == "CZ" for op in cand)
-        if has_cz:
-            cand = convert_cz_to_cx(cand)
-            
-        cx = count_cx(cand)
-        print(f"Candidate {i} CX count: {cx}")
-        
-        if verify_stabilizers(cand, stabilizers):
-            if cx < min_cx:
-                min_cx = cx
-                best_circuit = cand
-                print(f"Found better candidate! CX: {cx}")
-            elif cx == min_cx:
-                # Compare volume/length if needed, but for now just note it
-                print(f"Found equal candidate. CX: {cx}")
-                if best_circuit is None:
-                     best_circuit = cand # Fallback if equal
-        else:
-            print(f"Candidate {i} failed verification.")
+with open("candidate_graph.stim", "w") as f:
+    f.write(str(c_graph))
 
-    if best_circuit:
-        print("\nBest candidate found:")
-        print(best_circuit)
-        with open("candidate.stim", "w") as f:
-            f.write(str(best_circuit))
-    else:
-        print("No strictly better candidate found. Saving baseline as candidate.")
-        with open("candidate.stim", "w") as f:
-            f.write(str(baseline))
+with open("candidate_elim.stim", "w") as f:
+    f.write(str(c_elim))
 
-if __name__ == "__main__":
-    main()
+has_cz = any(op.name == "CZ" for op in c_graph)
+print(f"Graph state has CZ: {has_cz}")

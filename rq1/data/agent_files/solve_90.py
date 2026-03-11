@@ -1,28 +1,44 @@
 import stim
-import os
+import sys
 
-stabilizer_file = r"C:\Users\anpaz\Repos\quantum-ai\rq1\stabilizers_90.txt"
-with open(stabilizer_file, "r") as f:
-    stabilizers = [line.strip() for line in f if line.strip()]
+def solve():
+    # Read stabilizers
+    with open('stabilizers_90.txt', 'r') as f:
+        lines = [line.strip() for line in f if line.strip()]
 
-num_qubits = 90
-# Try to construct a Tableau from these stabilizers
-try:
-    # We want a tableau that outputs these stabilizers for Z inputs.
-    # However, Stim's Tableau.from_stabilizers creates a tableau where the Z outputs are the stabilizers.
-    # This means the tableau T maps Z_i -> S_i.
-    # So if we apply T to |0> (which is stabilized by Z_i), we get a state stabilized by S_i.
-    # So T is exactly the unitary we want.
-    t = stim.Tableau.from_stabilizers([stim.PauliString(s) for s in stabilizers], allow_underconstrained=True)
+    stabilizers = []
+    for line in lines:
+        # Remove any trailing punctuation if present (like commas or periods)
+        cleaned = line.rstrip(',.')
+        stabilizers.append(stim.PauliString(cleaned))
+
+    print(f"Loaded {len(stabilizers)} stabilizers.")
+
+    # Check for commutativity
+    for i in range(len(stabilizers)):
+        for j in range(i + 1, len(stabilizers)):
+            if not stabilizers[i].commutes(stabilizers[j]):
+                print(f"Stabilizers {i} and {j} do not commute!")
+                return
+
+    # Create tableau
+    try:
+        tableau = stim.Tableau.from_stabilizers(stabilizers, allow_redundant=True, allow_underconstrained=True)
+    except Exception as e:
+        print(f"Error creating tableau: {e}")
+        # If it fails, maybe because of redundancy or something.
+        # But from_stabilizers should handle it if we pass the flags.
+        return
+
+    # Convert to circuit
+    # The tableau T maps Z bases to the stabilizers.
+    # So the circuit for T applied to |0> creates the state.
+    circuit = tableau.to_circuit()
     
-    # Generate the circuit
-    circuit = t.to_circuit("elimination")
-    
-    # Save the circuit
-    with open(r"C:\Users\anpaz\Repos\quantum-ai\rq1\solve_90_circuit.stim", "w") as f:
+    with open('circuit_90.stim', 'w') as f:
         f.write(str(circuit))
-        
-    print(f"Generated circuit with {len(circuit)} instructions.")
+    
+    print("Circuit generated and saved to circuit_90.stim.")
 
-except Exception as e:
-    print(f"Error: {e}")
+if __name__ == "__main__":
+    solve()

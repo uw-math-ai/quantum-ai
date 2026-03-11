@@ -1,91 +1,110 @@
-
 import stim
 import sys
 
-def count_metrics(circuit):
-    cx = 0
-    vol = 0
+def get_metrics(circuit):
+    cx_count = 0
+    volume = 0
     for instr in circuit:
-        if instr.name == "CX" or instr.name == "CNOT":
-            n = len(instr.targets_copy()) // 2
-            cx += n
-            vol += n
-        elif instr.name in ["H", "S", "SQRT_X", "S_DAG", "SQRT_X_DAG", "X", "Y", "Z", "I", "CY", "CZ", "SWAP"]:
-             vol += len(instr.targets_copy())
-    return cx, vol
+        if instr.name in ["CX", "CNOT"]:
+            # usually CX is 2-qubit gate. If it has multiple targets like CX 0 1 2 3, it means CX 0 1, CX 2 3.
+            # So targets/2.
+            targets = instr.targets_copy()
+            cx_count += len(targets) // 2
+        
+        # Volume: Count all gates.
+        if instr.name not in ["QUBIT_COORDS", "SHIFT_COORDS", "DETECTOR", "OBSERVABLE_INCLUDE", "TICK"]:
+            # Count each individual gate application.
+            # For 1-qubit gates, len(targets).
+            # For 2-qubit gates, len(targets)/2 gates. But wait, volume counts total gates?
+            # If CX 0 1 is one gate, then len(targets)/2.
+            # If H 0 1 is two gates, then len(targets).
+            # Let's assume standard gate counting.
+            # 2-qubit gates: CX, CY, CZ, SWAP, ISWAP etc.
+            if instr.name in ["CX", "CNOT", "CY", "CZ", "SWAP", "ISWAP", "SQRT_XX", "SQRT_YY", "SQRT_ZZ"]:
+                volume += len(instr.targets_copy()) // 2
+            elif instr.name in ["MPP"]:
+                # MPP is complicated. It's a measurement. Does it count as volume? The prompt says "CX, CY, CZ, H, S, SQRT_X, etc".
+                # MPP is usually measurement. Measurements are usually excluded from volume or counted separately?
+                # The prompt says "Do NOT introduce measurements... unless they already exist".
+                # The baseline has no measurements.
+                pass
+            else:
+                # 1-qubit gates
+                volume += len(instr.targets_copy())
+                
+    return cx_count, volume
 
-def solve():
-    print("Loading data...")
-    # Read the file line by line to get raw circuit
-    with open("my_baseline.stim", "r") as f:
-        baseline_text = f.read()
+def main():
+    # Load stabilizers
+    with open("target_stabilizers_task.txt", "r") as f:
+        stabs_text = f.read().replace("\n", "").replace(" ", "")
+    stabs = [s for s in stabs_text.split(",") if s]
+
+    print(f"Loaded {len(stabs)} stabilizers.")
     
-    # Stim circuit parsing
+    # Create Tableau
     try:
-        baseline = stim.Circuit(baseline_text)
+        pauli_stabs = [stim.PauliString(s.strip()) for s in stabs]
+        tableau = stim.Tableau.from_stabilizers(pauli_stabs, allow_underconstrained=True)
     except Exception as e:
-        print(f"Error parsing baseline: {e}")
+        print(f"Error creating tableau: {e}")
         return
 
-    # Stabilizers
-    with open("my_stabilizers.txt", "r") as f:
-        stabilizers = [line.strip() for line in f if line.strip()]
+    # Load Baseline
+    with open("baseline_task.stim", "r") as f:
+        baseline = stim.Circuit(f.read())
+    
+    base_cx, base_vol = get_metrics(baseline)
+    print(f"Baseline: CX={base_cx}, Vol={base_vol}")
 
-    # Count baseline metrics
-    cx_base, vol_base = 0, 0
-    for instr in baseline:
-        if instr.name == "CX":
-            n = len(instr.targets_copy()) // 2
-            cx_base += n
-            vol_base += n
-        elif instr.name in ["H", "S", "SQRT_X", "S_DAG", "SQRT_X_DAG", "X", "Y", "Z", "I"]:
-            vol_base += len(instr.targets_copy())
-            
-    print(f"Baseline: CX={cx_base}, Vol={vol_base}")
+    # Generate Graph State Circuit
+    cand_graph = tableau.to_circuit(method="graph_state")
+    
+    # Check if RX is present and replace with H if needed (assuming |0> input)
+    # Graph state synthesis often assumes input is |+> which is H * |0>.
+    # If the circuit starts with RX, it resets to |0> then rotates?
+    # Actually, stim's graph state synthesis produces a circuit that prepares the state from a scratch state (all zero?).
+    # Let's inspect the circuit.
+    
+    graph_cx, graph_vol = get_metrics(cand_graph)
+    print(f"Graph State Candidate: CX={graph_cx}, Vol={graph_vol}")
 
-    # Create Tableau from stabilizers
-    # Stim 1.13+ supports Tableau.from_stabilizers
-    try:
-        # Convert strings to PauliStrings
-        pauli_stabs = [stim.PauliString(s) for s in stabilizers]
-        print(f"Num stabilizers: {len(pauli_stabs)}")
-        
-        # Check consistency/validity
-        # A valid stabilizer group must commute.
-        # Stim checks this?
-        
-        tableau = stim.Tableau.from_stabilizers(pauli_stabs, allow_redundant=True, allow_underconstrained=True)
-        # Note: If underconstrained, it picks SOME state. If stabilizers define a unique state, great.
-        # The prompt says "Target stabilizers (must all be preserved)". It does not say they form a complete set.
-        # But usually for strict improvement, we want to synthesize THE SAME state.
-        
-        # Synthesize a circuit for this tableau
-        # Method: "elimination" (Gaussian elimination)
-        # Often produces O(n^2) gates.
-        synth_circuit = tableau.to_circuit(method="elimination")
-        
-        # Count metrics for new circuit
-        cx_new, vol_new = 0, 0
-        for instr in synth_circuit:
-            if instr.name == "CX":
-                n = len(instr.targets_copy()) // 2
-                cx_new += n
-                vol_new += n
-            elif instr.name in ["H", "S", "SQRT_X", "S_DAG", "SQRT_X_DAG", "X", "Y", "Z", "I"]:
-                vol_new += len(instr.targets_copy())
+    # Generate Elimination Circuit
+    cand_elim = tableau.to_circuit(method="elimination")
+    elim_cx, elim_vol = get_metrics(cand_elim)
+    print(f"Elimination Candidate: CX={elim_cx}, Vol={elim_vol}")
 
-        print(f"Synthesized (elimination): CX={cx_new}, Vol={vol_new}")
-
-        if (cx_new < cx_base) or (cx_new == cx_base and vol_new < vol_base):
-            print("Improvement found via synthesis!")
-            with open("candidate_synthesis.stim", "w") as f:
-                f.write(str(synth_circuit))
-        else:
-            print("Synthesis was worse.")
-
-    except Exception as e:
-        print(f"Synthesis failed: {e}")
+    # Select best
+    candidates = [("graph", cand_graph, graph_cx, graph_vol), ("elim", cand_elim, elim_cx, elim_vol)]
+    
+    best_cand = None
+    
+    for name, circ, cx, vol in candidates:
+        if cx < base_cx or (cx == base_cx and vol < base_vol):
+            print(f"Candidate {name} is strictly better locally.")
+            # Check if we found a new best
+            if best_cand is None:
+                best_cand = (name, circ, cx, vol)
+            else:
+                # Compare with current best
+                bc_name, bc_circ, bc_cx, bc_vol = best_cand
+                if cx < bc_cx or (cx == bc_cx and vol < bc_vol):
+                    best_cand = (name, circ, cx, vol)
+    
+    if best_cand:
+        name, circ, cx, vol = best_cand
+        print(f"Selected {name} as best candidate.")
+        with open("candidate.stim", "w") as f:
+            f.write(str(circ))
+    else:
+        print("No strictly better candidate found locally.")
+        # Save graph state anyway to try, or maybe elimination?
+        # If neither is better, I might need to optimize the better of the two.
+        # But for now, let's save graph state if it's close.
+        # Actually, let's just save the graph state one as 'candidate.stim' to see what `evaluate_optimization` says.
+        # Maybe my local metric counting is slightly off vs the tool.
+        with open("candidate.stim", "w") as f:
+            f.write(str(cand_graph))
 
 if __name__ == "__main__":
-    solve()
-
+    main()

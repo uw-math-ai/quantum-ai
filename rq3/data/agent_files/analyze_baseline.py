@@ -1,73 +1,32 @@
 import stim
-import sys
-
-def check_stabilizers(circuit, stabilizers):
-    sim = stim.TableauSimulator()
-    sim.do(circuit)
-    
-    preserved = 0
-    total = len(stabilizers)
-    
-    for s_str in stabilizers:
-        try:
-            s = stim.PauliString(s_str)
-            if sim.peek_observable_expectation(s) == 1:
-                preserved += 1
-        except Exception as e:
-            # print(f'Error checking stabilizer {s_str}: {e}')
-            pass
-            
-    return preserved, total
-
-def count_cx(circuit):
-    count = 0
-    for instr in circuit:
-        if instr.name == 'CX' or instr.name == 'CNOT':
-            count += len(instr.targets_copy()) // 2
-    return count
-
-def get_volume(circuit):
-    count = 0
-    for instr in circuit:
-        if instr.name in ['CX', 'CY', 'CZ', 'H', 'S', 'SQRT_X', 'SQRT_Y', 'SQRT_Z', 'X', 'Y', 'Z', 'I', 'SWAP', 'ISWAP', 'SQRT_XX', 'SQRT_YY', 'SQRT_ZZ']:
-             if instr.name in ['CX', 'CY', 'CZ', 'SWAP', 'ISWAP', 'SQRT_XX', 'SQRT_YY', 'SQRT_ZZ']:
-                 count += len(instr.targets_copy()) // 2
-             else:
-                 count += len(instr.targets_copy())
-    return count
 
 def analyze():
-    try:
-        # Check if candidate exists
-        try:
-            with open('candidate_graph.stim', 'r') as f:
-                circuit_text = f.read()
-            circuit = stim.Circuit(circuit_text)
-            print('Loaded candidate_graph.stim')
-        except:
-            print('Could not load candidate_graph.stim')
-            return
-
-        with open('target_stabilizers.txt', 'r') as f:
-            stabilizers = [line.strip().replace(',', '') for line in f if line.strip()]
-            
-        preserved, total = check_stabilizers(circuit, stabilizers)
-        cx = count_cx(circuit)
-        vol = get_volume(circuit)
+    with open('task_baseline.stim', 'r') as f:
+        c = stim.Circuit(f.read())
+    
+    cx = c.num_2_qubit_gates()
+    # Volume is total gates? No, the tool defines volume.
+    # "volume – total gate count in the volume gate set (CX, CY, CZ, H, S, SQRT_X, etc.)"
+    # Basically all gates except maybe Identity/Annotations?
+    # Let's just count all operations for now as a proxy.
+    vol = len(c) # This is instruction count, not gate count (since one instruction can have multiple targets)
+    
+    # Better volume count: sum of len(targets) for gate instructions?
+    # The tool's definition of volume might be specific.
+    # But usually minimizing total gate count is the goal.
+    
+    real_vol = 0
+    real_cx = 0
+    for op in c:
+        if op.name in ["CX", "CNOT", "CZ", "CY"]:
+             # Each pair is a gate
+             real_cx += len(op.targets_copy()) // 2
+             real_vol += len(op.targets_copy()) // 2
+        elif op.name in ["H", "S", "X", "Y", "Z", "SQRT_X", "SQRT_Y", "SQRT_Z", "S_DAG", "SQRT_X_DAG", "SQRT_Y_DAG", "SQRT_Z_DAG"]:
+             real_vol += len(op.targets_copy())
         
-        print(f'Candidate Stabilizers preserved: {preserved}/{total}')
-        print(f'Candidate CX count: {cx}')
-        print(f'Candidate Volume: {vol}')
-        
-        if preserved == total:
-            print('VALID: Preserves all stabilizers.')
-        else:
-            print('INVALID: Does not preserve all stabilizers.')
-            
-    except Exception as e:
-        print(f'Error: {e}')
-        import traceback
-        traceback.print_exc()
+    print(f"Baseline CX: {real_cx}")
+    print(f"Baseline Volume: {real_vol}")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     analyze()

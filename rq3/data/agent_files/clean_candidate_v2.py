@@ -3,70 +3,31 @@ import re
 
 def main():
     try:
-        with open("candidate.stim", "r") as f:
+        with open("candidate_graph.stim", "r") as f:
             content = f.read()
     except FileNotFoundError:
-        print("candidate.stim not found.")
+        print("Error: candidate_graph.stim not found.")
         return
 
-    lines = content.splitlines()
-    new_lines = []
+    # Replace RX with H
+    # The graph state output uses RX as initialization to |+>.
+    # Since we assume |0> input, H is equivalent.
+    content = content.replace("RX", "H")
     
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        if line.startswith("TICK"):
-            continue
-        
-        # Replace RX with H
-        # Regex to match RX at start of line
-        if line.startswith("RX "):
-            # Check if it's RX or R something else
-            # RX followed by space
-            new_line = "H " + line[3:]
-            new_lines.append(new_line)
-        else:
-            new_lines.append(line)
-            
-    new_content = "\n".join(new_lines)
+    # Remove TICKs
+    content = content.replace("TICK", "")
     
-    try:
-        # Check if parseable
-        circuit = stim.Circuit(new_content)
-        print("Cleaned circuit parsed successfully.")
+    # Remove empty lines
+    lines = [line.strip() for line in content.split('\n') if line.strip()]
+    
+    # Reassemble
+    final_content = '\n'.join(lines)
+    
+    # Write to file
+    with open("candidate1_clean.stim", "w") as f:
+        f.write(final_content)
         
-        # Save as string to avoid decomposition
-        with open("candidate_clean.stim", "w") as f:
-            f.write(new_content)
-        print("Cleaned circuit saved to candidate_clean.stim")
-        
-        # Verify preservation
-        print("Verifying preservation...")
-        try:
-            with open("current_stabilizers_task.txt", "r") as f:
-                stabilizers = [stim.PauliString(l.strip()) for l in f if l.strip()]
-            
-            sim = stim.TableauSimulator()
-            sim.do_circuit(circuit)
-            
-            preserved = True
-            for s in stabilizers:
-                if sim.peek_observable_expectation(s) != 1:
-                    preserved = False
-                    print(f"FAIL: Stabilizer {s} not preserved.")
-                    break
-            
-            if preserved:
-                print("SUCCESS: All stabilizers preserved.")
-            else:
-                print("FAILURE: Stabilizers not preserved.")
-                
-        except Exception as e:
-            print(f"Verification failed: {e}")
-            
-    except Exception as e:
-        print(f"Failed to parse cleaned circuit: {e}")
+    print("Cleaned circuit saved to candidate1_clean.stim")
 
 if __name__ == "__main__":
     main()

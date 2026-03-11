@@ -1,10 +1,17 @@
-def check_len():
-    max_len = 0
-    with open("my_stabilizers_776.txt", "r") as f:
-        for line in f:
-            l = line.strip()
-            if l:
-                max_len = max(max_len, len(l))
-    print(f"Max stabilizer length: {max_len}")
+def check():
+    with open('clean_stabilizers.txt', 'r') as f:
+        lines = [line.strip() for line in f if line.strip()]
+    
+    print(f"Number of lines: {len(lines)}")
+    lengths = [len(l) for l in lines]
+    print(f"Max length: {max(lengths)}")
+    print(f"Min length: {min(lengths)}")
+    print(f"Unique lengths: {set(lengths)}")
+    
+    # Check if any line has length 65
+    for i, l in enumerate(lines):
+        if len(l) > 63:
+            print(f"Line {i} has length {len(l)}: {l}")
 
-check_len()
+if __name__ == "__main__":
+    check()

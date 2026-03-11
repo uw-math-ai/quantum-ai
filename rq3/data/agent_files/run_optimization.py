@@ -1,288 +1,174 @@
 import stim
-import os
+import re
+import sys
 
-BASELINE_FILE = r"C:\Users\anpaz\Repos\quantum-ai\rq3\current_baseline.stim"
-STABILIZERS_FILE = r"C:\Users\anpaz\Repos\quantum-ai\rq3\current_stabilizers.txt"
-OUTPUT_FILE = r"C:\Users\anpaz\Repos\quantum-ai\rq3\candidate_opt.stim"
+def count_cx(circuit):
+    count = 0
+    for instr in circuit:
+        if instr.name == "CX" or instr.name == "CNOT":
+            count += len(instr.targets) // 2
+    return count
 
-def get_metrics(circuit):
-    cx = 0
-    vol = 0
-    for instruction in circuit:
-        # Standard volume gate set usually includes:
-        # 1-qubit: H, S, S_DAG, SQRT_X, SQRT_X_DAG, SQRT_Y, SQRT_Y_DAG, SQRT_Z, SQRT_Z_DAG, X, Y, Z, I
-        # 2-qubit: CX, CY, CZ, SWAP, ISWAP, ISWAP_DAG
-        
-        name = instruction.name
-        n_targets = len(instruction.targets_copy())
-        
-        if name in ["CX", "CNOT", "CY", "CZ", "SWAP", "ISWAP", "ISWAP_DAG"]:
-            # These are 2-qubit gates (mostly).
-            # Stim stores 2-qubit gates with multiple targets as pairs.
-            # e.g. CX 0 1 2 3 is two CX gates: (0,1) and (2,3).
-            gate_count = n_targets // 2
-            if name in ["CX", "CNOT"]:
-                cx += gate_count
-            vol += gate_count
-        elif name in ["H", "S", "S_DAG", "X", "Y", "Z", "I", "SQRT_X", "SQRT_X_DAG", "SQRT_Y", "SQRT_Y_DAG", "SQRT_Z", "SQRT_Z_DAG", "C_XYZ", "C_ZYX"]:
-             # 1-qubit gates.
-             # Stim stores 1-qubit gates with multiple targets as independent gates.
-             # e.g. H 0 1 2 is three H gates.
-             vol += n_targets
-        elif name in ["MPP", "M", "MR", "R", "RX", "RY", "RZ", "DETECTOR", "OBSERVABLE_INCLUDE", "TICK", "SHIFT_COORDS", "QUBIT_COORDS"]:
-            # Non-unitary or annotations.
+def generate_circuit():
+    # Load stabilizers
+    with open("current_target_stabilizers.txt", "r") as f:
+        content = f.read().strip()
+    
+    # Split by comma or newline
+    lines = re.split(r'[,\n]+', content)
+    # Filter empty strings and whitespace
+    lines = [l.strip() for l in lines if l.strip()]
+    
+    try:
+        # Create Tableau from stabilizers
+        tableau = stim.Tableau.from_stabilizers([stim.PauliString(s) for s in lines])
+    except Exception as e:
+        print(f"Error creating tableau: {e}")
+        return None
+
+    # Synthesize circuit
+    # method="graph_state" is usually optimal for 2-qubit gates (CZ)
+    circ = tableau.to_circuit(method="graph_state")
+    
+    # Post-process to remove resets and convert to CX
+    new_circ = stim.Circuit()
+    
+    for instr in circ:
+        if instr.name == "R" or instr.name == "RY":
+            # Remove resets (assuming start state is |0>)
             pass
+        elif instr.name == "RX":
+            # Replace RX with H (RX resets to |+>, so from |0> we need H)
+            for t in instr.targets:
+                new_circ.append("H", [t])
+        elif instr.name == "CZ":
+            # Convert CZ to CX: H t, CX c t, H t
+            # Note: CZ is symmetric, so target/control doesn't matter for logic,
+            # but for optimization, maybe it does? 
+            # We'll just pick one.
+            for i in range(0, len(instr.targets), 2):
+                c = instr.targets[i]
+                t = instr.targets[i+1]
+                new_circ.append("H", [t])
+                new_circ.append("CX", [c, t])
+                new_circ.append("H", [t])
         else:
-            # Fallback for other gates?
-            # Assuming they contribute to volume if they are unitary.
-            # But baseline only has basic Clifford gates.
-            pass
-            
-    return cx, vol
+             new_circ.append(instr)
+             
+    # Optimization: Simple peephole to cancel adjacent H gates
+    # This reduces the H count added by CZ decomposition.
+    
+    # We'll convert to a list of operations to process
+    ops = []
+    for instr in new_circ:
+        if instr.name in ["H", "S", "X", "Y", "Z", "I"]:
+            for t in instr.targets:
+                ops.append({"name": instr.name, "targets": [t.value]})
+        elif instr.name in ["CX", "CZ", "SWAP"]:
+            for i in range(0, len(instr.targets), 2):
+                ops.append({"name": instr.name, "targets": [instr.targets[i].value, instr.targets[i+1].value]})
+        else:
+            # Keep others as is (e.g. measurements, though we shouldn't have any)
+            ops.append({"name": instr.name, "targets": [t.value for t in instr.targets], "raw": instr})
 
-def main():
-    # 1. Write the correct baseline and stabilizers first (overwriting existing stale files)
-    baseline_text = """CX 50 0 0 50 50 0
-H 0 6 10 11 18 22 23 28 29 40 41 58 59
-CX 0 6 0 10 0 11 0 18 0 22 0 23 0 28 0 29 0 36 0 40 0 41 0 54 0 55 0 56 0 58 0 59
-H 24 48 50 51
-CX 24 0 48 0 50 0 51 0 50 1 1 50 50 1
-H 1
-CX 1 54 1 55 1 56
-S 12 36
-H 12 24 36
-CX 12 1 24 1 36 1 48 1 51 1 12 2 2 12 12 2
-H 2
-S 2 24
-H 24 54 55 56
-CX 24 2 36 2 48 2 51 2 54 2 55 2 56 2 24 3 3 24 24 3
-H 3
-S 3
-H 54 55 56
-CX 3 54 3 55 3 56
-H 36
-CX 36 3 48 3 51 3 36 4 4 36 36 4
-S 4
-CX 48 4 51 4 25 5 5 25 25 5
-H 5 7 13 19 49 50 52
-CX 5 6 5 7 5 11 5 13 5 18 5 19 5 23 5 29 5 37 5 41 5 49 5 50 5 51 5 52 5 54 5 56 5 57 5 58 5 59 48 5 50 5 51 5 37 6 6 37 37 6
-H 6 50
-CX 6 50 6 55 6 57 13 6 48 6 51 6 50 7 7 50 50 7
-H 13
-CX 7 13 7 55 7 57
-H 55 57
-CX 48 7 51 7 55 7 57 7 13 8 8 13 13 8
-S 8
-H 8
-S 8
-H 55 57
-CX 8 55 8 57
-S 51
-H 11 18 19 23 29 37 41 49 50 51 52 54 56 57 58 59
-CX 11 8 18 8 19 8 23 8 29 8 37 8 41 8 48 8 49 8 50 8 51 8 52 8 54 8 56 8 57 8 58 8 59 8 51 9 9 51 51 9
-H 9
-S 9
-H 11 18 19 23 29 37 41 49 50 52 54 56 57 58 59
-CX 9 11 9 18 9 19 9 23 9 29 9 37 9 41 9 49 9 50 9 52 9 54 9 56 9 57 9 58 9 59
-H 55 57
-CX 48 9 55 9 57 9 12 10 10 12 12 10
-H 10 55 57
-CX 10 38 10 53 10 55 10 57
-H 26
-CX 26 10 48 10 49 10 38 11 11 38 38 11
-H 11
-CX 11 53 11 55 11 57
-H 14
-CX 14 11 48 11 49 11 26 12 12 26 26 12
-H 13 14 17 32 35 53 55 56 57 58 59
-CX 12 13 12 14 12 17 12 32 12 35 12 38 12 41 12 53 12 55 12 56 12 57 12 58 12 59 48 12 49 12 53 13 13 53 53 13
-H 13 55 57
-CX 13 14 13 55 13 57
-H 17 32 35 38 41 53 56 58 59
-CX 17 13 32 13 35 13 38 13 41 13 48 13 49 13 53 13 55 13 56 13 57 13 58 13 59 13
-H 14 17 32 35 38 41 53 55 56 57 58 59
-CX 14 17 14 32 14 35 14 38 14 41 14 53 14 55 14 56 14 57 14 58 14 59 48 14 49 14 24 15 15 24 24 15
-H 15 24 27 55 56 57 58
-CX 15 18 15 19 15 23 15 24 15 27 15 28 15 37 15 38 15 39 15 40 15 49 15 50 15 52 15 55 15 56 15 57 15 58 27 15 49 15 39 16 16 39 39 16
-H 16
-CX 16 55 16 56 16 57 24 16 49 16 24 17 17 24 24 17
-H 17
-CX 17 55 17 56 17 57
-S 27 49
-H 18 19 23 27 28 37 38 40 49 50 52 58
-CX 18 17 19 17 23 17 27 17 28 17 37 17 38 17 40 17 49 17 50 17 52 17 58 17 27 18 18 27 27 18
-S 18
-H 18
-S 18
-H 49 55 56 57
-CX 49 18 55 18 56 18 57 18 49 19 19 49 49 19
-S 19
-H 23 27 28 37 38 40 49 50 52 55 56 57 58
-CX 19 23 19 27 19 28 19 37 19 38 19 40 19 49 19 50 19 52 19 55 19 56 19 57 19 58
-H 55 56 57
-CX 55 19 56 19 57 19 36 20 20 36 36 20
-H 20
-S 40 54 56
-H 33 39 51 58
-CX 20 24 20 33 20 35 20 38 20 39 20 40 20 41 20 51 20 54 20 55 20 56 20 58 20 59 28 20 39 21 21 39 39 21
-S 54
-H 55 56 57
-CX 21 54 21 55 21 56 21 57 40 21 28 22 22 28 28 22
-S 55 56
-H 40 54
-CX 22 24 22 33 22 35 22 38 22 40 22 41 22 51 22 54 22 55 22 56 22 57 22 58 22 59 40 23 23 40 40 23
-H 23
-S 23
-CX 23 24 23 33 23 35 23 38 23 41 23 51 23 54 23 55 23 56 23 57 23 58 23 59 54 24 24 54 54 24
-H 24
-S 55 56
-CX 24 55 24 56 24 57
-S 55 56
-H 33 35 38 41 51 54 55 56 57 58 59
-CX 33 24 35 24 38 24 41 24 51 24 54 24 55 24 56 24 57 24 58 24 59 24
-H 25
-S 56
-H 57 59
-CX 25 41 25 56 25 57 25 59 29 25 54 26 26 54 54 26
-H 26 59
-CX 26 56 26 57 26 59
-H 41
-CX 41 26 29 27 27 29 29 27
-S 41 59
-CX 27 41 27 56 27 57 27 59 59 28 28 59 59 28
-S 28
-H 28
-CX 28 56 28 57 41 28 41 29 29 41 41 29
-S 29
-H 29
-CX 29 56 29 57
-H 30
-CX 30 42 30 56 37 30 48 30 52 30 42 31 31 42 42 31
-H 31
-S 31 37
-H 33 51 56 57
-CX 31 33 31 37 31 51 31 55 31 56 31 57 41 31 48 31 52 31 56 32 32 56 56 32
-H 32 37 41
-CX 32 37 32 41
-H 33 51 55 57
-CX 33 32 48 32 51 32 52 32 55 32 57 32 37 33 33 37 37 33
-H 33
-S 33
-H 37 51 55 57
-CX 33 37 33 41 33 51 33 55 33 57 48 33 52 33 41 34 34 41 41 34
-H 34
-CX 34 37 34 51 34 55 34 57 48 34 52 34 42 35 35 42 42 35
-H 35 57
-CX 35 43 35 57 48 35 50 35 52 35 43 36 36 43 43 36
-H 36
-S 36 50 55 57
-CX 36 50 36 53 36 55 36 56 36 57 48 36 49 36 52 36 57 37 37 57 57 37
-H 37
-S 37
-H 49 50
-CX 37 49 37 50
-H 53 55 56
-CX 48 37 52 37 53 37 55 37 56 37 50 38 38 50 50 38
-H 38
-S 38
-H 53 55 56
-CX 38 49 38 53 38 55 38 56 48 38 52 38 49 39 39 49 49 39
-H 39
-CX 39 53 39 55 39 56 48 39 52 39 48 40 40 48 48 40
-H 43
-CX 40 43 40 44 40 53 40 56 52 40 53 40 56 40 44 41 41 44 44 41
-H 41 53
-CX 41 53 41 55 43 41 52 41 53 42 42 53 53 42
-H 43
-CX 42 43 42 55
-H 55
-CX 52 42 55 42 56 42 56 43 43 56 56 43
-H 43 55
-CX 43 55 43 56
-H 56
-CX 52 43 56 43 56 44 44 56 56 44 52 44 51 45 45 51 51 45
-H 49 50
-CX 45 48 45 49 45 50 45 51 45 52 45 54 45 57 45 58 45 59 52 45 57 45 51 46 46 51 51 46
-H 46
-CX 46 55 49 46 52 46 49 47 47 49 49 47
-H 47
-CX 47 55
-S 52 57
-H 48 50 52 54 55 57 58 59
-CX 48 47 50 47 52 47 54 47 55 47 57 47 58 47 59 47 57 48 48 57 57 48
-S 48
-H 48
-S 48
-H 52
-CX 52 48 55 48 52 49 49 52 52 49
-S 49
-H 50 54 57 58 59
-CX 49 50 49 54 49 57 49 58 49 59 55 49 56 50 50 56 56 50
-H 50 55
-CX 50 51 50 55 54 50
-H 51
-S 51 54
-H 53 55 58
-CX 51 53 51 54 51 55 51 56 51 58 59 51 55 52 52 55 55 52
-H 52 54 59
-CX 52 54 52 59
-H 53 56 58
-CX 53 52 56 52 58 52 54 53 53 54 54 53
-H 53
-S 53
-H 54 56 58
-CX 53 54 53 56 53 58 53 59 59 54 54 59 59 54
-H 54
-CX 54 56 54 58 54 59 59 55 55 59 59 55
-H 58
-CX 55 58 55 59 56 55 59 56 56 59 59 56
-H 56 58 59
-CX 56 58 56 59 57 56 59 57 57 59 59 57
-H 59
-CX 57 59
-H 58
-CX 58 57
-H 58
-CX 58 59
-H 59
-CX 59 58
-H 1 7 13 28 29 32 37 43 47 48 52 57
-S 1 1 7 7 13 13 28 28 29 29 32 32 37 37 43 43 47 47 48 48 52 52 57 57
-H 1 7 13 28 29 32 37 43 47 48 52 57
-S 0 0 1 1 2 2 5 5 7 7 9 9 10 10 11 11 13 13 15 15 17 17 19 19 21 21 24 24 25 25 26 26 27 27 28 28 29 29 30 30 32 32 33 33 34 34 35 35 37 37 38 38 39 39 42 42 45 45 46 46 48 48 50 50 52 52 53 53 54 54 56 56 58 58 59 59"""
+    # Optimization pass
+    # We iterate and build a new list. 
+    # If we see H acting on qubit q, and the previous op on q was H, remove both.
+    # This requires tracking the "frontier" of each qubit.
+    # This is non-trivial to implement perfectly in a short script.
     
-    with open(BASELINE_FILE, "w") as f:
-        f.write(baseline_text)
-
-    # 2. Load the baseline
-    baseline = stim.Circuit(baseline_text)
+    # Let's use a simpler heuristic:
+    # Just look for immediate neighbors in the list? No, gates on other qubits might intervene.
     
-    # 3. Calculate baseline metrics
-    base_cx, base_vol = get_metrics(baseline)
-    print(f"Baseline Metrics: CX={base_cx}, Vol={base_vol}")
+    # Better approach: Use stim's own fusion if available? No.
+    # Let's write a "cancellation" pass.
     
-    # 4. Synthesize new circuit
-    # The baseline unitary U is such that U |0> = |stabilizer_state>.
-    # Stim's tableau.to_circuit() synthesizes a circuit that implements the tableau operations.
-    # Note: stim.Tableau.from_circuit(c) gives the Heisenberg picture evolution.
-    # The state prepared by the circuit is stabilized by Z_k evolved by the circuit.
-    # We need a circuit C' such that Stabilizers(C') == Stabilizers(C).
-    # Since we are given a circuit that prepares the state from |0>, we just need a circuit that implements the same Tableau (or equivalent up to phases/stabilizers, but same Tableau is sufficient).
+    final_ops = []
+    # Track the last operation index for each qubit
+    # qubit_last_op_index = {} 
+    # This is complex because multi-qubit gates entangle.
     
-    tableau = stim.Tableau.from_circuit(baseline)
-    new_circuit = tableau.to_circuit(method="elimination")
+    # ALTERNATIVE: Just output the circuit as is. 
+    # The CZ -> CX conversion adds 2 H per CZ.
+    # If we have many CZs, this is costly in volume.
+    # But usually "graph state" circuits are efficient.
     
-    # 5. Calculate new metrics
-    new_cx, new_vol = get_metrics(new_circuit)
-    print(f"New Circuit Metrics: CX={new_cx}, Vol={new_vol}")
+    # Let's try to do a safe cancellation:
+    # If we have [H q], [H q] with NOTHING involving q in between, we cancel.
     
-    # 6. Check if improved
-    if new_cx < base_cx or (new_cx == base_cx and new_vol < base_vol):
-        print("IMPROVEMENT FOUND!")
-        with open(OUTPUT_FILE, "w") as f:
-            f.write(str(new_circuit))
-    else:
-        print("No improvement with standard synthesis.")
+    # We can do this by maintaining a "pending H" set for each qubit?
+    # No, order matters.
+    
+    # Simplest:
+    # Iterate through ops.
+    # Maintain a "stack" of gates for each qubit?
+    # No, just let Stim do it? Stim doesn't have "optimize" method exposed in Python easily.
+    
+    # Let's try to cancel immediate H-H if they are adjacent in the list (ignoring other qubits).
+    # But we have to be careful about commutation.
+    # Actually, if we just synthesized it, the structure is:
+    # H on some qubits
+    # CZs
+    # H on some qubits (maybe)
+    # S, X, etc.
+    
+    # The CZ decomposition:
+    # H t
+    # CX c t
+    # H t
+    
+    # If we have multiple CZs involving `t`, we get:
+    # ...
+    # H t
+    # CX c1 t
+    # H t
+    # H t  <-- from next CZ
+    # CX c2 t
+    # H t
+    # ...
+    # The H t, H t in the middle CANCEL!
+    
+    # So yes, we definitely want to cancel adjacent H's on the same qubit.
+    # Since we are generating the sequence, we can just buffer the H's.
+    
+    optimized_circ = stim.Circuit()
+    
+    # We will process the circuit we generated `new_circ`
+    # We can't easily cancel across other gates without dependency analysis.
+    # But in graph state circuits, we often have blocks of CZs.
+    # The `to_circuit` output groups them.
+    
+    # Let's try a greedy approach:
+    # Build the circuit, but whenever we add a gate, check if it cancels the previous gate on that qubit?
+    # Too hard.
+    
+    # Let's just output the circuit with H-CX-H.
+    # BUT, we can optimize the generated list.
+    # If we see [H t], [H t], we remove both.
+    # We need to ensure no gate involving t is between them.
+    
+    # Let's iterate through the ops.
+    # We maintain a list of "active" operations.
+    # When adding an op, we check if it commutes with everything since the last op on its qubits.
+    # That's too complex.
+    
+    # Let's just stick to the simple "graph state" output.
+    # If `cx_count` is the metric, converting CZ to CX yields 1 CX.
+    # So `cx_count` = number of CZs.
+    # The Baseline has lots of CX.
+    # Graph state synthesis minimizes interaction.
+    # It might be optimal.
+    
+    return new_circ
 
 if __name__ == "__main__":
-    main()
+    c = generate_circuit()
+    if c:
+        # Save to candidate.stim
+        c.to_file("candidate.stim")
+        print(f"Generated candidate with {count_cx(c)} CX gates.")
+        
+        # Check baseline
+        with open("current_baseline.stim") as f:
+            base = stim.Circuit(f.read())
+        print(f"Baseline has {count_cx(base)} CX gates.")

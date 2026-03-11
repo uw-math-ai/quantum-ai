@@ -1,56 +1,60 @@
 import stim
 
-def count_cx(circuit):
-    count = 0
-    for instr in circuit:
-        if instr.name == "CX" or instr.name == "CNOT":
-            count += len(instr.targets_copy()) // 2
-    return count
+stabilizers = [
+    "XXXIIIXXXIII",
+    "IIXXXIIIXXXI",
+    "XIIIXXXIIIXX",
+    "XXXXXIIIIII", # This one is length 11. Let's see if baseline satisfies it with I or X at end.
+    "IIIIIIXXXXXX",
+    "IIZZZZIZIZII",
+    "ZIIIZIZZZIIZ",
+    "ZZZIIZZIIIZI",
+    "ZIIZZZIIZIZI",
+    "IZZIIIZZIZIZ"
+]
 
-def calculate_volume(circuit):
-    # Volume is total gate count in the volume gate set (CX, CY, CZ, H, S, SQRT_X, etc.)
-    # Basically all gates except efficient Paulis? Or all gates?
-    # The prompt says: "volume – total gate count in the volume gate set (CX, CY, CZ, H, S, SQRT_X, etc.)"
-    # Usually this means all operations.
-    count = 0
-    for instr in circuit:
-        if instr.name in ["CX", "CNOT", "CY", "CZ", "H", "S", "S_DAG", "SQRT_X", "SQRT_X_DAG", "SQRT_Y", "SQRT_Y_DAG", "SQRT_Z", "SQRT_Z_DAG", "X", "Y", "Z", "I"]:
-            # For 2-qubit gates, stim lists targets in pairs.
-            # For 1-qubit gates, it lists targets individually.
-            # The "gate count" usually refers to the number of operations applied to qubits.
-            # So a "CX 0 1 2 3" counts as 2 gates?
-            # Or is it the number of instructions?
-            # Standard definition: total number of gates.
-            if instr.name in ["CX", "CNOT", "CY", "CZ"]:
-                count += len(instr.targets_copy()) // 2
-            else:
-                count += len(instr.targets_copy())
-    return count
+# Load baseline
+with open("baseline.stim", "r") as f:
+    circuit = stim.Circuit(f.read())
 
-def check():
-    circuit = stim.Circuit.from_file("baseline.stim")
+sim = stim.TableauSimulator()
+sim.do(circuit)
+
+print(f"Num qubits: {circuit.num_qubits}")
+
+for i, stab in enumerate(stabilizers):
+    # Pad to 12 chars if necessary
+    if len(stab) < 12:
+        print(f"Warning: Stabilizer {i} '{stab}' has length {len(stab)}.")
+        # Try both 'I' and 'X' and 'Z'?
+        # Let's just create a PauliString and see what the simulator says.
+        # But we need to know the target.
+        pass
     
-    # Load stabilizers
-    with open("stabilizers.txt", "r") as f:
-        stabilizers = [line.strip() for line in f if line.strip()]
+    # Construct PauliString
+    # If length is 11, we need to guess the 12th char.
+    # Given the others are 12, it's likely 12.
     
-    print(f"Loaded {len(stabilizers)} stabilizers.")
-    
-    # Check expectation
-    sim = stim.TableauSimulator()
-    sim.do(circuit)
-    
-    preserved = 0
-    for s_str in stabilizers:
-        s = stim.PauliString(s_str)
-        if sim.peek_observable_expectation(s) == 1:
-            preserved += 1
+    candidates = []
+    if len(stab) == 11:
+         candidates = [stab + "I", stab + "X", stab + "Z", stab + "Y"]
+    else:
+         candidates = [stab]
+         
+    found = False
+    for cand in candidates:
+        try:
+            p = stim.PauliString(cand)
+            if sim.peek_observable_expectation(p) == 1:
+                print(f"Stabilizer {i} preserved as {cand}")
+                found = True
+                break
+        except Exception as e:
+            print(f"Error checking {cand}: {e}")
             
-    print(f"Baseline preserves {preserved}/{len(stabilizers)} stabilizers.")
-    
-    cx = count_cx(circuit)
-    vol = calculate_volume(circuit)
-    print(f"Baseline metrics: cx_count={cx}, volume={vol}")
+    if not found:
+        print(f"Stabilizer {i} NOT preserved (tried {candidates})")
 
-if __name__ == "__main__":
-    check()
+print("Baseline stabilizers:")
+print(sim.canonical_stabilizers())
+

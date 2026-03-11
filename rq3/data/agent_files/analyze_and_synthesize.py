@@ -1,127 +1,83 @@
-
 import stim
 import sys
 
-def count_cx(circuit):
-    count = 0
-    for instruction in circuit:
-        if instruction.name in ["CX", "CNOT"]:
-            count += len(instruction.targets_copy()) // 2
-    return count
-
-def get_volume(circuit):
-    count = 0
-    gate_set = ["CX", "CNOT", "CY", "CZ", "H", "S", "S_DAG", "SQRT_X", "SQRT_X_DAG", "SQRT_Y", "SQRT_Y_DAG", "SQRT_Z", "SQRT_Z_DAG", "X", "Y", "Z", "I"]
-    for instruction in circuit:
-        if instruction.name in gate_set:
-            targets = instruction.targets_copy()
-            if instruction.name in ["CX", "CNOT", "CY", "CZ"]:
-                 count += len(targets) // 2
-            else:
-                 count += len(targets)
-    return count
-
-def read_stabilizers(path):
-    with open(path, 'r') as f:
-        lines = [line.strip() for line in f if line.strip()]
-    return lines
-
 def main():
-    stabilizers = read_stabilizers("prompt_stabilizers.txt")
-    baseline = stim.Circuit.from_file("prompt_baseline.stim")
-    
-    b_cx = count_cx(baseline)
-    b_vol = get_volume(baseline)
-    print(f"Baseline CX: {b_cx}")
-    print(f"Baseline Volume: {b_vol}")
-    
-    # Check baseline preservation
-    sim = stim.TableauSimulator()
-    sim.do(baseline)
-    preserved = 0
-    stab_objs = []
-    for s in stabilizers:
-        p = stim.PauliString(s)
-        stab_objs.append(p)
-        if sim.peek_observable_expectation(p) == 1:
-            preserved += 1
-    
-    print(f"Baseline preserved: {preserved}/{len(stabilizers)}")
-    
-    if preserved != len(stabilizers):
-        print("WARNING: Baseline does not preserve all stabilizers!")
-
-    # Attempt Synthesis
     try:
-        # Method 1: Gaussian Elimination
-        tableau = stim.Tableau.from_stabilizers(stab_objs, allow_underconstrained=True)
-        cand1 = tableau.to_circuit("elimination")
+        # Load baseline
+        with open("baseline.stim", "r") as f:
+            baseline_text = f.read()
+        baseline_circuit = stim.Circuit(baseline_text)
         
-        c1_cx = count_cx(cand1)
-        c1_vol = get_volume(cand1)
-        print(f"Candidate 1 (Elimination) CX: {c1_cx}, Volume: {c1_vol}")
+        # Load stabilizers
+        with open("target_stabilizers.txt", "r") as f:
+            lines = [l.strip() for l in f.readlines() if l.strip()]
         
-        # Method 2: Graph State
-        cand2_raw = tableau.to_circuit("graph_state")
+        num_qubits = len(lines[0])
+        print(f"Number of qubits in stabilizers: {num_qubits}")
         
-        # Post-process: Replace RX with H, remove TICK
-        cand2 = stim.Circuit()
-        for inst in cand2_raw:
-            if inst.name == "RX":
-                # Replace RX with H on the same targets
-                cand2.append("H", inst.targets_copy())
-            elif inst.name == "TICK":
-                continue
+        stabilizers = []
+        for line in lines:
+            stabilizers.append(stim.PauliString(line))
+            
+        # Verify baseline stabilizes targets
+        # Note: from_circuit computes T such that T|0> is the state.
+        # We check if T|0> is stabilized by S.
+        # i.e. S * (T|0>) = (T|0>)
+        # <=> T^-1 * S * T * |0> = |0>
+        # <=> T^-1 * S * T is a Z-type Pauli (all Z or I).
+        # Actually stim has a helper for this.
+        
+        baseline_cx = sum(1 for op in baseline_circuit if op.name == "CX")
+        print(f"Baseline CX count: {baseline_cx}")
+        
+        # Try graph state synthesis
+        print("Synthesizing graph state...")
+        # Note: allow_underconstrained=True fills missing stabilizers with Z operators.
+        tableau = stim.Tableau.from_stabilizers(stabilizers, allow_underconstrained=True)
+        
+        graph_circuit = tableau.to_circuit(method="graph_state")
+        
+        # Decompose CZ to CX
+        final_circuit = stim.Circuit()
+        for op in graph_circuit:
+            if op.name == "CZ":
+                targets = op.targets_copy()
+                # CZ can take multiple pairs. Decompose each.
+                for i in range(0, len(targets), 2):
+                    c = targets[i]
+                    t = targets[i+1]
+                    # CZ(c, t) = H(t) CX(c, t) H(t)
+                    final_circuit.append("H", [t])
+                    final_circuit.append("CX", [c, t])
+                    final_circuit.append("H", [t])
+            elif op.name == "H":
+                final_circuit.append("H", op.targets_copy())
+            elif op.name == "S":
+                final_circuit.append("S", op.targets_copy())
+            elif op.name == "X":
+                final_circuit.append("X", op.targets_copy())
+            elif op.name == "Y":
+                final_circuit.append("Y", op.targets_copy())
+            elif op.name == "Z":
+                final_circuit.append("Z", op.targets_copy())
+            elif op.name == "I":
+                pass
             else:
-                cand2.append(inst)
+                # Other gates? Graph state usually only has H, S, CZ, X, Y, Z, I.
+                # Maybe S_DAG?
+                final_circuit.append(op)
                 
-        c2_cx = count_cx(cand2)
-        c2_vol = get_volume(cand2)
-        print(f"Candidate 2 (Graph State, clean) CX: {c2_cx}, Volume: {c2_vol}")
+        final_cx = sum(1 for op in final_circuit if op.name == "CX")
+        print(f"Graph state circuit CX count (decomposed): {final_cx}")
         
-        # Compare
-        best_cand = None
-        best_metrics = (b_cx, b_vol)
-        best_name = "Baseline"
-        
-        # Check Candidate 1
-        if (c1_cx < b_cx) or (c1_cx == b_cx and c1_vol < b_vol):
-             # Verify it works
-             sim1 = stim.TableauSimulator()
-             sim1.do(cand1)
-             p1 = 0
-             for s in stab_objs:
-                 if sim1.peek_observable_expectation(s) == 1:
-                     p1 += 1
-             if p1 == len(stabilizers):
-                 best_cand = cand1
-                 best_metrics = (c1_cx, c1_vol)
-                 best_name = "Elimination"
-                 
-        # Check Candidate 2
-        if (c2_cx < best_metrics[0]) or (c2_cx == best_metrics[0] and c2_vol < best_metrics[1]):
-             sim2 = stim.TableauSimulator()
-             sim2.do(cand2)
-             p2 = 0
-             for s in stab_objs:
-                 if sim2.peek_observable_expectation(s) == 1:
-                     p2 += 1
-             if p2 == len(stabilizers):
-                 best_cand = cand2
-                 best_metrics = (c2_cx, c2_vol)
-                 best_name = "Graph State"
-
-        print(f"Best strategy: {best_name}")
-        
-        if best_cand:
-            with open("best_candidate.stim", "w") as f:
-                f.write(str(best_cand))
-            print("Saved best_candidate.stim")
-        else:
-            print("No improvement found.")
+        with open("candidate.stim", "w") as f:
+            # Write without fences
+            f.write(str(final_circuit).replace("circuit", "").strip())
             
     except Exception as e:
-        print(f"Synthesis error: {e}")
+        print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()

@@ -1,78 +1,81 @@
 import stim
 import sys
 
-def count_cx(circuit):
-    count = 0
-    for instr in circuit:
-        if instr.name == 'CX' or instr.name == 'CNOT':
-            count += len(instr.targets_copy()) // 2
-    return count
-
-def get_volume(circuit):
-    count = 0
-    for instr in circuit:
-        if instr.name in ['CX', 'CY', 'CZ', 'H', 'S', 'SQRT_X', 'SQRT_Y', 'SQRT_Z', 'X', 'Y', 'Z', 'I', 'SWAP', 'ISWAP', 'SQRT_XX', 'SQRT_YY', 'SQRT_ZZ']:
-             if instr.name in ['CX', 'CY', 'CZ', 'SWAP', 'ISWAP', 'SQRT_XX', 'SQRT_YY', 'SQRT_ZZ']:
-                 count += len(instr.targets_copy()) // 2
-             else:
-                 count += len(instr.targets_copy())
-    return count
-
-def generate():
-    with open('target_stabilizers.txt', 'r') as f:
-        # Filter empty lines
-        stabilizers = [line.strip().replace(',', '') for line in f if line.strip()]
-        
-    print(f'Loaded {len(stabilizers)} stabilizers.')
-    
-    # Method 1: Graph State Synthesis
+def generate_circuit():
     try:
-        # We need PauliString objects
-        paulis = [stim.PauliString(s) for s in stabilizers]
-        tableau = stim.Tableau.from_stabilizers(paulis, allow_underconstrained=True)
+        with open("target_stabilizers_76.txt", "r") as f:
+            content = f.read().replace(',', '\n')
+            lines = [line.strip() for line in content.split('\n') if line.strip()]
+    except FileNotFoundError:
+        print("Error: target_stabilizers_76.txt not found.")
+        return
+
+    # Parse stabilizers
+    stabilizers = []
+    for line in lines:
+        try:
+            stabilizers.append(stim.PauliString(line))
+        except Exception as e:
+            print(f"Error parsing line '{line}': {e}")
+
+    print(f"Loaded {len(stabilizers)} stabilizers.")
+    if len(stabilizers) > 0:
+        print(f"First stabilizer length: {len(stabilizers[0])}")
+
+    try:
+        # allow_underconstrained=True because we just need to preserve THESE
+        tableau = stim.Tableau.from_stabilizers(stabilizers, allow_underconstrained=True)
+        print(f"Successfully created tableau with {len(tableau)} qubits.")
         
-        circuit_graph = tableau.to_circuit(method='graph_state')
+    except Exception as e:
+        print(f"Error creating tableau: {e}")
+        return
+
+    # Try graph state synthesis
+    try:
+        circuit = tableau.to_circuit(method="graph_state")
         
-        # Convert CZ to CX to get accurate CX count
-        # CZ(a,b) = H(b) CX(a,b) H(b)
-        circuit_cx = stim.Circuit()
-        for instr in circuit_graph:
-            if instr.name == 'CZ':
-                targets = instr.targets_copy()
-                for k in range(0, len(targets), 2):
-                    p = targets[k].value
-                    q = targets[k+1].value
-                    circuit_cx.append('H', [q])
-                    circuit_cx.append('CX', [p, q])
-                    circuit_cx.append('H', [q])
+        cleaned_circuit = stim.Circuit()
+        for instr in circuit:
+            if instr.name == "RX":
+                cleaned_circuit.append("H", instr.targets_copy())
+            elif instr.name == "R" or instr.name == "RZ":
+                pass 
+            elif instr.name == "MY" or instr.name == "MZ" or instr.name == "MX":
+                 cleaned_circuit.append(instr)
             else:
-                circuit_cx.append(instr)
-                
-        cx_graph = count_cx(circuit_cx)
-        vol_graph = get_volume(circuit_cx)
-        print(f'Method graph_state: CX={cx_graph}, Vol={vol_graph}')
+                cleaned_circuit.append(instr)
         
-        with open('candidate_graph.stim', 'w') as f:
-            f.write(str(circuit_cx))
-            
+        # print("CANDIDATE_START")
+        # print(cleaned_circuit)
+        # print("CANDIDATE_END")
+        
+        # Verify using Simulator
+        sim = stim.TableauSimulator()
+        sim.do(cleaned_circuit)
+        
+        valid = True
+        failed_count = 0
+        for i, s in enumerate(stabilizers):
+             val = sim.peek_observable_expectation(s)
+             if val != 1:
+                 # print(f"Stabilizer {i} not preserved (val={val})")
+                 failed_count += 1
+                 valid = False
+        
+        if valid:
+            print("VERIFICATION SUCCESS: All stabilizers preserved.")
+            # Write to file
+            with open("candidate.stim", "w") as f:
+                f.write(str(cleaned_circuit))
+            print("Wrote candidate to candidate.stim")
+        else:
+            print(f"VERIFICATION FAILED: {failed_count} stabilizers not preserved.")
+
     except Exception as e:
-        print(f'Method graph_state failed: {e}')
+        print(f"Error during synthesis: {e}")
+        import traceback
+        traceback.print_exc()
 
-    # Method 2: Elimination Synthesis
-    try:
-        paulis = [stim.PauliString(s) for s in stabilizers]
-        tableau = stim.Tableau.from_stabilizers(paulis, allow_underconstrained=True)
-        
-        circuit_elim = tableau.to_circuit(method='elimination')
-        cx_elim = count_cx(circuit_elim)
-        vol_elim = get_volume(circuit_elim)
-        print(f'Method elimination: CX={cx_elim}, Vol={vol_elim}')
-        
-        with open('candidate_elimination.stim', 'w') as f:
-            f.write(str(circuit_elim))
-
-    except Exception as e:
-        print(f'Method elimination failed: {e}')
-
-if __name__ == '__main__':
-    generate()
+if __name__ == "__main__":
+    generate_circuit()

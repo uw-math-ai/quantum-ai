@@ -1,46 +1,46 @@
 import stim
-import sys
+import re
 
-def solve():
-    print("Loading data...")
-    with open("my_stabilizers.txt", "r") as f:
-        lines = [l.strip() for l in f if l.strip()]
-    stabilizers = [stim.PauliString(l) for l in lines]
+def check():
+    with open("current_target_stabilizers.txt", "r") as f:
+        lines = [l.strip().strip(',') for l in f if l.strip()]
     
-    baseline = stim.Circuit.from_file("my_baseline.stim")
+    print(f"Loaded {len(lines)} stabilizers.")
     
-    sim = stim.TableauSimulator()
-    sim.do(baseline)
-    
-    good_indices = []
-    failed_indices = []
-    
-    for i, s in enumerate(stabilizers):
-        if sim.peek_observable_expectation(s) == 1:
-            good_indices.append(i)
-        else:
-            failed_indices.append(i)
-
-    print(f"Failed indices: {failed_indices}")
-    
-    good_stabs = [stabilizers[i] for i in good_indices]
-    bad_stabs = [stabilizers[i] for i in failed_indices]
-    
-    print(f"Checking consistency of good set ({len(good_stabs)})...")
     try:
-        t = stim.Tableau.from_stabilizers(good_stabs, allow_underconstrained=True)
-        print("Good set is consistent.")
+        stabs = [stim.PauliString(s) for s in lines]
     except Exception as e:
-        print(f"Good set is INCONSISTENT: {e}")
+        print(f"Error parsing stabilizers: {e}")
         return
 
-    for i, bad in enumerate(bad_stabs):
-        try:
-            test_set = good_stabs + [bad]
-            t = stim.Tableau.from_stabilizers(test_set, allow_underconstrained=True)
-            print(f"Bad stabilizer {failed_indices[i]} is CONSISTENT with good set.")
-        except Exception as e:
-            print(f"Bad stabilizer {failed_indices[i]} is INCONSISTENT with good set: {e}")
+    anticommuting_pairs = []
+    for i in range(len(stabs)):
+        for j in range(i + 1, len(stabs)):
+            if not stabs[i].commutes(stabs[j]):
+                anticommuting_pairs.append((i, j))
+    
+    if anticommuting_pairs:
+        print(f"Found {len(anticommuting_pairs)} anticommuting pairs!")
+        for i, j in anticommuting_pairs[:3]:
+            print(f"  {i} vs {j}")
+            print(f"  {stabs[i]}")
+            print(f"  {stabs[j]}")
+    else:
+        print("All stabilizers commute.")
+
+    # Check baseline
+    with open("current_baseline.stim", "r") as f:
+        base_circ = stim.Circuit(f.read())
+        
+    sim = stim.TableauSimulator()
+    sim.do(base_circ)
+    
+    preserved = 0
+    for s in stabs:
+        if sim.peek_observable_expectation(s) == 1:
+            preserved += 1
+            
+    print(f"Baseline preserves {preserved}/{len(stabs)} stabilizers.")
 
 if __name__ == "__main__":
-    solve()
+    check()

@@ -1,109 +1,84 @@
 import stim
+import sys
 
-def count_cx_volume(circuit):
+def analyze_circuit(circuit):
     cx_count = 0
     volume = 0
     for instr in circuit:
-        if instr.name == "CX" or instr.name == "CNOT":
-            n = len(instr.targets_copy()) // 2
-            cx_count += n
-            volume += n
-        elif instr.name in ["H", "S", "S_DAG", "X", "Y", "Z", "SQRT_X", "SQRT_X_DAG", "SQRT_Y", "SQRT_Y_DAG", "CZ"]:
-            if instr.name == "CZ":
-                n = len(instr.targets_copy()) // 2
-                volume += n
-            else:
-                volume += len(instr.targets_copy())
+        name = instr.name
+        n_targets = len(instr.targets_copy())
         
+        if name in ['CX', 'CNOT']:
+            # CX is a 2-qubit gate. If there are multiple targets, it broadcasts.
+            # Stim format: CX 0 1 2 3 means CX 0 1 then CX 2 3.
+            # So pairs = n_targets / 2
+            pairs = n_targets // 2
+            cx_count += pairs
+            volume += pairs
+        elif name in ['CY', 'CZ', 'C_XYZ', 'C_ZYX']:
+             pairs = n_targets // 2
+             volume += pairs
+        elif name in ['H', 'S', 'SQRT_X', 'X', 'Y', 'Z', 'I', 'S_DAG', 'SQRT_X_DAG', 'SQRT_Y', 'SQRT_Y_DAG', 'H_YZ', 'H_XY']:
+             volume += n_targets
+        elif name in ['RX', 'RY', 'RZ', 'R', 'M', 'MX', 'MY', 'MZ', 'MPP']:
+             # These are not in the volume set described, or are resets/measurements
+             # If they exist, we might want to flag them.
+             pass
     return cx_count, volume
 
-def decompose_cz_to_cx(circuit):
-    new_circuit = stim.Circuit()
-    for instr in circuit:
-        if instr.name == "CZ":
-            targets = instr.targets_copy()
-            for i in range(0, len(targets), 2):
-                t1 = targets[i]
-                t2 = targets[i+1]
-                # CZ = H(t2) CX(t1, t2) H(t2)
-                # Ensure we handle qubits correctly.
-                new_circuit.append("H", [t2])
-                new_circuit.append("CX", [t1, t2])
-                new_circuit.append("H", [t2])
-        else:
-            new_circuit.append(instr)
-    return new_circuit
+def main():
+    try:
+        with open("prompt_baseline.stim", "r") as f:
+            baseline_text = f.read()
+        baseline = stim.Circuit(baseline_text)
+    except Exception as e:
+        print(f"Error reading baseline: {e}")
+        return
 
-def run():
-    print("Loading stabilizers...")
-    with open("stabilizers_new.txt", "r") as f:
-        stabilizers = [line.strip() for line in f if line.strip()]
-    
-    stim_stabilizers = [stim.PauliString(s) for s in stabilizers]
-    
-    print("Generating tableau...")
-    # Generate tableau
-    tableau = stim.Tableau.from_stabilizers(stim_stabilizers, allow_redundant=True, allow_underconstrained=True)
-    
-    # Generate graph state circuit 
-    print("Synthesizing graph state circuit...")
-    circuit_graph = tableau.to_circuit(method="graph_state")
-    circuit_graph_cx = decompose_cz_to_cx(circuit_graph)
-    cx_graph, vol_graph = count_cx_volume(circuit_graph_cx)
-    print(f"Graph State CX: {cx_graph}, Volume: {vol_graph}")
+    b_cx, b_vol = analyze_circuit(baseline)
+    print(f"Baseline: CX={b_cx}, Vol={b_vol}")
 
-    print("Synthesizing elimination circuit...")
-    circuit_elim = tableau.to_circuit(method="elimination")
-    cx_elim, vol_elim = count_cx_volume(circuit_elim)
-    print(f"Elimination CX: {cx_elim}, Volume: {vol_elim}")
-    
-    # Select best
-    best_cand = None
-    if cx_graph < cx_elim:
-        best_cand = circuit_graph_cx
-        print("Graph state is better.")
-    else:
-        best_cand = circuit_elim
-        print("Elimination is better.")
-
-    # Load baseline
-    print("Loading baseline...")
-    with open("baseline_new.stim", "r") as f:
-        baseline_text = f.read()
-    baseline = stim.Circuit(baseline_text)
-    
-    cx_base, vol_base = count_cx_volume(baseline)
-    print(f"Baseline CX: {cx_base}, Volume: {vol_base}")
-
-    cx_cand, vol_cand = count_cx_volume(best_cand)
-    print(f"Best Candidate CX: {cx_cand}, Volume: {vol_cand}")
-    
-    if cx_cand < cx_base:
-        print("Candidate is better!")
-        with open("candidate_new.stim", "w") as f:
-            f.write(str(best_cand))
-            
-        # Verify preservation
-        print("Verifying stabilizer preservation...")
-        sim = stim.TableauSimulator()
-        sim.do(best_cand)
+    # Method 1: Tableau from circuit -> Graph state
+    try:
+        # Create tableau from the circuit
+        tableau = stim.Tableau.from_circuit(baseline)
         
-        all_preserved = True
-        for s_str in stabilizers:
-            s = stim.PauliString(s_str)
-            expectation = sim.peek_observable_expectation(s)
-            if expectation != 1:
-                print(f"Stabilizer {s_str} NOT preserved! Expectation: {expectation}")
-                all_preserved = False
-                break
+        # Method: Graph State
+        cand1 = tableau.to_circuit(method='graph_state')
         
-        if all_preserved:
-            print("All stabilizers preserved locally.")
-        else:
-            print("Stabilizer preservation failed!")
+        # Post-process to remove resets if any
+        # Replace RX with H, R with I (remove)
+        new_cand1 = stim.Circuit()
+        for instr in cand1:
+            if instr.name == 'RX':
+                new_cand1.append("H", instr.targets_copy())
+            elif instr.name == 'R':
+                # Reset to 0. If we are at 0 (start), this is I.
+                # If in middle, it's a reset.
+                # But graph state synthesis usually puts them at start.
+                pass
+            else:
+                new_cand1.append(instr)
+        cand1 = new_cand1
+        
+        c1_cx, c1_vol = analyze_circuit(cand1)
+        print(f"Candidate 1 (Graph State): CX={c1_cx}, Vol={c1_vol}")
+        
+        with open("candidate_graph.stim", "w") as f:
+            f.write(str(cand1))
+
+        # Method: Elimination
+        cand2 = tableau.to_circuit(method='elimination')
+        c2_cx, c2_vol = analyze_circuit(cand2)
+        print(f"Candidate 2 (Elimination): CX={c2_cx}, Vol={c2_vol}")
+
+        if c1_cx < b_cx or (c1_cx == b_cx and c1_vol < b_vol):
+            print("Candidate 1 is likely better.")
             
-    else:
-        print("Candidate is NOT better in CX count.")
+    except Exception as e:
+        print(f"Error in optimization: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
-    run()
+    main()

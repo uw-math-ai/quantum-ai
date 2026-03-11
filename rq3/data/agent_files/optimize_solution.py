@@ -1,44 +1,46 @@
 import stim
+import traceback
 
 def solve():
-    # Load stabilizers
-    with open('target_stabilizers.txt', 'r') as f:
-        stabilizers = [line.strip().replace(',', '') for line in f if line.strip()]
-    
-    # Check qubit count from length of first stabilizer
-    num_qubits = len(stabilizers[0])
-    print(f'Number of qubits from stabilizers: {num_qubits}')
-    
-    # Create Tableau
     try:
-        print(f'Number of stabilizers: {len(stabilizers)}')
+        lines = []
+        with open("current_stabilizers.txt", "r") as f:
+            for l in f:
+                l = l.strip().replace(",", "")
+                if l:
+                    try:
+                        lines.append(stim.PauliString(l))
+                    except ValueError:
+                        pass # Skip empty lines
         
-        tableau = stim.Tableau.from_stabilizers(stabilizers, allow_underconstrained=True)
+        # Create tableau from stabilizers
+        # allow_underconstrained=True handles cases where fewer stabilizers than qubits are provided
+        tableau = stim.Tableau.from_stabilizers(lines, allow_underconstrained=True)
         
-        # Method 1: Graph state synthesis (uses CZ gates)
-        circuit_graph = tableau.to_circuit(method='graph_state')
+        # Synthesize circuit using graph state method
+        # This typically produces a circuit with H and CZ gates.
+        circuit = tableau.to_circuit(method="graph_state")
         
-        # Check metrics for graph state circuit
-        cx_count_graph = circuit_graph.num_gates('CX')
-        print(f'Graph state circuit: {cx_count_graph} CX gates')
+        # Post-process circuit
+        new_circuit = stim.Circuit()
+        for instruction in circuit:
+            if instruction.name == "RX":
+                # RX is reset to X-basis (|0> -> |+>). Since we start in |0>, this is just H.
+                new_circuit.append("H", instruction.targets_copy())
+            elif instruction.name == "R":
+                # R is reset to Z-basis (|0> -> |0>). Since we start in |0>, this is identity.
+                pass
+            elif instruction.name == "RY":
+                 # Prepare |i>. H -> |+>, S -> |i>.
+                 new_circuit.append("H", instruction.targets_copy())
+                 new_circuit.append("S", instruction.targets_copy())
+            else:
+                new_circuit.append(instruction)
         
-        # Write candidate
-        with open('candidate.stim', 'w') as f:
-            f.write(str(circuit_graph))
-            
-    except Exception as e:
-        print(f'Error synthesizing: {e}')
+        print(new_circuit)
 
-    # Load baseline to compare
-    with open('baseline.stim', 'r') as f:
-        baseline_text = f.read()
-    
-    try:
-        baseline = stim.Circuit(baseline_text)
-        base_cx = baseline.num_gates('CX')
-        print(f'Baseline CX count: {base_cx}')
-    except Exception as e:
-        print(f'Error reading baseline: {e}')
+    except Exception:
+        traceback.print_exc()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     solve()

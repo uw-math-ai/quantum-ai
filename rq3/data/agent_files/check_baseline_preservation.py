@@ -1,52 +1,41 @@
 import stim
+import sys
 
-def main():
-    try:
-        with open("baseline.stim", "r") as f:
-            baseline_text = f.read()
-        baseline = stim.Circuit(baseline_text)
-        print(f"Baseline loaded. Qubits: {baseline.num_qubits}")
-    except Exception as e:
-        print(f"Error loading baseline: {e}")
-        return
+def check_stabilizers():
+    with open("task_stabilizers.txt", "r") as f:
+        stabs_text = f.read().strip()
+    stabs = [s.strip() for s in stabs_text.split(",") if s.strip()]
 
-    try:
-        with open("target_stabilizers.txt", "r") as f:
-            lines = [l.strip() for l in f if l.strip()]
-        stabs = [stim.PauliString(l) for l in lines]
-        print(f"Loaded {len(stabs)} stabilizers.")
-        if len(stabs) > 0:
-            print(f"Stabilizer length: {len(stabs[0])}")
-    except Exception as e:
-        print(f"Error loading stabilizers: {e}")
-        return
+    with open("task_baseline.stim", "r") as f:
+        baseline = stim.Circuit(f.read())
 
+    # Simulate baseline
     sim = stim.TableauSimulator()
     sim.do(baseline)
     
-    preserved_count = 0
+    preserved = 0
+    failed = []
+    
     for i, s in enumerate(stabs):
-        if sim.peek_observable_expectation(s) == 1:
-            preserved_count += 1
+        p = stim.PauliString(s)
+        if sim.peek_observable_expectation(p) == 1:
+            preserved += 1
         else:
-            print(f"Stabilizer {i} NOT preserved.")
+            failed.append(i)
+            
+    print(f"Preserved: {preserved}/{len(stabs)}")
+    if failed:
+        print(f"Failed indices: {failed}")
+        
+    # Check anticommuting pair 42 and 45
+    p42 = stim.PauliString(stabs[42])
+    p45 = stim.PauliString(stabs[45])
     
-    print(f"Preserved {preserved_count}/{len(stabs)} stabilizers.")
-
-    cx_count = 0
-    for instr in baseline:
-        if instr.name == "CX":
-            cx_count += len(instr.targets_copy()) // 2
-    print(f"Baseline CX count: {cx_count}")
+    exp42 = sim.peek_observable_expectation(p42)
+    exp45 = sim.peek_observable_expectation(p45)
     
-    vol_count = 0
-    for instr in baseline:
-        if instr.name in ["CX", "CNOT", "CY", "CZ", "H", "S", "SQRT_X", "SQRT_Y", "SQRT_Z", "X", "Y", "Z", "I"]:
-             if instr.name in ["CX", "CNOT", "CY", "CZ"]:
-                 vol_count += len(instr.targets_copy()) // 2
-             else:
-                 vol_count += len(instr.targets_copy())
-    print(f"Baseline Volume: {vol_count}")
+    print(f"Expectation 42: {exp42}")
+    print(f"Expectation 45: {exp45}")
 
 if __name__ == "__main__":
-    main()
+    check_stabilizers()

@@ -1,0 +1,2 @@
+s = "XZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII"
+print(f"Length: {len(s)}")

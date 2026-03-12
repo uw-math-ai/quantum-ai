@@ -1,33 +1,37 @@
 import stim
 
-def generate_circuit():
-    with open(r"C:\Users\anpaz\Repos\quantum-ai\rq3\data\gemini-3-pro-preview\agent_files\my_target_stabilizers.txt", "r") as f:
+def generate_graph_state_circuit(stabilizers_path, output_path, method='graph_state'):
+    with open(stabilizers_path, 'r') as f:
         lines = f.readlines()
     
-    # Clean stabilizers
-    cleaned_stabilizers = []
-    for line in lines:
-        s = line.strip()
-        if s:
-            cleaned_stabilizers.append(stim.PauliString(s))
-            
+    stabilizers = [line.strip().replace(',', '') for line in lines if line.strip()]
+    
+    # Create tableau
     try:
-        tableau = stim.Tableau.from_stabilizers(cleaned_stabilizers, allow_redundant=True, allow_underconstrained=True)
-        
-        # Method 1: Graph state
-        circuit_graph = tableau.to_circuit("graph_state")
-        with open(r"C:\Users\anpaz\Repos\quantum-ai\rq3\data\gemini-3-pro-preview\agent_files\candidate_graph.stim", "w") as f:
-            f.write(str(circuit_graph))
-            
-        # Method 2: Elimination
-        circuit_elim = tableau.to_circuit("elimination")
-        with open(r"C:\Users\anpaz\Repos\quantum-ai\rq3\data\gemini-3-pro-preview\agent_files\candidate_elim.stim", "w") as f:
-            f.write(str(circuit_elim))
-            
-        print("Circuits generated successfully.")
-        
+        pauli_stabilizers = [stim.PauliString(s) for s in stabilizers]
+        print(f"Number of stabilizers: {len(pauli_stabilizers)}")
+        tableau = stim.Tableau.from_stabilizers(pauli_stabilizers, allow_underconstrained=True)
     except Exception as e:
-        print(f"Error generating circuit: {e}")
+        print(f"Error creating tableau: {e}")
+        return
+
+    # Synthesize circuit
+    try:
+        circuit = tableau.to_circuit(method=method)
+    except Exception as e:
+        print(f"Error synthesizing circuit with method {method}: {e}")
+        return
+
+    with open(output_path, 'w') as f:
+        f.write(str(circuit))
+    
+    print(f"Generated {output_path} using method {method}")
+    
+    # Also print some stats
+    print(f"Stats for {method}:")
+    print(f"  Num gates: {len(circuit)}")
+    print(f"  Num qubits: {circuit.num_qubits}")
 
 if __name__ == "__main__":
-    generate_circuit()
+    generate_graph_state_circuit('target_stabilizers.txt', 'candidate_graph.stim', method='graph_state')
+    generate_graph_state_circuit('target_stabilizers.txt', 'candidate_elimination.stim', method='elimination')

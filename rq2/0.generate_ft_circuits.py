@@ -4,8 +4,9 @@ import sys
 import argparse
 import stim
 
-# # Ensure local imports work
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add tools directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
+
 
 from datetime import datetime
 from agent import prompt_agent, CircuitParam, generate_ft_state_prep
@@ -13,16 +14,14 @@ from copilot.tools import define_tool
 from validate_ft_circuits import check_syndrome_extraction_ft
 from check_error_propagation import check_fault_tolerance, ft_score
 from check_stabilizers import check_stabilizers
-from agent import generated_ft_circuits
-
-generated_ft_circuits.clear()
 
 def generate_circuits_from_data(
     benchmarks_path: str,
-    output_path: str,
+    output_path: str|None = None,
     model: str =  "claude-sonnet-4.5",
     attempts: int = 3,
-    timeout: int = 60
+    timeout: int = 60,
+    prompt_file: str = "rq2/prompts/ft_state_prep_prompt.txt"
 ) -> list[dict]:
     """
     Generate fault-tolerant state preparation circuits for all circuits in circuit_dataset.
@@ -36,10 +35,15 @@ def generate_circuits_from_data(
     Returns:
         List of dictionaries with code_name and circuit
     """
+    if output_path is None:
+        timestamp = datetime.now().strftime("%y%m%d.%H%M")
+        output_dir = os.path.join(".", "data", model)
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, f"{timestamp}.json")
+
     results = []
-    with open("data/circuit_dataset.jsonl", "r", encoding="utf-8") as f:
+    with open(benchmarks_path, "r", encoding="utf-8") as f:
         for line in f:
-            generated_ft_circuits.clear()
             entry = json.loads(line)
             source_code = entry["source_code"]
             distance = entry["d"]
@@ -62,10 +66,10 @@ def generate_circuits_from_data(
                     stabilizers=input_stabilizers,
                     non_ft_circuit = output_circuit,
                     distance = distance,
-                    qubits = qubits,
                     attempts=attempts,
                     timeout=timeout,
-                    model=model
+                    model=model,
+                    prompt_file=prompt_file
                 )
                 end_time = datetime.now()
                 # generated_candidates = list(generated_ft_circuits)
@@ -220,13 +224,13 @@ def main():
     )
     parser.add_argument(
         "--benchmarks", 
-        default="data/circuit_dataset.jsonl",
+        default="../data/circuit_dataset.jsonl",
         help="Path to benchmarks JSONL file"
     )
     parser.add_argument(
         "--output", 
-        default="data/generated_ft_circuits_cordelia.json",
-        help="Path to output JSON file"
+        default=None,
+        help="Path to output JSON file (default: ./data/<model>/<YYMMdd.HHmm>.json)"
     )
     parser.add_argument(
         "--attempts", 
@@ -240,14 +244,26 @@ def main():
         default=300,
         help="Timeout in seconds for each generation"
     )
+    parser.add_argument(
+        "--model",
+        default="claude-sonnet-4.5",
+        help="Model to use for generation (default: claude-sonnet-4.5)"
+    )
+    parser.add_argument(
+        "--prompt-file",
+        default="prompts/ft_state_prep_prompt0.txt",
+        help="Path to the prompt template file (default: prompts/ft_state_prep_prompt0.txt)"
+    )
     
     args = parser.parse_args()
     
     generate_circuits_from_data(
         benchmarks_path=args.benchmarks,
         output_path=args.output,
+        model=args.model,
         attempts=args.attempts,
-        timeout=args.timeout
+        timeout=args.timeout,
+        prompt_file=args.prompt_file
     )
 
 

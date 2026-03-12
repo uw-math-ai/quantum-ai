@@ -18,8 +18,6 @@ from circuit_metric import is_strictly_more_optimal, compute_metrics
 
 load_dotenv()
 
-generated_ft_circuits = []
-
 class CircuitParam(BaseModel):
     circuit: str = Field(description="The Stim circuit description as a string")
     stabilizers: list[str] = Field(description="List of stabilizer strings")
@@ -111,7 +109,8 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
     return asyncio.run(run())
 
 def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str, 
-    distance: int, qubits: list[int], attempts: int | None = 3, timeout: int | None = 60, *, model: str) -> tuple[stim.Circuit, list[dict]] | None:
+    distance: int, attempts: int | None = 3, timeout: int | None = 60, *, model: str,
+    prompt_file: str = "rq2/prompts/ft_state_prep_prompt.txt") -> tuple[stim.Circuit, list[dict]] | None:
     """
     Generate a fault-tolerant state preparation circuit for given stabilizers.
     
@@ -227,102 +226,18 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
                     used_qubits.add(t.value)
         return sorted(list(used_qubits - set(data_qubits)))
 
-    # Sylvie's prompt
-    # prompt = f"""
-    # You are a quantum error correction assistant.
+    with open(prompt_file, "r") as f:
+        prompt_template = f.read()
 
-    # Consider the following inputs and do not proceed unless all are provided:
-    #     A quantum circuit 
-    #     ```
-    #     {non_ft_circuit} 
-    #     ```
-    #     described in Stim format, which prepares a state that is not necessarily fault-tolerant.
-    #     The distance of the code being prepared 
-    #     ```
-    #     {distance}
-    #     ```
-    #     The circuit stabilizers 
-    #     ```
-    #     {stabilizers_str}
-    #     ```
-    # Task: Generate a fault tolerant version of 
-    # ```
-    # {non_ft_circuit}
-    # ``` that preserves the given stabilizers in 
-    # ```
-    # {stabilizers_str}
-    # ```.
+    prompt = prompt_template.format(
+        non_ft_circuit=non_ft_circuit,
+        distance=distance,
+        stabilizers_str=stabilizers_str,
+        agent_files_dir=agent_files_dir,
+        attempts=attempts,
+    )
 
-    # Fault tolerance:
-    # - A fault is a location in the circuit where there is an unexpected disruption (X, Y, Z Pauli gate) that alters the circuit's intended state in an undesired way.
-    # - A circuit is fault tolerant if any fault propagates to less than floor(({distance} - 1)/ 2) data qubits
-    # - A circuit is also fault tolerant if a fault that propagates to greater than or equal to floor(({distance} - 1)/2) data qubits triggers a flag ancilla that indicates a failure of the circuit. 
-    # - You may use flag ancillas to detect high-weight fault propagation. (put more about how to use flags)
-    # - See https://mqt.readthedocs.io/projects/qecc/en/latest/StatePrep.html for guidance on the fault tolerant transformation
-
-    # Transformation guidelines:
-    # - Do not change the structure of the original circuit. You may add ancillas, but do not reorder gates on the original data qubits. 
-    # - Introduce additional ancilla qubits if necessary to reduce error propagation.
-    # - The resulting circuit must prepare a state stabilized by all generators in {stabilizers_str}. 
-    # - All ancilla qubits must be initialized in the |0⟩ state and measured at the end of the circuit. 
-
-    # Tooling / output rules:  
-    # - You may call validate_circuit to evaluate a candidate circuit. IMPORTANT: one call to validate_circuit counts as ONE attempt. 
-    # - You have a total budget of 5 attempt(s) = at most 5 calls to validate_circuit.
-    # - Keep track of the best circuit seen so far using the following priority:
-    #     1) Preserve all stabilizers.
-    #     2) Maximize fault tolerance score.
-    #     3) Prefer shorter/simpler circuits.
-    # - You should iteratively propose a circuit, call validate_circuit, then revise. Use the error propagation results to help improve the fault tolerance of each proposed circuit. 
-    # - If all stabilizers are preserved (every result is true) and the circuit is fault tolerant (the result is true), you have found the correct circuit - immediately call return_result with it. You do NOT need to use all attempts.
-    # -  The new fault tolerant circuit output must be a plain string, for example
-    #     \"H 0
-    #    CX 0 3\"
-    # - When you are out of attempts, call return_result with the BEST circuit you found, even if it is not perfect. This means that all of the stabilizers are stabilized and the fault tolerance score is higher than any of the other circuits. 
-    # - Do NOT call or rely on any repository tools besides validate_circuit and return_result.
-    # - If you need to write any temporary or scratch files, write them into the directory: {agent_files_dir}
-    # - Do NOT output Markdown code fences, prose, or extra markers.
-
-    # Do not end the conversation without calling return_result.
-    # """
-
-    # Cordelia's prompt
-    prompt = f"""
-        You are an assistant that edits quantum circuits. You will edit a non-fault tolerant circuit and aim at increasing the fault tolerant score. 
-
-        Input: a Stim circuit C {non_ft_circuit}, the distance of the code {distance}, a list of the stabilizers {stabilizers_str}.
-
-        Setup: Let $d$ be the distance of the codes, {distance}, and let $t$ be the correctable threshold: 
-        [
-        t = \\left\\lfloor\\frac{{d-1}}{2}\\right\\rfloor.
-        ]
-
-        Let \\mathrm{{spots}}(C) be the set of valid fault locations in C where a single-qubit Pauli fault can occur. For each l \\in \\mathrm{{spots}}(C) and P \\in {{X,Y,Z}}, let C[l \\leftarrow P] denote the circuit obtained from C by inserting P at location l. Define
-        [
-        \\mathcal{{S}}(C) = {{ C[l \\leftarrow P] : l \\in \\mathrm{{spots}}(C),; P \\in {{X,Y,Z}}  }}.
-        ]
-        Let (E(C', C)) be the number of errors in (C') compared with (C) after propagation computed by check_error_propogation.py.
-
-        Flag gadget: A flag qubit $f$ is an extra ancilla qubit added to a circuit to detect harmful error propagation. It is coupled to the data qubits so that it is triggered, meaning it is measured with eigenvalue -1, if and only if a fault causes an error that propagates to more data qubits than the code can correct, that is, beyond the correctable threshold t. You can find flag qubit strategies in https://arxiv.org/pdf/2408.11894
-
-        We now setup the fault-tolerance score. Let \\pi \\in {{0,1}} be a rule indicating whether the result from one execution should be accepted. If a circuit C contains no flag, set \\pi(C) =1.
-        For \\mathcal{{S}}(C), let \\mathcal{{T}}(\\mathcal{{S}}(C)) denote the set of all circuits in \\mathcal{{S}}(C) with error larger than the correctable threshold t comparing with C, i.e.
-        [\\mathcal{{T}}(\\mathcal{{S}}(C)) := {{ C \\in \\mathcal{{S}} \\ | \\ E(C',C) > t }}.]
-
-        Then the fault-tolerance score is defined by
-        [\\mathrm{{FT}}(C) = \\begin{{cases}} 
-        0 & \\text{{if }} \\pi(C) \\neq 1 \\\\
-        \\displaystyle{{1-\\frac{{1}}{{|\\mathcal{{T}}(\\mathcal{{S}}(C))|}}
-        \\sum_{{C'\\in \\mathcal{{S}}(C)}}
-        \\mathbf{{1}}!\\left{{\\pi(C')=1 ,\\wedge, E(C', C)>t\\right}}}} & \\text{{if }} \\pi(C) = 1 \\text{{ and }}  \\mathcal{{T}}(\\mathcal{{S}}(C)) \\neq \\emptyset  \\\\
-        1 & \\text{{if }} \\pi(C) = 1 \\text{{ and }}  \\mathcal{{T}}(\\mathcal{{S}}(C)) = \\emptyset.
-        \\end{{cases}}
-        ]
-
-        Task: Modify C to a new stim circuit $\\hat{{C}}$ that has the same output and stabilizes the same code space as C (you can use functions in check_stabilizers.py to check for stabilizer). You can adjust the gates and/or add flags and ancilla qubits. Aim to increase \\mathrm{{FT}}(\\hat{{C}}) at each attempt; keep the maximal \\mathrm{{FT}}(\\hat{{C}}) and \\hat{{C}} you found so far. Stop and output if \\mathrm{{FT}}(\\hat{{C}}) reaches 1. 
-
-        You have 10 attempts. If you run out of attempts, output the maximal \\mathrm{{FT}}(\\hat{{C}}) you found and the corresponding \\hat{{C}}.
-        """
+    print(prompt)
 
     prompt_agent(prompt, tools=[validate_circuit, return_result], model=model, timeout=timeout)
 

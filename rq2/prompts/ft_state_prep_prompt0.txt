@@ -20,7 +20,7 @@ Fault tolerance:
 - A fault is a location in the circuit where there is an unexpected disruption (X, Y, Z Pauli gate) that alters the circuit's intended state in an undesired way.
 - A circuit is fault tolerant if any fault propagates to less than floor(({distance} - 1)/ 2) data qubits
 - A circuit is also fault tolerant if a fault that propagates to greater than or equal to floor(({distance} - 1)/2) data qubits triggers a flag ancilla that indicates a failure of the circuit. 
-- You may use flag ancillas to detect high-weight fault propagation. (put more about how to use flags)
+- You may use flag ancillas to detect high-weight fault propagation. 
 - See https://mqt.readthedocs.io/projects/qecc/en/latest/StatePrep.html for guidance on the fault tolerant transformation
 
 Transformation guidelines:

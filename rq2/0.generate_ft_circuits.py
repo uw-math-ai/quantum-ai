@@ -107,6 +107,12 @@ def generate_circuits_from_data(
                 #         print(f"Skipping invalid generated circuit: {e}")
                 
 
+                # If no final result but we have validated candidates, use the latest one
+                if circuit_results is None and all_candidates:
+                    latest = all_candidates[-1]
+                    print(f"  ⚠ Timed out, falling back to latest verified circuit (ft_score={latest['ft_score']})")
+                    circuit_results = {"circuit": stim.Circuit(latest["circuit"])}
+
                 if circuit_results is not None:
                     circuit_obj = circuit_results["circuit"]
                     circuit_str = str(circuit_obj)
@@ -159,6 +165,7 @@ def generate_circuits_from_data(
                 stab_results = None
                 all_stabilized = None
                 all_true = None
+                all_candidates = []
                 end_time = datetime.now()
                 print(f"  ✗ Error: {e}")
 

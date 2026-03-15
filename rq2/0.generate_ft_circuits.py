@@ -41,6 +41,7 @@ def generate_circuits_from_data(
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, f"{timestamp}.json")
 
+    started_at = datetime.now()
     results = []
     with open(benchmarks_path, "r", encoding="utf-8") as f:
         for line in f:
@@ -51,6 +52,7 @@ def generate_circuits_from_data(
             input_stabilizers = entry["input_stabilizers"]
             output_circuit = entry["output_circuit"]
             ancillas = []
+            all_candidates = []
             start_time = None
             end_time = None
 
@@ -157,17 +159,40 @@ def generate_circuits_from_data(
                     print("  ✗ Failed to generate circuit")
                     
             except Exception as e:
-                circuit_str = None
-                # ancilla = None
-                is_ft = None
-                ft_details = None
-                score = None
-                stab_results = None
-                all_stabilized = None
-                all_true = None
-                all_candidates = []
                 end_time = datetime.now()
                 print(f"  ✗ Error: {e}")
+
+                # If we have validated candidates, fall back to the latest one
+                if all_candidates:
+                    latest = all_candidates[-1]
+                    print(f"  ⚠ Falling back to latest verified circuit (ft_score={latest['ft_score']})")
+                    circuit_obj = stim.Circuit(latest["circuit"])
+                    circuit_str = str(circuit_obj)
+
+                    used_qubits = set()
+                    for inst in circuit_obj:
+                        for t in inst.targets_copy():
+                            if hasattr(t, "value"):
+                                used_qubits.add(t.value)
+
+                    data_qubits = set(qubits)
+                    ancillas = sorted(list(used_qubits - data_qubits))
+
+                    stab_results = check_stabilizers(circuit_str, input_stabilizers)
+                    all_stabilized = all(stab_results.values())
+                    ft_details, is_ft = check_fault_tolerance(circuit_str, qubits, ancillas, distance)
+                    score = ft_score(circuit_str, qubits, ancillas, distance, 1.0)
+                    all_true = all([all_stabilized, is_ft])
+                    print(f"   FT score: {score}, stabilizers: {all_stabilized}, FT: {is_ft}")
+                else:
+                    circuit_str = None
+                    is_ft = None
+                    ft_details = None
+                    score = None
+                    stab_results = None
+                    all_stabilized = None
+                    all_true = None
+                    all_candidates = []
 
             runtime_seconds = None
             if start_time and end_time:
@@ -214,8 +239,20 @@ def generate_circuits_from_data(
             results.append(result)
 
             # Save intermediate results after each generation
+            output = {
+                "metadata": {
+                    "benchmarks_path": benchmarks_path,
+                    "prompt_path": prompt_file,
+                    "model": model,
+                    "attempts": attempts,
+                    "timeout": timeout,
+                    "started_at": started_at.isoformat(),
+                    "finished_at": datetime.now().isoformat()
+                },
+                "results": results
+            }
             with open(output_path, 'w') as f:
-                json.dump(results, f, indent=4)
+                json.dump(output, f, indent=4)
             print(f"  Saved intermediate results to {output_path}")
 
 

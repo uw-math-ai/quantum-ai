@@ -239,7 +239,10 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
 
     print(prompt)
 
-    prompt_agent(prompt, tools=[validate_circuit, return_result], model=model, timeout=timeout)
+    try:
+        prompt_agent(prompt, tools=[validate_circuit, return_result], model=model, timeout=timeout)
+    except Exception as e:
+        print(f"  ⚠ generate_ft_state_prep caught exception: {e}")
 
     if result is None:
         return None, all_candidates

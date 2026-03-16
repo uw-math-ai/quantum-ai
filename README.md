@@ -2,7 +2,9 @@
 
 Can AI agents generate fault-tolerant quantum error correction circuits? This repo benchmarks LLMs and reinforcement learning on synthesizing, verifying, and optimizing stabilizer-code circuits for state preparation and syndrome extraction. All circuits use [Stim](https://github.com/quantumlib/Stim) format and are validated via stabilizer-based oracles.
 
-See the [research poster](AI-Driven%20Quantum%20Error%20Correction%20Circuit%20Synthesis.pdf) for details.
+See the [research poster](docs/AI-Driven%20Quantum%20Error%20Correction%20Circuit%20Synthesis.pdf) for details.
+
+![Research Poster](ml-poster-winter-2026.png)
 
 ## Research Questions
 

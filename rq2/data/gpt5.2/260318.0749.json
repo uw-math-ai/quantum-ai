@@ -1,0 +1,189 @@
+{
+    "metadata": {
+        "benchmarks_path": "../data/circuit_dataset.jsonl",
+        "prompt_path": "prompts/ft_state_prep_prompt_3.txt",
+        "model": "gpt5.2",
+        "attempts": 15,
+        "timeout": 300,
+        "started_at": "2026-03-18T07:49:23.976551",
+        "finished_at": "2026-03-18T08:45:07.783391"
+    },
+    "results": [
+        {
+            "code_name": "Perfect 5-Qubit Code",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T07:49:24.090816",
+            "end_time": "2026-03-18T07:54:27.792123",
+            "runtime_seconds": 303.701307,
+            "best_output": {
+                "circuit": null,
+                "ft_score": null,
+                "ft_check": null,
+                "all_stabilized": null,
+                "stabilizer_details": null,
+                "ALL TRUE": null
+            },
+            "generated_circuits": []
+        },
+        {
+            "code_name": "Steane",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T07:54:27.858156",
+            "end_time": "2026-03-18T07:59:31.387111",
+            "runtime_seconds": 303.528955,
+            "best_output": {
+                "circuit": null,
+                "ft_score": null,
+                "ft_check": null,
+                "all_stabilized": null,
+                "stabilizer_details": null,
+                "ALL TRUE": null
+            },
+            "generated_circuits": []
+        },
+        {
+            "code_name": "Shor",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T07:59:31.452925",
+            "end_time": "2026-03-18T08:04:34.967654",
+            "runtime_seconds": 303.514729,
+            "best_output": {
+                "circuit": null,
+                "ft_score": null,
+                "ft_check": null,
+                "all_stabilized": null,
+                "stabilizer_details": null,
+                "ALL TRUE": null
+            },
+            "generated_circuits": []
+        },
+        {
+            "code_name": "Tetrahedral",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T08:04:35.264805",
+            "end_time": "2026-03-18T08:09:38.851977",
+            "runtime_seconds": 303.587172,
+            "best_output": {
+                "circuit": null,
+                "ft_score": null,
+                "ft_check": null,
+                "all_stabilized": null,
+                "stabilizer_details": null,
+                "ALL TRUE": null
+            },
+            "generated_circuits": []
+        },
+        {
+            "code_name": "Hamming",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T08:09:39.311022",
+            "end_time": "2026-03-18T08:14:42.861189",
+            "runtime_seconds": 303.550167,
+            "best_output": {
+                "circuit": null,
+                "ft_score": null,
+                "ft_check": null,
+                "all_stabilized": null,
+                "stabilizer_details": null,
+                "ALL TRUE": null
+            },
+            "generated_circuits": []
+        },
+        {
+            "code_name": "Carbon",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T08:14:43.280574",
+            "end_time": "2026-03-18T08:19:46.862545",
+            "runtime_seconds": 303.581971,
+            "best_output": {
+                "circuit": null,
+                "ft_score": null,
+                "ft_check": null,
+                "all_stabilized": null,
+                "stabilizer_details": null,
+                "ALL TRUE": null
+            },
+            "generated_circuits": []
+        },
+        {
+            "code_name": "Golay",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T08:19:49.994085",
+            "end_time": "2026-03-18T08:24:53.537610",
+            "runtime_seconds": 303.543525,
+            "best_output": {
+                "circuit": null,
+                "ft_score": null,
+                "ft_check": null,
+                "all_stabilized": null,
+                "stabilizer_details": null,
+                "ALL TRUE": null
+            },
+            "generated_circuits": []
+        },
+        {
+            "code_name": "BB Code n=72",
+            "original_score": 1.0,
+            "start_time": "2026-03-18T08:24:53.540043",
+            "end_time": "2026-03-18T08:29:57.123240",
+            "runtime_seconds": 303.583197,
+            "best_output": {
+                "circuit": null,
+                "ft_score": null,
+                "ft_check": null,
+                "all_stabilized": null,
+                "stabilizer_details": null,
+                "ALL TRUE": null
+            },
+            "generated_circuits": []
+        },
+        {
+            "code_name": "BB Code n=90",
+            "original_score": 1.0,
+            "start_time": "2026-03-18T08:29:57.125880",
+            "end_time": "2026-03-18T08:35:00.679970",
+            "runtime_seconds": 303.55409,
+            "best_output": {
+                "circuit": null,
+                "ft_score": null,
+                "ft_check": null,
+                "all_stabilized": null,
+                "stabilizer_details": null,
+                "ALL TRUE": null
+            },
+            "generated_circuits": []
+        },
+        {
+            "code_name": "Iceberg Code m=2",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T08:35:00.686333",
+            "end_time": "2026-03-18T08:40:04.183665",
+            "runtime_seconds": 303.497332,
+            "best_output": {
+                "circuit": null,
+                "ft_score": null,
+                "ft_check": null,
+                "all_stabilized": null,
+                "stabilizer_details": null,
+                "ALL TRUE": null
+            },
+            "generated_circuits": []
+        },
+        {
+            "code_name": "Iceberg Code m=3",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T08:40:04.197311",
+            "end_time": "2026-03-18T08:45:07.783295",
+            "runtime_seconds": 303.585984,
+            "best_output": {
+                "circuit": null,
+                "ft_score": null,
+                "ft_check": null,
+                "all_stabilized": null,
+                "stabilizer_details": null,
+                "ALL TRUE": null
+            },
+            "generated_circuits": []
+        }
+    ]
+}

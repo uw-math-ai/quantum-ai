@@ -295,7 +295,7 @@ def main():
     )
     parser.add_argument(
         "--prompt-file",
-        default="prompts/ft_state_prep_prompt0.txt",
+        default="prompts/ft_state_prep_prompt_3.txt",
         help="Path to the prompt template file (default: prompts/ft_state_prep_prompt0.txt)"
     )
     

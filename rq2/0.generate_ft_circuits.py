@@ -59,7 +59,7 @@ def generate_circuits_from_data(
             # Compute FT score of the original (non-FT) circuit
             orig_ancillas = []
             clean_circuit = output_circuit.replace("\\n", "\n")
-            orig_ft_score = ft_score(clean_circuit, qubits, orig_ancillas, distance, 1.0)
+            orig_ft_score = ft_score(clean_circuit, qubits, orig_ancillas, distance)
             print(f"Original FT score: {orig_ft_score}")
             try:
                 start_time = datetime.now()

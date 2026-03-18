@@ -5,7 +5,7 @@ import asyncio
 from dotenv import load_dotenv
 from copilot.types import Tool, Attachment
 from copilot.tools import define_tool
-from copilot import CopilotClient, PermissionHandler
+from copilot import CopilotClient
 from copilot.generated.session_events import SessionEventType, SessionEvent
 from pydantic import BaseModel, Field
 from pathlib import Path
@@ -81,7 +81,6 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
             session_config = {
                 "model": resolved_model,
                 "tools": tools,
-                "on_permission_request": PermissionHandler.approve_all,
                 "system_message": {
                     "content": system_message,
                 },

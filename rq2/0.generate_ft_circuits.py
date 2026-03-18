@@ -138,7 +138,7 @@ def generate_circuits_from_data(
 
                     print(f"  ✓ Circuit generated successfully - FT check: {is_ft}")
 
-                    score = ft_score(circuit_str, qubits, ancillas, distance, 1.0)
+                    score = ft_score(circuit_str, qubits, ancillas, distance)
                     print(f"   FT score: {score}")
                     # generated_candidates.append({
                     #     "circuit": circuit_str,
@@ -181,7 +181,7 @@ def generate_circuits_from_data(
                     stab_results = check_stabilizers(circuit_str, input_stabilizers)
                     all_stabilized = all(stab_results.values())
                     ft_details, is_ft = check_fault_tolerance(circuit_str, qubits, ancillas, distance)
-                    score = ft_score(circuit_str, qubits, ancillas, distance, 1.0)
+                    score = ft_score(circuit_str, qubits, ancillas, distance)
                     all_true = all([all_stabilized, is_ft])
                     print(f"   FT score: {score}, stabilizers: {all_stabilized}, FT: {is_ft}")
                 else:
@@ -296,7 +296,7 @@ def main():
     parser.add_argument(
         "--prompt-file",
         default="prompts/ft_state_prep_prompt_3.txt",
-        help="Path to the prompt template file (default: prompts/ft_state_prep_prompt0.txt)"
+        help="Path to the prompt template file (default: prompts/ft_state_prep_prompt_3.txt)"
     )
     
     args = parser.parse_args()

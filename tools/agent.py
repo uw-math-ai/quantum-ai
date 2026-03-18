@@ -203,13 +203,17 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
         top_errors = sorted_errors[:10]
 
         # find the ft score
-        score = ft_score(circuit.circuit, circuit.data_qubits, ancillas, distance, 1.0)
+        score = ft_score(circuit.circuit, circuit.data_qubits, ancillas, distance)
+        
 
         # Append candidate to list
         all_candidates.append({
             "circuit": str(parsed),
-            "ft_score": score
+            "ft_score": score,
+            "preserved_stabilizers": preserved,
         })
+
+        print(f"attempt:{len(all_candidates)}, score:{score}, stabilizers:{preserved}")
 
         return {
             "fault_tolerance": fault_tolerance_results,

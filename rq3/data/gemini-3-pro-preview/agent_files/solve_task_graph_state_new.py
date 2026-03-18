@@ -1,0 +1,88 @@
+import stim
+import sys
+
+def main():
+    # Stabilizers from the prompt
+    stabilizers_str = [
+        "XZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXI",
+        "IXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZX",
+        "XIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZ",
+        "ZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZ",
+        "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXIIIIIIIIIIIIIII",
+        "XXXXXXXXXXXXXXXIIIIIIIIIIIIIIIXXXXXXXXXXXXXXX",
+        "ZZZZZZZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "ZZZZZIIIIIZZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIZZZZZZZZZZIIIIIIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIZZZZZIIIIIZZZZZIIIIIIIIIIIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZZZZZZZIIIII",
+        "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZZIIIIIZZZZZ"
+    ]
+
+    try:
+        stabilizers = [stim.PauliString(s) for s in stabilizers_str]
+        
+        # Check consistency
+        num_qubits = len(stabilizers[0])
+        # print(f"Num qubits: {num_qubits}, Num stabilizers: {len(stabilizers)}")
+        
+        tableau = stim.Tableau.from_stabilizers(stabilizers, allow_redundant=True, allow_underconstrained=True)
+        
+        # Synthesize using graph_state method which uses CZ gates (0 CX cost)
+        circuit = tableau.to_circuit(method="graph_state")
+        
+        # Post-process: Replace RX with H if we assume input is |0>
+        new_circuit = stim.Circuit()
+        for instruction in circuit:
+            if instruction.name == "RX":
+                targets = instruction.targets_copy()
+                new_circuit.append("H", targets)
+            elif instruction.name == "R":
+                 # Reset Z. If input is |0>, this is Identity.
+                 # But usually graph_state produces RX.
+                 pass
+            else:
+                new_circuit.append(instruction)
+        
+        # print(new_circuit)
+        with open("candidate_graph.stim", "w") as f:
+            print(new_circuit, file=f)
+        print("Candidate written to candidate_graph.stim")
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

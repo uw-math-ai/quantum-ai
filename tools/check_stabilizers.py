@@ -59,14 +59,35 @@ if __name__ == "__main__":
 
     # Circuit that should prepare this state
     circuit = """
-     H 0 1\\nCX 0 1 0 4\\nH 2 3\\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13
-    """
+       CX 2 0 0 2 2 0
+       H 0 4
+       CX 0 3 0 4
+       H 2
+       CX 2 0 3 1 1 3 3 1
+       H 1 2 4
+       CX 1 2 1 4
+       H 3
+       CX 3 1
+       H 3
+       CX 2 3
+       H 4
+       CX 4 2 4 3 3 4 4 3
+       H 3
+       CX 3 4
+       H 4
+       CX 4 3
+       H 2
+       S 2 2
+       H 2
+       S 0 0 2 2
+     """
 
-    circuit = preprocess_stim_text(circuit)
     circuit_print = stim.Circuit(circuit)
     print(circuit_print.diagram())
 
     # Define your target stabilizers
-    target_stabilizers = ["XXXXXXXXIIIIIII", "IXXIXXIIXXIXXII", "IIXXIXXIIXXXIXI", "IIIIXXXXIIIXXXX", "ZZZZIIIIIIIIIII", "IZZIZZIIIIIIIII", "IIZZIZZIIIIIIII", "IIIIZZZZIIIIIII", "IZIIZIIIZIIIZII", "IIZIIZIIIZIZIII", "IIZZIIIIIZZIIII", "IIIIZZIIIIIZZII", "IIIIIZZIIIIZIZI", "IIIIIIZZIIIIIZZ"]
+    target_stabilizers = [
+      "XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"
+    ]
 
     print(check_stabilizers(circuit, target_stabilizers))

@@ -148,7 +148,7 @@ def is_strictly_more_optimal(
         tick_is_barrier=tick_is_barrier,
     )
 
-    better = (cand.cx_count, cand.volume, cand.depth) < (base.cx_count, base.volume, base.depth)
+    better = (cand.cx_count, cand.volume) < (base.cx_count, base.volume)
 
     return better, {
         "candidate": cand.as_dict(),

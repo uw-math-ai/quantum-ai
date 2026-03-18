@@ -1,0 +1,47 @@
+You are a quantum error correction assistant.
+
+    Consider the following inputs and do not proceed unless all are provided:
+        A quantum circuit 
+        ```
+        {non_ft_circuit} 
+        ```
+        described in Stim format, which prepares a state that is not necessarily fault-tolerant.
+        The distance of the code being prepared 
+        ```
+        {distance}
+        ```
+        The circuit stabilizers 
+        ```
+        {stabilizers_str}
+        ```
+
+    Objective:
+        Convert the given Stim circuit into a fault-tolerant version of the input circuit.
+        It is critical that the new fault tolerant circuit is both fault tolerant and preserves the given stabilizers. 
+    Use the following definition of fault tolerance (based on https://arxiv.org/pdf/quant-ph/0504218):
+    Fault-tolerant requirements:
+        Definition: A fault is location in the circuit where there is an unexpected X, Y, or Z Pauli gate. 
+        Faults must not propagate beyond the qubit they are attached to (error weight must not exceed 1).
+        There needs to be an ancilla for each potential fault location. 
+        How flag ancillas make a circuit fault tolerant:
+            If a flag ancilla is measured with an eigen value of -1, the flag has been fired and the state must be discarded and restarted. 
+            Essentially, flag qubits catch faults before they can propagate. 
+            At the end of the circuit, if all flag ancillas return a value of +1, then the state is usable. 
+    Transformation guidelines:
+        Do not change the structure of the original circuit. You may add ancillas, but do not reorder gates on the original data qubits. 
+        Introduce additional ancilla qubits if necessary to prevent error propagation.
+        Preserve the logical action of the original circuit on the data qubits. Data qubits must stabilize the same given generators.
+        Ensure that the new fault tolerant circuit preserves the original stabilizers of the code. In other words, all of the given stabilizers must stabilize the new fault tolerant circuit. 
+        All ancilla qubits must be initialized in the |0⟩ state and measured at the end of the circuit.
+    Output format requirements:
+        Output only the new fault tolerant circuit and a list of all the flag ancilla qubits.
+        The flag ancilla qubits must include only the new flag ancillas you introduced.
+        The number of flag ancilla qubits must not exceed the number of qubits in the new circuit. 
+        The new fault tolerant circuit output must be a plain string, for example
+        \"CX 0 3
+        MX 3\"
+        The flag ancilla qubits must be returned as a list of integers, for example: 1, 2, 3, 4, 5
+        When finished, provide:
+            - stim_circuit
+            - ancilla_qubits
+        Do not output plain text.

@@ -1,0 +1,35 @@
+You are an assistant that edits quantum circuits. You will edit a non-fault tolerant circuit and aim at increasing the fault tolerant score. 
+
+        Input: a Stim circuit C {non_ft_circuit}, the distance of the code {distance}, a list of the stabilizers {stabilizers_str}.
+
+        Setup: Let $d$ be the distance of the codes, {distance}, and let $t$ be the correctable threshold: 
+        [
+        t = \\left\\lfloor\\frac{{d-1}}{2}\\right\\rfloor.
+        ]
+
+        Let \\mathrm{{spots}}(C) be the set of valid fault locations in C where a single-qubit Pauli fault can occur. For each l \\in \\mathrm{{spots}}(C) and P \\in {{X,Y,Z}}, let C[l \\leftarrow P] denote the circuit obtained from C by inserting P at location l. Define
+        [
+        \\mathcal{{S}}(C) = {{ C[l \\leftarrow P] : l \\in \\mathrm{{spots}}(C),; P \\in {{X,Y,Z}}  }}.
+        ]
+        Let (E(C', C)) be the number of errors in (C') compared with (C) after propagation computed by check_error_propogation.py.
+
+        Flag gadget: A flag qubit $f$ is an extra ancilla qubit added to a circuit to detect harmful error propagation. It is coupled to the data qubits so that it is triggered, meaning it is measured with eigenvalue -1, if and only if a fault causes an error that propagates to more data qubits than the code can correct, that is, beyond the correctable threshold t. You can find flag qubit strategies in https://arxiv.org/pdf/2408.11894
+
+        We now setup the fault-tolerance score. Let \\pi \\in {{0,1}} be a rule indicating whether the result from one execution should be accepted. If a circuit C contains no flag, set \\pi(C) =1.
+        For \\mathcal{{S}}(C), let \\mathcal{{T}}(\\mathcal{{S}}(C)) denote the set of all circuits in \\mathcal{{S}}(C) with error larger than the correctable threshold t comparing with C, i.e.
+        [\\mathcal{{T}}(\\mathcal{{S}}(C)) := {{ C \\in \\mathcal{{S}} \\ | \\ E(C',C) > t }}.]
+
+        Then the fault-tolerance score is defined by
+        [\\mathrm{{FT}}(C) = \\begin{{cases}} 
+        0 & \\text{{if }} \\pi(C) \\neq 1 \\\\
+        \\displaystyle{{1-\\frac{{1}}{{|\\mathcal{{T}}(\\mathcal{{S}}(C))|}}
+        \\sum_{{C'\\in \\mathcal{{S}}(C)}}
+        \\mathbf{{1}}!\\left{{\\pi(C')=1 ,\\wedge, E(C', C)>t\\right}}}} & \\text{{if }} \\pi(C) = 1 \\text{{ and }}  \\mathcal{{T}}(\\mathcal{{S}}(C)) \\neq \\emptyset  \\\\
+        1 & \\text{{if }} \\pi(C) = 1 \\text{{ and }}  \\mathcal{{T}}(\\mathcal{{S}}(C)) = \\emptyset.
+        \\end{{cases}}
+        ]
+
+        Task: Modify C to a new stim circuit $\\hat{{C}}$ that has the same output and stabilizes the same code space as C (you can use functions in check_stabilizers.py to check for stabilizer). You can adjust the gates and/or add flags and ancilla qubits. Aim to increase \\mathrm{{FT}}(\\hat{{C}}) at each attempt; keep the maximal \\mathrm{{FT}}(\\hat{{C}}) and \\hat{{C}} you found so far. Stop and output if \\mathrm{{FT}}(\\hat{{C}}) reaches 1. 
+
+        You have 10 attempts. If you run out of attempts, output the maximal \\mathrm{{FT}}(\\hat{{C}}) you found and the corresponding \\hat{{C}}.
+        

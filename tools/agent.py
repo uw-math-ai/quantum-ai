@@ -13,7 +13,7 @@ import json
 
 
 from check_stabilizers import check_stabilizers
-from check_error_propagation import check_fault_tolerance
+from check_error_propagation import check_fault_tolerance, ft_score
 from circuit_metric import is_strictly_more_optimal, compute_metrics
 
 load_dotenv()
@@ -27,7 +27,6 @@ class CircuitParam(BaseModel):
 
 class CheckStabilizersParam(BaseModel):
     circuit: str = Field(description="The Stim circuit description as a string")
-    stabilizers: list[str] = Field(description="List of stabilizer strings (e.g. ['XXXX', 'ZIZI'])")
 
 
 class FinalCircuitParam(BaseModel):
@@ -39,23 +38,15 @@ class FinalCircuitParam(BaseModel):
         )
     )
 
-@define_tool(description="""Validate correctness and fault-tolerance of a Stim circuit.
-             Checks stabilizer preservation, error propagation, and fault-tolerance
-             Returns a dictionary with which stabilizers are preserved, error propagation results, and fault-tolerance status""")
-def validate_circuit(circuit: CircuitParam) -> dict:
-    try:
-        _ = stim.Circuit(circuit.circuit)
-    except Exception as e:
-        return {"error": f"Failed to parse circuit: {e}"}
+class FTResultParam(BaseModel):
+    stim_circuit: str = Field(
+        description="Raw Stim circuit text (no markdown, no commentary)."
+    )
+    ancilla_qubits: list[int] = Field(
+        description="List of newly introduced ancilla qubit indices."
+    )
 
-    stab_results = check_stabilizers(circuit.circuit, circuit.stabilizers)
-    error_propagation_results, fault_tolerance_results = check_fault_tolerance(circuit.circuit, circuit.data_qubits, circuit.flag_qubits)
 
-    return {
-        "stabilizers": stab_results,
-        "error_propagation": error_propagation_results,
-        "fault_tolerance": fault_tolerance_results
-    }
 
 def _resolve_model_and_provider(model: str) -> tuple[str, dict | None]:
     if model.startswith("ollama"):
@@ -111,7 +102,6 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
             session.on(handle_event)
 
             await session.send_and_wait({"prompt": prompt, "attachments": attachments}, timeout=timeout)
-
             return response
         finally:
             await client.stop()
@@ -119,7 +109,8 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
     return asyncio.run(run())
 
 def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str, 
-    distance: int, qubits: list[int], attempts: int = 1, timeout: int | None = 60) -> stim.Circuit | None:
+    distance: int, attempts: int | None = 3, timeout: int | None = 60, *, model: str,
+    prompt_file: str = "rq2/prompts/ft_state_prep_prompt.txt") -> tuple[stim.Circuit, list[dict]] | None:
     """
     Generate a fault-tolerant state preparation circuit for given stabilizers.
     
@@ -130,76 +121,136 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
     Returns:
         stim.Circuit: The generated fault-tolerant circuit with minimum bad faults or None if generation failed.
     """
-    
+    # Track all intermediate circuits
+    all_candidates = []
+
     # Format stabilizers for display
     stabilizers_str = ", ".join(stabilizers)
 
-    result = {}
-    # @define_tool(description="Return the final circuit as a string")
-    # def return_result(params: CircuitParam) -> str:
-    #     nonlocal result
-    #     result = {
-    #         "circuit": params.circuit,
-    #         "data_qubits": params.data_qubits,
-    #         "flag_qubits": params.flag_qubits
-    #     }
+    # Create a scratch directory for any temporary files the agent may write
+    agent_files_dir = os.path.join("data", model, "agent_files_ft")
+    os.makedirs(agent_files_dir, exist_ok=True)
 
-    #     return "Result received. Stop generation."
+    result = None
 
     @define_tool(description=(
-        "Submit the final fault-tolerant Stim circuit.\n"
-        "Input must contain a single field 'stim_circuit' with raw Stim text.\n"
-        "No markdown, no commentary."
+        "Submit the final fault-tolerant circuit and its ancilla qubits.\n"
+        "Fields:\n"
+        "- stim_circuit: raw Stim circuit text\n"
+        "- ancilla_qubits: list of integers\n"
+        "Do not include markdown or commentary."
     ))
-    def return_result(params: FinalCircuitParam) -> str:
+    def return_result(params: FTResultParam) -> str:
         nonlocal result
         try:
             parsed = stim.Circuit(params.stim_circuit)
         except Exception as e:
             return f"Failed to parse Stim circuit ({e}). Retry."
 
-        result = {
-            "circuit": params.stim_circuit
-        }
+        result = {"circuit": parsed}
         return "Final circuit received. Stop generation."
 
     
-    prompt = f"""
-    You are a quantum error correction assistant.
-    Consider the following inputs and do not proceed unless all are provided:
-        A quantum circuit {non_ft_circuit} described in Stim format, which prepares a state that is not necessarily fault-tolerant.
-        The data qubits in the circuit {qubits}
-        The distance of the code being prepared {distance}
-        The circuit stabilizers {stabilizers_str}
-    Once all inputs are provided, convert the given Stim circuit into a fault-tolerant version of the same circuit,
-    using the following definition of fault tolerance (based on https://arxiv.org/pdf/quant-ph/0504218):
-    Fault-tolerant requirements:
-        Faults must not propagate beyond the qubit they are attached to (error weight must not exceed 1).
-        Each ancilla qubit may interact with only one qubit in the data block.
-        Measuring ancilla qubits in the X basis must yield an overall parity of 0.
-    Transformation guidelines:
-        Do not change the structure of the original circuit. You may add ancillas, but do not reorder gates on the original data qubits. 
-        Introduce additional ancilla qubits if necessary to prevent multi-qubit error propagation.
-        Ensure all ancilla-data interactions are strictly one-to-one.
-        Preserve the logical action of the original circuit on the data qubits.
-        Explicitly include X-basis measurements of ancilla qubits and enforce even parity.
-        Ensure that the final circuit preserves the original stabilizers of the code.
-    Output format requirements:
-        Output only the final fault-tolerant Stim circuit.
-        The output must be a plain string, for example:
-        \"CX 0 3
-        MX 3\"
-    Do not include explanations, comments, validation notes, or analysis—only the fault-tolerant Stim circuit string."""
+    @define_tool(description="""Validate correctness and fault-tolerance of a Stim circuit.
 
-    prompt_agent(prompt, tools=[validate_circuit, return_result], timeout=timeout)
-    
-    # Check if result was populated by the agent
-    if not result or "circuit" not in result:
-        return None
+        This tool evaluates a candidate circuit produced by the agent.
 
-    return stim.Circuit(result["circuit"])
+        Checks performed:
+        1. Stabilizer Preservation
+            Verifies that the circuit preserves the provided stabilizer generators.
 
-def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1, timeout: int | None = 600) -> stim.Circuit | None:
+        2. Error Propagation Analysis
+            Injects single-qubit Pauli faults (X, Y, Z) at each gate location and propagates
+            them through the remainder of the circuit to determine how errors spread.
+
+        3. Fault-Tolerance Check
+            Determines whether the circuit satisfies the fault-tolerance condition:
+            - Any fault propagating to more than floor((distance - 1)/2) data qubits
+                must trigger a flag ancilla (X error on a flag qubit).
+
+        4. Fault-Tolerance Score
+            Computes a continuous score that penalizes undetected high-weight faults.
+
+        Returns a dictionary containing:
+        - Whether the circuit is fault tolerant
+        - How many stabilizers are preserved
+        - The fault tolerance score
+        - The most severe error propagation events""") 
+    def validate_circuit(circuit: CircuitParam) -> dict:
+        try:
+            parsed = stim.Circuit(circuit.circuit)
+        except Exception as e:
+            return {"error": f"Failed to parse circuit: {e}"}
+
+        ancillas = compute_ancillas(parsed, circuit.data_qubits)
+
+        # check stabilizers
+        result = check_stabilizers(circuit.circuit, circuit.stabilizers)
+        print("".join(['.' if s else '!' for s in result.values()]))
+        preserved = sum(1 for ok in result.values() if ok)
+
+        # check error propagation and fault tolerance
+        error_propagation_results, fault_tolerance_results = check_fault_tolerance(circuit.circuit, circuit.data_qubits, ancillas, distance)
+
+        # Sort propagation results by highest data weight (worst faults)
+        sorted_errors = sorted(
+            error_propagation_results,
+            key=lambda r: r["data_weight"],
+            reverse=True
+        )
+
+        # Return only the worst 10 faults
+        top_errors = sorted_errors[:10]
+
+        # find the ft score
+        score = ft_score(circuit.circuit, circuit.data_qubits, ancillas, distance, 1.0)
+
+        # Append candidate to list
+        all_candidates.append({
+            "circuit": str(parsed),
+            "ft_score": score
+        })
+
+        return {
+            "fault_tolerance": fault_tolerance_results,
+            "error_propagation": top_errors, 
+            "preserved_stabilizers": preserved,
+            "ft_score": score
+        } 
+
+    def compute_ancillas(parsed_circuit, data_qubits):
+        used_qubits = set()
+        for inst in parsed_circuit:
+            for t in inst.targets_copy():
+                if hasattr(t, "value"):
+                    used_qubits.add(t.value)
+        return sorted(list(used_qubits - set(data_qubits)))
+
+    with open(prompt_file, "r") as f:
+        prompt_template = f.read()
+
+    prompt = prompt_template.format(
+        non_ft_circuit=non_ft_circuit,
+        distance=distance,
+        stabilizers_str=stabilizers_str,
+        agent_files_dir=agent_files_dir,
+        attempts=attempts,
+    )
+
+    print(prompt)
+
+    try:
+        prompt_agent(prompt, tools=[validate_circuit, return_result], model=model, timeout=timeout)
+    except Exception as e:
+        print(f"  ⚠ generate_ft_state_prep caught exception: {e}")
+
+    if result is None:
+        return None, all_candidates
+
+    return result, all_candidates
+
+
+def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1, timeout: int | None = 600, prompt_file: str = "rq1/prompts/state_prep_prompt4.txt") -> stim.Circuit | None:
     """
     Generate a state preparation circuit for given stabilizers (without fault-tolerance requirement).
     
@@ -256,13 +307,13 @@ def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1,
         except Exception as e:
             return {"error": f"Failed to parse circuit: {e}"}
 
-        result = check_stabilizers(params.circuit, params.stabilizers)
+        result = check_stabilizers(params.circuit, stabilizers)
         print("".join(['.' if s else '!' for s in result.values()]))
         preserved = sum(1 for ok in result.values() if ok)
         return {"results": result, "preserved": preserved, "total": len(result)}
 
     
-    with open("rq1/prompt.txt", "r") as f:
+    with open(prompt_file, "r") as f:
         prompt_template = f.read()
 
     prompt = prompt_template.format(
@@ -288,80 +339,148 @@ def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1,
 
 class OptimizeParam(BaseModel):
     candidate: str = Field(description="Candidate Stim circuit")
-    baseline: str = Field(description="Baseline Stim circuit")
 
 
 def generate_optimized_circuit(
     stabilizers: list[str],
     initial_circuit: str,
     *,
+    prompt_template: str,
     model: str,
     attempts: int = 10,
     timeout: int | None = 6000,
-) -> stim.Circuit | None:
+) -> dict:
     """
     Optimize an existing Clifford circuit while preserving stabilizers.
     Uses lexicographic rule: (cx_count, volume, depth).
+
+    Args:
+        stabilizers: List of stabilizer strings.
+        initial_circuit: Baseline Stim circuit text to optimize.
+        prompt_template: A format-string prompt with placeholders
+            {stabilizers_str}, {initial_circuit}, {attempts}, {agent_files_dir}.
+        model: LLM model identifier.
+        attempts: Number of optimization attempts.
+        timeout: Timeout in seconds.
+
+    Returns:
+        dict with keys:
+            'circuit': stim.Circuit | None  – the accepted optimized circuit, or None if none accepted.
+            'evaluations': list[dict]       – intermediate results from each evaluate_optimization call,
+                each containing 'circuit', 'preserved_stabilizers', 'candidate', 'baseline', 'better'.
     """
 
     stabilizers_str = ", ".join(stabilizers)
     baseline_metrics = compute_metrics(initial_circuit).as_dict()
 
     repo_root = Path(__file__).resolve().parents[1] 
-    agent_files_dir = repo_root / "rq3" / "data" / "agent_files"
+    agent_files_dir = repo_root / "rq3" / "data" / model / "agent_files"
     agent_files_dir.mkdir(parents=True, exist_ok=True)
 
     result = None
+    evaluations = []
 
     @define_tool(description=(
-        "Check whether a candidate circuit preserves all stabilizers.\n"
-        "Returns dictionary of stabilizer -> bool and counts."
+        "Evaluate a candidate Stim circuit for correctness AND optimization.\n\n"
+        "This is the primary evaluation tool. It performs two checks in order:\n\n"
+        "1. STABILIZER PRESERVATION – simulates the circuit with a TableauSimulator\n"
+        "   to verify that every target stabilizer has expectation +1. If any\n"
+        "   stabilizer is not preserved the circuit is INVALID and cannot be\n"
+        "   submitted via final_circuit.\n\n"
+        "2. OPTIMIZATION COMPARISON – compares the candidate against the baseline\n"
+        "   using a strict lexicographic rule on three integer metrics:\n"
+        "     a. cx_count  – number of CX (CNOT) gates (primary, most important).\n"
+        "     b. volume    – total gate count in the volume gate set\n"
+        "                    (CX, CY, CZ, H, S, SQRT_X, etc.).\n"
+        "   A candidate is 'strictly better' only when the tuple\n"
+        "   (cand.cx_count, cand.volume) is lexicographically less than\n"
+        "   the baseline tuple. Equal tuples are NOT an improvement.\n\n"
+        "Input:\n"
+        "  - candidate: raw Stim circuit text (no Markdown fences). Must be\n"
+        "    parseable by stim.Circuit.\n\n"
+        "Output (on success):\n"
+        "  {\n"
+        "    'preserved_stabilizers': <int>  (number of stabilizers preserved out of total),\n"
+        "    'valid': true/false             (true when ALL stabilizers are preserved),\n"
+        "    'candidate': { 'cx_count': int, 'volume': int, 'depth': int, ... },\n"
+        "    'baseline':  { 'cx_count': int, 'volume': int, 'depth': int, ... },\n"
+        "    'better': true/false\n"
+        "  }\n\n"
+        "Output (on parse / error): { 'error': <string> }\n\n"
+        "Usage guidance:\n"
+        "  - Call this tool to check every candidate circuit before submitting\n"
+        "    via final_circuit.\n"
+        "  - A circuit must have valid == true AND better == true to be\n"
+        "    accepted by final_circuit.\n"
+        "  - Focus optimization efforts on reducing cx_count first; only then\n"
+        "    try to reduce volume or depth."
     ))
-    def check_stabilizers_tool(params: CheckStabilizersParam) -> dict:
+    def evaluate_optimization(params: OptimizeParam) -> dict:
         try:
-            _ = stim.Circuit(params.circuit)
+            parsed = stim.Circuit(params.candidate)
         except Exception as e:
             return {"error": f"Failed to parse circuit: {e}"}
 
-        results = check_stabilizers(params.circuit, params.stabilizers)
-        preserved = sum(1 for v in results.values() if v)
+        # --- stabilizer check ---
+        stab_results = check_stabilizers(params.candidate, stabilizers)
+        preserved = sum(1 for v in stab_results.values() if v)
+        all_preserved = preserved == len(stab_results)
 
-        print("".join(['.' if v else '!' for v in results.values()]))
+        print("".join(['.' if v else '!' for v in stab_results.values()]))
 
-        return {
-            "results": results,
-            "preserved": preserved,
-            "total": len(results)
+        # --- optimization comparison ---
+        better, info = is_strictly_more_optimal(
+            candidate_text=params.candidate,
+            baseline_text=initial_circuit,
+        )
+
+        cand = info["candidate"]
+        base = info["baseline"]
+
+        print(
+            f"[OPT] CX: {cand['cx_count']} (base {base['cx_count']}), "
+            f"VOL: {cand['volume']} (base {base['volume']}), "
+            f"DEPTH: {cand['depth']} (base {base['depth']}) "
+            f"{'✓' if better else '✗'} | "
+            f"stabilizers: {preserved}/{len(stab_results)} "
+            f"{'✓' if all_preserved else '✗'}"
+        )
+
+        result = {
+            "preserved_stabilizers": preserved,
+            "valid": all_preserved,
+            "candidate": cand,
+            "baseline": base,
+            "better": better,
         }
 
+        # Track this evaluation for intermediate results
+        evaluations.append({
+            "circuit": params.candidate,
+            **result,
+        })
+
+        return result
+    
+
     @define_tool(description=(
-    "Compare candidate circuit to baseline using lexicographic "
-    "optimization rule (cx_count, volume, depth)."
-))
-    def evaluate_optimization(params: OptimizeParam) -> dict:
-        try:
-            better, info = is_strictly_more_optimal(
-                candidate_text=params.candidate,
-                baseline_text=params.baseline,
-            )
-
-            cand = info["candidate"]
-            base = info["baseline"]
-
-            print(
-                f"[OPT] CX: {cand['cx_count']} (base {base['cx_count']}), "
-                f"VOL: {cand['volume']} (base {base['volume']}), "
-                f"DEPTH: {cand['depth']} (base {base['depth']}) "
-                f"{'✓' if better else '✗'}"
-            )
-
-            return info
-
-        except Exception as e:
-            return {"error": str(e)}
-    @define_tool(description=(
-        "Submit final optimized circuit.\n"
-        "Must preserve stabilizers and be strictly more optimal."
+        "Submit the final optimized Stim circuit for acceptance.\n\n"
+        "This tool performs TWO automatic validation checks before accepting:\n"
+        "  1. Stabilizer preservation – every target stabilizer must be satisfied.\n"
+        "  2. Strict optimization     – the circuit must be lexicographically better \n"
+        "     than the baseline on (cx_count, volume).\n\n"
+        "If either check fails the submission is REJECTED and you should keep \n"
+        "iterating. The tool returns a message indicating success or failure.\n\n"
+        "Input:\n"
+        "  - stim_circuit: raw Stim circuit text (no Markdown fences, no prose).\n"
+        "    Must be parseable by stim.Circuit.\n\n"
+        "Output:\n"
+        "  - On success: 'Final optimized circuit accepted. Stop generation.'\n"
+        "  - On failure: a description of what went wrong (stabilizers or metrics).\n\n"
+        "Best practice:\n"
+        "  - Always call evaluate_optimization first to verify that\n"
+        "    valid == true AND better == true before submitting here.\n"
+        "  - Only call this tool with your final answer."
     ))
     def final_circuit(params: FinalCircuitParam) -> str:
         nonlocal result
@@ -393,17 +512,14 @@ def generate_optimized_circuit(
                 f"DEPTH {cand['depth']} vs {base['depth']}"
             )
 
-            return "Circuit is not strictly more optimal. Retry."
+            return "Circuit is NOT strictly more optimal."
 
         result = parsed
-        return "Final optimized circuit accepted. Stop generation."
+        return "Final optimized circuit accepted."
 
     # -------------------------------------------------
     # Prompt Construction
     # -------------------------------------------------
-    with open("rq3/optimizer_prompt2.txt", "r") as f:
-        prompt_template = f.read()
-
     prompt = prompt_template.format(
         stabilizers_str=stabilizers_str,
         initial_circuit=initial_circuit,
@@ -413,14 +529,16 @@ def generate_optimized_circuit(
 
     print(prompt)
 
-    prompt_agent(prompt, tools=[evaluate_optimization, check_stabilizers_tool, final_circuit], model=model, timeout=timeout)
+    prompt_agent(prompt, tools=[evaluate_optimization, final_circuit], model=model, timeout=timeout)
 
     # Check if result was populated by the agent
     if not result:
-        return None
+        return {"circuit": None, "evaluations": evaluations}
 
     print('done.')
-    return result
+    return {"circuit": result, "evaluations": evaluations}
+
+
 # -------------------------
 # MAIN
 # -------------------------
@@ -445,134 +563,5 @@ def main():
     print(result)
 
 
-
-def iter_jsonl(path: Path):
-    """Yield dict per JSONL line, skipping blanks."""
-    with path.open("r", encoding="utf-8") as f:
-        for line_num, line in enumerate(f, start=1):
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                yield line_num, json.loads(line)
-            except json.JSONDecodeError as e:
-                raise ValueError(f"Bad JSON on line {line_num}: {e}") from e
-
-
-def normalize_stim_text(stim_text: str) -> str:
-    """
-    Your dataset stores circuits with '\\n'. Convert to real newlines.
-    If it's already real newlines, this is harmless.
-    """
-    return stim_text.replace("\\n", "\n").strip() + "\n"
-
-
-def main_optimizer():
-    dataset_path = Path("data") / "circuit_dataset.jsonl"
-    if not dataset_path.exists():
-        raise FileNotFoundError(f"Dataset not found: {dataset_path.resolve()}")
-
-    model = "claude-opus-4.6"
-    attempts = 10
-    timeout = 6000
-
-    
-    out_dir = Path("rq3") / "data" / model
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / "optimized_results.jsonl"
-
-    total = 0
-    improved = 0
-    failed = 0
-
-    with out_path.open("w", encoding="utf-8") as out_f:
-        for line_num, rec in iter_jsonl(dataset_path):
-            total += 1
-
-            source = rec.get("source_code", f"line_{line_num}")
-            stabilizers = rec["input_stabilizers"]
-            baseline_text = normalize_stim_text(rec["output_circuit"])
-
-            # sanity: baseline parses
-            try:
-                _ = stim.Circuit(baseline_text)
-            except Exception as e:
-                failed += 1
-                out_f.write(json.dumps({
-                    "line": line_num,
-                    "source_code": source,
-                    "status": "baseline_parse_error",
-                    "error": str(e),
-                }) + "\n")
-                continue
-
-            base_metrics = compute_metrics(baseline_text).as_dict()
-            print(f"\n[{total}] {source} | base: {base_metrics}")
-
-            try:
-                opt_circ = generate_optimized_circuit(
-                    stabilizers=stabilizers,
-                    initial_circuit=baseline_text,
-                    model=model,
-                    attempts=attempts,
-                    timeout=timeout,
-                )
-            except Exception as e:
-                failed += 1
-                out_f.write(json.dumps({
-                    "line": line_num,
-                    "source_code": source,
-                    "status": "optimizer_exception",
-                    "error": str(e),
-                    "baseline_metrics": base_metrics,
-                }) + "\n")
-                continue
-
-            if opt_circ is None:
-                # Your harness may return None if no result ever accepted
-                out_f.write(json.dumps({
-                    "line": line_num,
-                    "source_code": source,
-                    "status": "no_result",
-                    "baseline_metrics": base_metrics,
-                }) + "\n")
-                continue
-
-            opt_text = str(opt_circ)
-            opt_metrics = compute_metrics(opt_text).as_dict()
-
-            is_strict = (
-                (opt_metrics["cx_count"], opt_metrics["volume"], opt_metrics["depth"])
-                < (base_metrics["cx_count"], base_metrics["volume"], base_metrics["depth"])
-            )
-
-            if is_strict:
-                improved += 1
-                status = "improved"
-            else:
-                status = "not_strictly_better"
-
-            print(f"    -> opt:  {opt_metrics}  [{status}]")
-
-            out_f.write(json.dumps({
-                "line": line_num,
-                "source_code": source,
-                "d": rec.get("d"),
-                "permutation": rec.get("permutation"),
-                "input_stabilizers": stabilizers,
-                "baseline_circuit": baseline_text,
-                "optimized_circuit": opt_text,
-                "baseline_metrics": base_metrics,
-                "optimized_metrics": opt_metrics,
-                "status": status,
-                "model": model,
-                "attempts": attempts,
-            }) + "\n")
-
-    print(f"\nDONE. total={total} improved={improved} failed={failed} results={out_path.resolve()}")
-
-#%%
 if __name__ == "__main__":
-    # main()
-    main_optimizer()
-# %%
+    main()

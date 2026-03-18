@@ -1,0 +1,115 @@
+import stim
+import sys
+
+def generate_circuit():
+    stabilizers_text = """
+XXXXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIXXXXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIXXXXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIXXXXIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIXXXXIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXXXXIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXXXXIII
+XIXIXIXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIXIXIXIXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIXIXIXIXIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIXIXIXIXIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXIXIXIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXIXIXIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXIXIX
+IIXXXXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIXXXXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIXXXXIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIXXXXIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXXXXIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXXXXIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXXXXI
+ZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIZZZZIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZIII
+ZIZIZIZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIZIZIZIZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIZIZIZIZIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIZIZIZIZIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIZIZIZIZIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZIZIZIZIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZIZIZIZ
+IIZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIZZZZIIIIIIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZIIIIIIIIIIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZIIIIIIII
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZI
+IXXIXIIIXXIXIIIIIIIIIIIIIIIIIXXIXIIIXXIXIIIIIIIII
+IXXIXIIIIIIIIIIXXIXIIIIIIIIIIXXIXIIIIIIIIIIXXIXII
+IIIIIIIIIIIIIIIIIIIIIIXXIXIIIXXIXIIIXXIXIIIXXIXII
+IZZIZIIIZZIZIIIIIIIIIIIIIIIIIZZIZIIIZZIZIIIIIIIII
+IZZIZIIIIIIIIIIZZIZIIIIIIIIIIZZIZIIIIIIIIIIZZIZII
+IIIIIIIIIIIIIIIIIIIIIIZZIZIIIZZIZIIIZZIZIIIZZIZII
+"""
+    lines = [line.strip() for line in stabilizers_text.splitlines() if line.strip()]
+    
+    # Check lengths
+    lengths = [len(l) for l in lines]
+    max_len = max(lengths)
+    
+    # Pad to max_len
+    padded_lines = [l + "I" * (max_len - len(l)) for l in lines]
+    
+    try:
+        # Convert strings to stim.PauliString
+        pauli_stabilizers = [stim.PauliString(line) for line in padded_lines]
+        
+        # Create a tableau from the stabilizers.
+        t = stim.Tableau.from_stabilizers(pauli_stabilizers, allow_redundant=True, allow_underconstrained=True)
+        
+        # Convert to circuit
+        circuit = t.to_circuit(method="graph_state")
+        
+        # Post-process: Remove TICKs, replace RX->H
+        temp_circuit = stim.Circuit()
+        for instr in circuit:
+            if instr.name == "RX":
+                temp_circuit.append("H", instr.targets_copy())
+            elif instr.name == "M" or instr.name == "TICK":
+                pass
+            else:
+                temp_circuit.append(instr)
+
+        # Filter out qubits > 48
+        final_circuit = stim.Circuit()
+        for instr in temp_circuit:
+            targets = instr.targets_copy()
+            # New targets: keep only those <= 48
+            new_targets = [t for t in targets if t.value <= 48]
+            
+            # If no targets left, skip
+            if not new_targets:
+                continue
+            
+            # If some targets removed, check if valid
+            if len(new_targets) != len(targets):
+                # If gate is single qubit, this is fine (batch application)
+                # If gate is 2-qubit (CZ), we must drop the pair if one is removed?
+                # But since stabilizers on >48 are I, they shouldn't interact with <=48.
+                # So we assume strict separation.
+                pass
+            
+            final_circuit.append(instr.name, new_targets, instr.gate_args_copy())
+
+        # Write to file
+        with open("candidate_graph_final.stim", "w") as f:
+            print(final_circuit, file=f)
+        
+        print("Candidate written to candidate_graph_final.stim")
+        
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+
+if __name__ == "__main__":
+    generate_circuit()

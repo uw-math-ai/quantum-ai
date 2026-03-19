@@ -1,0 +1,751 @@
+{
+    "metadata": {
+        "benchmarks_path": "../data/circuit_dataset.jsonl",
+        "prompt_path": "prompts/ft_state_prep_prompt_3.txt",
+        "model": "claude-opus-4.6",
+        "attempts": 15,
+        "timeout": 300,
+        "started_at": "2026-03-18T16:35:23.477317",
+        "finished_at": "2026-03-18T16:56:39.443184"
+    },
+    "results": [
+        {
+            "code_name": "Perfect 5-Qubit Code",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:35:23.687672",
+            "end_time": "2026-03-18T16:37:34.432235",
+            "runtime_seconds": 130.744563,
+            "best_output": {
+                "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1 0 5 1 5 2 5 3 5\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5",
+                "ft_score": 0.11206896551724133,
+                "ft_check": false,
+                "all_stabilized": true,
+                "stabilizer_details": {
+                    "XZZXI": true,
+                    "IXZZX": true,
+                    "XIXZZ": true,
+                    "ZXIXZ": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0 0 5\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1 2 5\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5",
+                    "ft_score": 0.1228070175438597,
+                    "preserved_stabilizers": 3
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nH 5\nCX 0 5 2 5\nH 5\nM 5",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "H 5\nCX 2 5 2 0 0 5 0 2 2 5 2 0\nH 5 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "CX 2 0\nH 5\nCX 5 2 0 2 5 2\nH 5\nCX 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5",
+                    "ft_score": 0.0357142857142857,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "H 5 6\nCX 5 2 6 0 2 0 5 2 6 0 0 2 5 2 6 0 2 0 5 2 6 0\nH 5 6 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5 6",
+                    "ft_score": 0.1384615384615384,
+                    "preserved_stabilizers": 2
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2 5\nCX 5 2 2 0 5 0 3 1 1 3 3 1\nH 5 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5",
+                    "ft_score": 0.16216216216216217,
+                    "preserved_stabilizers": 3
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nH 5\nCX 0 5 1 5 2 5 3 5 4 5\nH 5\nM 5",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "H 5\nCX 2 0 2 5 0 2 0 5 2 0 2 5\nH 5 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "H 5\nCX 5 6 5 2 6 0 2 0 5 0 6 2 0 2 5 2 6 0 2 0 5 0 6 2\nH 5\nCX 5 6\nH 6 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5 6",
+                    "ft_score": 0.12307692307692308,
+                    "preserved_stabilizers": 2
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 5\nCX 2 5 0 5\nH 5 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 6\nCX 1 6 3 6\nH 6 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5 6",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0 0 5 2 5\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1 0 5 2 5 1 6 3 6\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5 6",
+                    "ft_score": 0.24590163934426235,
+                    "preserved_stabilizers": 3
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1 0 5 2 5 1 5 3 5\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5",
+                    "ft_score": 0.11206896551724133,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0 2 5\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1 2 5\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5",
+                    "ft_score": 0.1228070175438597,
+                    "preserved_stabilizers": 3
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nCX 0 5 2 5 1 5 3 5\nM 5",
+                    "ft_score": 0.5833333333333333,
+                    "preserved_stabilizers": 3
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nCX 0 5 2 5\nM 5",
+                    "ft_score": 0.42592592592592593,
+                    "preserved_stabilizers": 3
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nH 5\nCX 5 0 5 2\nH 5\nM 5",
+                    "ft_score": 0.38888888888888884,
+                    "preserved_stabilizers": 1
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1 0 5 1 5 2 5 3 5\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nCX 0 6 1 6 2 6 3 6\nM 5 6",
+                    "ft_score": 0.6637931034482758,
+                    "preserved_stabilizers": 3
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1 0 5 1 5 2 5 3 5 4 5\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5",
+                    "ft_score": 0.2100840336134454,
+                    "preserved_stabilizers": 3
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 5\nCX 5 0 5 1 5 2 5 3\nH 5 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nM 5",
+                    "ft_score": 0.1724137931034483,
+                    "preserved_stabilizers": 2
+                }
+            ]
+        },
+        {
+            "code_name": "Steane",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:37:35.104266",
+            "end_time": "2026-03-18T16:39:44.337246",
+            "runtime_seconds": 129.23298,
+            "best_output": {
+                "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2 2 4 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5 3 7 4 7 5 7 6 7\nM 7",
+                "ft_score": 0.07526881720430112,
+                "ft_check": false,
+                "all_stabilized": true,
+                "stabilizer_details": {
+                    "XXIIXXI": true,
+                    "XIXIXIX": true,
+                    "IIIXXXX": true,
+                    "ZZIIZZI": true,
+                    "ZIZIZIZ": true,
+                    "IIIZZZZ": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2 2 4 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 7 4 2 2 4 4 2 7 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7\nM 7",
+                    "ft_score": 0.14583333333333337,
+                    "preserved_stabilizers": 3
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2 2 4 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5 0 7 1 7\nH 7\nM 7",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "H 7\nCX 1 0 0 1 1 0 0 7\nH 0\nCX 0 3 0 4 1 7\nH 1\nCX 1 0 1 4 1 6 2 8 4 2 2 4 4 2 2 8 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7 8\nM 7 8",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6\nH 7\nCX 4 7 4 2 7 2 2 4 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7\nM 7",
+                    "ft_score": 0.02020202020202022,
+                    "preserved_stabilizers": 5
+                },
+                {
+                    "circuit": "H 7 8\nCX 1 0 0 1 1 7 1 0 7 1\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 8 4 2 8 2 2 4 4 2 2 8 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7 8\nM 7 8",
+                    "ft_score": 0.11214953271028039,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "H 7\nCX 1 0 1 7 0 1 0 7 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6\nH 8\nCX 4 8 4 2 2 4 2 8 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7 8\nM 7 8",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "H 7\nCX 1 7 1 0 0 7 0 1 1 7 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6\nH 8\nCX 4 8 4 2 2 8 2 4 4 8 4 2 2 8 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7 8\nM 7 8",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 7 0 3 0 4 7 0\nH 1\nCX 1 0 1 4 1 6 4 8 4 2 2 4 4 2 8 4 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7 8\nM 7 8",
+                    "ft_score": 0.21153846153846156,
+                    "preserved_stabilizers": 1
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1 7\nCX 1 7 1 0 0 7 1 4 1 6\nH 8\nCX 4 8 4 2 2 8 2 4 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7 8\nM 7 8",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6\nH 7\nCX 7 4 4 2 2 4 4 2 7 4 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7\nM 7",
+                    "ft_score": 0.12371134020618557,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6\nH 7\nCX 7 2 4 2 2 4 4 2 7 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7\nM 7",
+                    "ft_score": 0.12371134020618557,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "H 7\nCX 1 0 1 7 0 1 0 7 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6\nH 8\nCX 4 8 4 2 2 4 2 8 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7 8\nM 7 8",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2\nH 7\nCX 2 7 2 4 4 2 2 7 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7\nM 7",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2 2 4 4 2 5 2 6 2 2 7 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nM 7",
+                    "ft_score": 0.26881720430107525,
+                    "preserved_stabilizers": 5
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2 2 4 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5 0 7 1 7 2 7 4 7 5 7 6 7\nM 7",
+                    "ft_score": 0.3548387096774194,
+                    "preserved_stabilizers": 5
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2 2 4 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5 3 7 4 7 5 7 6 7\nM 7",
+                    "ft_score": 0.07526881720430112,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2 2 7 2 4 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5 3 8 4 8 5 8 6 8\nM 7 8",
+                    "ft_score": 0.27368421052631575,
+                    "preserved_stabilizers": 4
+                }
+            ]
+        },
+        {
+            "code_name": "Shor",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:39:44.896504",
+            "end_time": "2026-03-18T16:41:29.883096",
+            "runtime_seconds": 104.986592,
+            "best_output": {
+                "circuit": "CX 0 9 1 0 0 1 1 0 0 9\nH 0\nCX 0 10 0 2 0 3 0 8 0 10\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7\nM 9 10",
+                "ft_score": 0.13978494623655913,
+                "ft_check": false,
+                "all_stabilized": true,
+                "stabilizer_details": {
+                    "XXXXXXIII": true,
+                    "XXXIIIXXX": true,
+                    "ZZIIIIIII": true,
+                    "ZIZIIIIII": true,
+                    "IIIZZIIII": true,
+                    "IIIZIZIII": true,
+                    "IIIIIIZZI": true,
+                    "IIIIIIZIZ": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 2 0 3 0 8\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 9 0 2 0 3 0 8 9 0\nH 1\nCX 1 10 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7 10 1\nM 9 10",
+                    "ft_score": 0.1777777777777778,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 2 0 3 0 8\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7\nH 9\nCX 0 9 1 9 2 9\nH 9\nM 9",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 9\nCX 0 9 0 2 0 3 0 8 0 9\nH 9 1 10\nCX 1 10 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7 1 10\nH 10\nM 9 10",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 9 0 0 2 0 3 0 8 9 0\nH 1\nCX 10 1 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7 10 1\nM 9 10",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "H 9\nCX 1 9 1 0 0 1 1 0 1 9\nH 9 0\nCX 0 2 0 3 0 8\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7\nM 9",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 2 0 3 0 8\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5\nH 9\nCX 3 9 7 6 6 7 7 6 6 7 8 6 8 7 3 9\nH 9\nM 9",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "CX 1 0 0 9 0 1 1 0 0 9\nH 0\nCX 0 2 0 3 0 8\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7\nM 9",
+                    "ft_score": 0.07954545454545459,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "CX 1 0 0 9 1 10 0 1 1 0 0 9 1 10\nH 0\nCX 0 2 0 3 0 8\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7\nM 9 10",
+                    "ft_score": 0.10869565217391308,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "CX 1 0 0 9 1 10 0 1 1 0 0 9 1 10\nH 0\nCX 0 11 0 2 0 3 0 8 0 11\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7\nM 9 10 11",
+                    "ft_score": 0.17525773195876293,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "H 12\nCX 1 12 1 0 1 12\nH 12\nCX 0 9 1 10 0 1 1 0 0 9 1 10\nH 0\nCX 0 11 0 2 0 3 0 8 0 11\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7\nM 9 10 11 12",
+                    "ft_score": 0.196078431372549,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "H 12\nCX 1 12 1 0 1 12\nH 12 13\nCX 0 13 0 9 1 10 0 1 1 0 0 9 1 10 0 13\nH 13 0\nCX 0 11 0 2 0 3 0 8 0 11\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7\nM 9 10 11 12 13",
+                    "ft_score": 0.19626168224299068,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "H 12\nCX 1 12 1 0 1 12\nH 12 13\nCX 0 13 0 9 1 10 0 1 1 0 0 9 1 10 0 13\nH 13 14\nCX 0 14\nH 0\nCX 0 14\nH 14\nCX 0 11 0 2 0 3 0 8 0 11\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7\nM 9 10 11 12 13 14",
+                    "ft_score": 0.18584070796460173,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "CX 0 9 1 0 0 1 1 0 0 9\nH 0\nCX 0 10 0 2 0 3 0 8 0 10\nH 1\nCX 0 11 1 12 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7 0 11 1 12\nM 9 10 11 12",
+                    "ft_score": 0.41237113402061853,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 0 9 1 0 0 1 1 0 0 9\nH 0\nCX 0 10 0 2 0 3 0 8 0 10\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7\nM 9 10",
+                    "ft_score": 0.13978494623655913,
+                    "preserved_stabilizers": 8
+                }
+            ]
+        },
+        {
+            "code_name": "Tetrahedral",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:41:31.138033",
+            "end_time": "2026-03-18T16:44:28.665393",
+            "runtime_seconds": 177.52736,
+            "best_output": {
+                "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 15 1 15 2 15 3 15 4 15 5 15 6 15 7 15 8 16 9 16 10 16 11 16 12 16 13 16 14 16\nM 15 16",
+                "ft_score": 0.46543778801843316,
+                "ft_check": false,
+                "all_stabilized": true,
+                "stabilizer_details": {
+                    "XXXXXXXXIIIIIII": true,
+                    "IXXIXXIIXXIXXII": true,
+                    "IIXXIXXIIXXXIXI": true,
+                    "IIIIXXXXIIIXXXX": true,
+                    "ZZZZIIIIIIIIIII": true,
+                    "IZZIZZIIIIIIIII": true,
+                    "IIZZIZZIIIIIIII": true,
+                    "IIIIZZZZIIIIIII": true,
+                    "IZIIZIIIZIIIZII": true,
+                    "IIZIIZIIIZIZIII": true,
+                    "IIZZIIIIIZZIIII": true,
+                    "IIIIZZIIIIIZZII": true,
+                    "IIIIIZZIIIIZIZI": true,
+                    "IIIIIIZZIIIIIZZ": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 14
+                },
+                {
+                    "circuit": "H 0 1 15\nCX 15 0 0 1 0 4\nH 2 3\nCX 15 1 1 2 1 3 1 4 1 5 1 8 1 14 15 2 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13\nH 15\nM 15",
+                    "ft_score": 0.03139013452914796,
+                    "preserved_stabilizers": 14
+                },
+                {
+                    "circuit": "H 0 1 15 16 17 18\nCX 15 0 16 1 0 1 0 4\nH 2 3\nCX 17 2 18 3 15 1 16 2 1 2 1 3 1 4 1 5 1 8 1 14 17 4 18 4 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13\nH 15 16 17 18\nM 15 16 17 18",
+                    "ft_score": 0.07531380753138073,
+                    "preserved_stabilizers": 13
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3 15\nCX 1 15 1 2 1 3 1 4 1 5 1 8 1 14 2 15 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13\nH 15\nM 15",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 14
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14\nH 15\nCX 2 15 4 15 5 15 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13\nH 15\nM 15",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 14
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 15 4 15 5 15 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13\nM 15",
+                    "ft_score": 0.07999999999999996,
+                    "preserved_stabilizers": 12
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 15 1 15 2 15 3 15 4 15 5 15 6 15 7 15\nM 15",
+                    "ft_score": 0.23963133640552992,
+                    "preserved_stabilizers": 14
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 15 1 15 2 15 3 15 4 15 5 15 6 15 7 15 8 16 9 16 10 16 11 16 12 16 13 16 14 16\nM 15 16",
+                    "ft_score": 0.46543778801843316,
+                    "preserved_stabilizers": 14
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 15 1 15 0 1 0 4\nH 2 3\nCX 2 15 3 15 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 16 1 16 2 16 3 16 4 16 5 16 6 16 7 16 8 17 9 17 10 17 11 17 12 17 13 17 14 17\nM 15 16 17",
+                    "ft_score": 0.47807017543859653,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 15 1 15 2 15 3 15 4 15 5 15 6 15 7 15 8 16 9 16 10 16 11 16 12 16 13 16 14 16 1 17 2 17 4 17 5 17 8 17 11 17 12 17 14 17 2 18 3 18 4 18 5 18 6 18 9 18 10 18 13 18\nM 15 16 17 18",
+                    "ft_score": 0.6682027649769585,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 15 1 15 2 15 3 15 4 16 5 16 6 16 7 16 8 17 9 17 10 17 11 17 12 18 13 18 14 18\nM 15 16 17 18",
+                    "ft_score": 0.6589861751152073,
+                    "preserved_stabilizers": 11
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 15 1 15 2 15 3 15 4 15 5 15 6 15 7 15 4 16 5 16 6 16 7 16 8 16 9 16 10 16 11 16\nM 15 16",
+                    "ft_score": 0.5391705069124424,
+                    "preserved_stabilizers": 11
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 15 7 15 1 16 2 16 4 16 5 16 8 16 11 16 12 16 14 16 2 17 3 17 4 17 5 17 6 17 9 17 10 17 13 17 4 18 5 18 6 18 7 18 11 18 12 18 13 18 14 18\nM 15 16 17 18",
+                    "ft_score": 0.6589861751152073,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 15 1 15 2 15 3 15 4 15 5 15 6 15 7 15 8 16 9 16 10 16 11 16 12 16 13 16 14 16 3 17 4 17 6 17 7 17\nM 15 16 17",
+                    "ft_score": 0.5668202764976958,
+                    "preserved_stabilizers": 12
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 15 1 15 2 15 3 15 4 15 5 15 6 15 8 16 9 16 10 16 11 16 12 16 13 16 14 16\nM 15 16",
+                    "ft_score": 0.4470046082949308,
+                    "preserved_stabilizers": 12
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 15 1 15 2 15 3 15 4 15 5 15 6 15 7 15 8 16 9 16 10 16 11 16 12 16 13 16 14 16 0 17\nM 15 16 17",
+                    "ft_score": 0.4838709677419355,
+                    "preserved_stabilizers": 13
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13 0 15 1 15 2 15 3 15 4 15 5 15 6 15 7 15 8 16 9 16 10 16 11 16 12 16 13 16 14 16 0 17 1 17 3 17 4 17 5 17 6 17 7 17\nM 15 16 17",
+                    "ft_score": 0.511520737327189,
+                    "preserved_stabilizers": 11
+                }
+            ]
+        },
+        {
+            "code_name": "Hamming",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:44:32.193724",
+            "end_time": "2026-03-18T16:47:21.388648",
+            "runtime_seconds": 169.194924,
+            "best_output": {
+                "circuit": "CX 7 0 0 7 7 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8",
+                "ft_score": 0.0,
+                "ft_check": false,
+                "all_stabilized": true,
+                "stabilizer_details": {
+                    "IIIIIIIXXXXXXXX": true,
+                    "IIIXXXXIIIIXXXX": true,
+                    "IXXIIXXIIXXIIXX": true,
+                    "XIXIXIXIXIXIXIX": true,
+                    "IIIIIIIZZZZZZZZ": true,
+                    "IIIZZZZIIIIZZZZ": true,
+                    "IZZIIZZIIZZIIZZ": true,
+                    "ZIZIZIZIZIZIZIZ": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "CX 7 0 0 7 7 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "R 15 16 17 18\nCX 7 0 0 7 7 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1 0 15\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14 2 16\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6 6 17\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8 7 18\nM 15 16 17 18",
+                    "ft_score": 0.32727272727272727,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "R 15 16 17 18\nH 15 16 17 18\nCX 7 0 0 7 7 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1 15 0 15 7\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14 16 2 16 3\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6 17 5 17 6\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8 18 7 18 8\nH 15 16 17 18\nM 15 16 17 18",
+                    "ft_score": 0.49820788530465954,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "R 15 16 17 18\nCX 7 0 0 7 7 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8 0 15 7 15 2 16 3 16 5 17 6 17 8 18 9 18\nM 15 16 17 18",
+                    "ft_score": 0.6545454545454545,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "R 15 16 17 18\nCX 7 0 0 7 7 0 0 15 7 15\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1 0 16 3 16\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14 2 17 6 17\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6 5 18 8 18\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8\nM 15 16 17 18",
+                    "ft_score": 0.40418118466898956,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "R 15 16 17 18 19 20\nH 15 16 17 18 19 20\nCX 15 0 15 7 7 0 0 7 7 0 16 0 16 7\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1 17 0 17 3\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14 18 2 18 6\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6 19 5 19 6\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8 20 7 20 8\nH 15 16 17 18 19 20\nM 15 16 17 18 19 20",
+                    "ft_score": 0.47404844290657444,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "R 15\nCX 7 0 0 7 7 0\nH 15\nCX 15 0 15 7\nH 15 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8\nM 15",
+                    "ft_score": 0.028673835125448077,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 7 0 0 7 7 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8\nH 15\nCX 15 0 15 7\nH 15\nM 15",
+                    "ft_score": 0.3527272727272728,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "H 15\nCX 7 0 0 7 7 0 15 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1 15 7\nH 16\nCX 16 2\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14 16 3\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8\nH 15 16\nM 15 16",
+                    "ft_score": 0.06360424028268552,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 7 0 0 7 7 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1 0 15 7 15\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14 2 16 3 16\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6 5 17 6 17\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8 7 18 8 18\nH 15 16 17 18\nM 15 16 17 18",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 7
+                },
+                {
+                    "circuit": "H 15 16 17 18\nCX 7 0 0 7 7 0 15 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1 15 7 16 2\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14 16 3 17 5\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6 17 6 18 7\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8 18 8\nH 15 16 17 18\nM 15 16 17 18",
+                    "ft_score": 0.313588850174216,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "CX 7 0 0 7 7 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 8
+                }
+            ]
+        },
+        {
+            "code_name": "Carbon",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:47:24.302907",
+            "end_time": "2026-03-18T16:50:48.945441",
+            "runtime_seconds": 204.642534,
+            "best_output": {
+                "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCZ 0 21\nCX 12 0 0 4 0 6 0 7 0 8 12 0\nCZ 0 21\nH 12\nM 12\nH 21\nM 21\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20",
+                "ft_score": 0.6753623188405797,
+                "ft_check": false,
+                "all_stabilized": true,
+                "stabilizer_details": {
+                    "XXXIIIXXXIII": true,
+                    "IIXXXIIIXXXI": true,
+                    "XIIIXXXIIIXX": true,
+                    "XXXXXXIIIIII": true,
+                    "IIIIIIXXXXXX": true,
+                    "IIZZZZIZIZII": true,
+                    "ZIIIZIZZZIIZ": true,
+                    "ZZZIIZZIIIZI": true,
+                    "ZIIZZZIIZIZI": true,
+                    "IZZIIIZZIZIZ": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 4 0 6 0 7 0 8\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 1 3 1 6 1 8 1 9 1 10 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 3 2 3 7 3 8 3 9 3 10 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 7 5 5 7 7 5 5 6 10 5 7 6 6 7 7 6 6 9 6 10 6 11 8 7 7 8 8 7 7 9 8 7 11 7 9 8 8 9 9 8 8 9 10 8 11 8",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 12 0 4 0 6 0 7 0 8 0 12\nH 12\nM 12\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 1 13 1 3 1 6 1 8 1 9 1 10 1 13\nH 13\nM 13\nCX 2 14 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 2 14\nH 14\nM 14\nCX 3 15 3 2 3 7 3 8 3 9 3 10 3 15\nH 15\nM 15\nCX 4 16 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 4 16\nH 16\nM 16\nCX 5 17 7 5 5 7 7 5 5 6 10 5 5 17\nH 17\nM 17\nCX 6 18 7 6 6 7 7 6 6 9 6 10 6 11 6 18\nH 18\nM 18\nCX 7 19 8 7 7 8 8 7 7 9 8 7 11 7 7 19\nH 19\nM 19\nCX 8 20 9 8 8 9 9 8 8 9 10 8 11 8 8 20\nH 20\nM 20",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 9
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 12 0 0 4 0 6 0 7 0 8 12 0\nH 12\nM 12\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20",
+                    "ft_score": 0.6588235294117647,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "H 21\nCX 21 0 2 0 0 2 2 0 21 0\nH 21\nM 21\nH 0 4\nCX 12 0 0 4 0 6 0 7 0 8 12 0\nH 12\nM 12\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20",
+                    "ft_score": 0.6705202312138728,
+                    "preserved_stabilizers": 8
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 12 0 0 4 0 6 0 7 0 8 12 0\nH 12\nM 12\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20\nCX 21 4\nH 21\nM 21",
+                    "ft_score": 0.6588235294117647,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 12 0 0 4 0 6 0 7 0 8 12 0\nH 12\nM 12\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20\nCX 21 1 21 4\nH 21\nM 21\nCX 22 2 22 5\nH 22\nM 22",
+                    "ft_score": 0.6588235294117647,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4 21\nCX 0 21 12 0 0 4 0 6 0 7 0 8 0 21 12 0\nH 12\nM 12\nH 21\nM 21\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20",
+                    "ft_score": 0.6608695652173913,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "H 21\nCX 0 21 2 0 0 2 2 0 0 21\nH 21\nM 21\nH 0 4\nCX 12 0 0 4 0 6 0 7 0 8 12 0\nH 12\nM 12\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20",
+                    "ft_score": 0.6589595375722543,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 12 0 0 4 0 6 0 7 0 8 12 0\nH 12\nM 12\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20\nCX 21 1 21 2\nH 21\nM 21",
+                    "ft_score": 0.6588235294117647,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 12 0 0 4 0 6 0 7 0 8 12 0\nH 12\nM 12\nH 2 3\nCX 21 0 2 0 3 0 3 1 1 3 3 1 21 0\nH 21\nM 21\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20",
+                    "ft_score": 0.6608187134502924,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCZ 0 21\nCX 12 0 0 4 0 6 0 7 0 8 12 0\nCZ 0 21\nH 12\nM 12\nH 21\nM 21\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20",
+                    "ft_score": 0.6753623188405797,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCZ 0 21\nCX 12 0 0 4 0 6 0 7 0 8 12 0\nCZ 0 21\nH 12\nM 12\nH 21\nM 21\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20\nCX 22 1 22 4\nH 22\nM 22",
+                    "ft_score": 0.6753623188405797,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4 21\nCX 0 21\nH 21\nM 21\nCX 12 0 0 4 0 6 0 7 0 8 12 0\nH 12\nM 12\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20",
+                    "ft_score": 0.6588921282798834,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 21 0 12 0 0 4 0 6 0 7 0 8 12 0 21 0\nH 12 21\nM 12 21\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20",
+                    "ft_score": 0.6608695652173913,
+                    "preserved_stabilizers": 10
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 21 12 0 0 4 0 6 0 7 0 8 12 0\nH 12 21\nM 12 21\nH 2 3\nCX 2 0 3 0 3 1 1 3 3 1\nH 3\nCX 13 1 1 3 1 6 1 8 1 9 1 10 13 1\nH 13\nM 13\nCX 14 2 2 1 2 4 2 5 2 6 2 7 2 8 2 10 2 11 14 2\nH 14\nM 14\nCX 15 3 3 2 3 7 3 8 3 9 3 10 15 3\nH 15\nM 15\nCX 16 4 5 4 4 5 5 4 4 6 4 8 7 4 9 4 10 4 11 4 16 4\nH 16\nM 16\nCX 17 5 7 5 5 7 7 5 5 6 10 5 17 5\nH 17\nM 17\nCX 18 6 7 6 6 7 7 6 6 9 6 10 6 11 18 6\nH 18\nM 18\nCX 19 7 8 7 7 8 8 7 7 9 8 7 11 7 19 7\nH 19\nM 19\nCX 20 8 9 8 8 9 9 8 8 9 10 8 11 8 20 8\nH 20\nM 20",
+                    "ft_score": 0.6588921282798834,
+                    "preserved_stabilizers": 10
+                }
+            ]
+        },
+        {
+            "code_name": "Golay",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:51:01.643295",
+            "end_time": "2026-03-18T16:56:20.702655",
+            "runtime_seconds": 319.05936,
+            "best_output": {
+                "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9\nCX 0 1 0 2 0 3 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8\nCX 1 5 1 6 1 8 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1\nH 7\nCX 2 4 2 5 2 7 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20\nH 23 24 25\nCX 0 23 1 24 2 25\nM 23 24 25",
+                "ft_score": 0.2377300613496932,
+                "ft_check": false,
+                "all_stabilized": true,
+                "stabilizer_details": {
+                    "IXIIXIIXXXXXIIIIIIIIIIX": true,
+                    "XIIXIIXXXXXIIIIIIIIIIXI": true,
+                    "IXXIXXXIIIXXIIIIIIIIXII": true,
+                    "XXIXXXIIIXXIIIIIIIIXIII": true,
+                    "XXXXIIIXIIXXIIIIIIXIIII": true,
+                    "XIXIXIXXXIIXIIIIIXIIIII": true,
+                    "IIIXXXXIXXIXIIIIXIIIIII": true,
+                    "IIXXXXIXXIXIIIIXIIIIIII": true,
+                    "IXXXXIXXIXIIIIXIIIIIIII": true,
+                    "XXXXIXXIXIIIIXIIIIIIIII": true,
+                    "XIXIIXIIXXXXXIIIIIIIIII": true,
+                    "IZIIZIIZZZZZIIIIIIIIIIZ": true,
+                    "ZIIZIIZZZZZIIIIIIIIIIZI": true,
+                    "IZZIZZZIIIZZIIIIIIIIZII": true,
+                    "ZZIZZZIIIZZIIIIIIIIZIII": true,
+                    "ZZZZIIIZIIZZIIIIIIZIIII": true,
+                    "ZIZIZIZZZIIZIIIIIZIIIII": true,
+                    "IIIZZZZIZZIZIIIIZIIIIII": true,
+                    "IIZZZZIZZIZIIIIZIIIIIII": true,
+                    "IZZZZIZZIZIIIIZIIIIIIII": true,
+                    "ZZZZIZZIZIIIIZIIIIIIIII": true,
+                    "ZIZIIZIIZZZZZIIIIIIIIII": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9\nCX 0 1 0 2 0 3 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8\nCX 1 5 1 6 1 8 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1\nH 7\nCX 2 4 2 5 2 7 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 22
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9 23\nCX 0 23 0 1 0 2 0 3 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22 0 23\nH 23\nM 23\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8 24\nCX 1 24 1 5 1 6 1 8 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1 1 24\nH 24\nM 24\nH 7 25\nCX 2 25 2 4 2 5 2 7 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20 2 25\nH 25\nM 25",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 22
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9 23\nCX 23 0 0 1 0 2 0 3 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22 23 0\nH 23\nM 23\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8 24\nCX 24 1 1 5 1 6 1 8 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1 24 1\nH 24\nM 24\nH 7 25\nCX 25 2 2 4 2 5 2 7 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20 25 2\nH 25\nM 25",
+                    "ft_score": 0.28959276018099545,
+                    "preserved_stabilizers": 12
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9 23\nCX 0 23 0 1 0 2 0 3 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22 22 23\nH 23\nM 23\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8 24\nCX 1 24 1 5 1 6 1 8 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1 20 24\nH 24\nM 24\nH 7 25\nCX 2 25 2 4 2 5 2 7 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20 21 25\nH 25\nM 25",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 22
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9 23\nCX 0 1 0 2 0 3 0 23 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22 22 23\nH 23\nM 23\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8 24\nCX 1 5 1 6 1 8 1 24 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1 20 24\nH 24\nM 24\nH 7 25\nCX 2 4 2 5 2 7 2 25 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20 21 25\nH 25\nM 25",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 22
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9 23\nCX 0 1 0 2 0 3 23 1 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22 23 22\nH 23\nM 23\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8 24\nCX 1 5 1 6 1 8 24 5 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1 24 20\nH 24\nM 24\nH 7 25\nCX 2 4 2 5 2 7 25 4 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20 25 21\nH 25\nM 25",
+                    "ft_score": 0.19519519519519524,
+                    "preserved_stabilizers": 14
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9\nCX 23 1 0 1 0 2 0 3 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22 23 22\nM 23\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8\nCX 24 5 1 5 1 6 1 8 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1 24 20\nM 24\nH 7\nCX 25 4 2 4 2 5 2 7 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20 25 21\nM 25",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 22
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9\nCX 1 23 0 1 0 2 0 3 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22 22 23\nM 23\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8\nCX 5 24 1 5 1 6 1 8 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1 20 24\nM 24\nH 7\nCX 4 25 2 4 2 5 2 7 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20 21 25\nM 25",
+                    "ft_score": 0.12612612612612617,
+                    "preserved_stabilizers": 17
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9\nCX 23 1 0 1 0 2 0 3 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22 23 22\nM 23\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8\nCX 24 5 1 5 1 6 1 8 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1 24 20\nM 24\nH 7\nCX 25 4 2 4 2 5 2 7 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20 25 21\nM 25",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 22
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9 23\nCX 1 23 0 1 0 2 0 3 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22 22 23\nH 23\nM 23\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8 24\nCX 5 24 1 5 1 6 1 8 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1 20 24\nH 24\nM 24\nH 7 25\nCX 4 25 2 4 2 5 2 7 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20 21 25\nH 25\nM 25",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 22
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0 1 2 3 6 9\nCX 0 1 0 2 0 3 0 6 0 9 0 12 0 14 0 15 0 16 0 20 0 21 0 22\nH 4 5 10\nCX 3 0 4 0 5 0 9 0 10 0 3 1 1 3 3 1\nH 8\nCX 1 5 1 6 1 8 1 9 1 10 1 11 1 13 1 14 1 15 1 19 1 20 2 1 3 1 4 1 8 1 9 1\nH 7\nCX 2 4 2 5 2 7 2 8 2 9 2 10 2 13 2 15 2 16 2 18 2 19 2 20 2 21 4 2 5 2 7 2 8 2 9 2 10 2 9 3 3 9 9 3 3 5 3 9 3 10 3 13 3 15 3 17 3 20 3 22 4 3 6 3 7 3 8 3 5 4 4 5 5 4 4 5 4 8 4 9 4 13 4 17 4 19 4 21 4 22 6 4 7 4 8 4 9 4 6 5 5 6 6 5 5 6 5 7 5 8 5 9 5 10 5 11 5 15 5 17 5 18 5 19 5 21 5 22 7 5 10 5 8 6 6 8 8 6 6 7 6 10 6 11 6 13 6 15 6 16 6 17 6 18 6 19 9 7 7 9 9 7 7 10 7 11 7 21 7 22 8 7 9 7 9 8 8 9 9 8 8 9 8 11 8 13 8 16 8 17 8 18 8 21 10 8 10 9 9 10 10 9 9 10 9 15 9 21 10 11 10 13 10 16 10 17 10 21 11 13 11 15 11 16 11 17 11 21 22 11 21 12 12 21 21 12 22 12 20 13 13 20 20 13 19 14 14 19 19 14 18 15 15 18 18 15 17 16 16 17 17 16 22 16 22 17 22 18 22 20\nH 23 24 25\nCX 0 23 1 24 2 25\nM 23 24 25",
+                    "ft_score": 0.2377300613496932,
+                    "preserved_stabilizers": 22
+                }
+            ]
+        }
+    ]
+}

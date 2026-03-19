@@ -1,0 +1,193 @@
+{
+    "metadata": {
+        "benchmarks_path": "../data/circuit_dataset.jsonl",
+        "prompt_path": "prompts/ft_state_prep_prompt_3.txt",
+        "model": "gemini-3-pro-preview",
+        "attempts": 15,
+        "timeout": 300,
+        "started_at": "2026-03-18T16:35:36.743085",
+        "finished_at": "2026-03-18T17:01:11.933307"
+    },
+    "results": [
+        {
+            "code_name": "Perfect 5-Qubit Code",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:35:36.985193",
+            "end_time": "2026-03-18T16:40:41.575459",
+            "runtime_seconds": 304.590266,
+            "best_output": {
+                "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nH 5\nCX 5 6 5 0 5 3\nH 6\nCX 1 6 2 6\nH 6\nCX 5 6\nH 5 7\nCX 7 8 7 1 7 4\nH 8\nCX 2 8 3 8\nH 8\nCX 7 8\nH 7 9\nCX 9 10 9 0 9 2\nH 10\nCX 3 10 4 10\nH 10\nCX 9 10\nH 9 11\nCX 11 12 11 1 11 3\nH 12\nCX 0 12 4 12\nH 12\nCX 11 12\nH 11\nM 5 6 7 8 9 10 11 12",
+                "ft_score": 0.8333333333333334,
+                "ft_check": false,
+                "all_stabilized": true,
+                "stabilizer_details": {
+                    "XZZXI": true,
+                    "IXZZX": true,
+                    "XIXZZ": true,
+                    "ZXIXZ": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 4
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nH 5\nCX 5 6 5 0 5 3 1 6 2 6 5 6\nH 5 7\nCX 7 8 7 1 7 4 2 8 3 8 7 8\nH 7 9\nCX 9 10 9 0 9 2 3 10 4 10 9 10\nH 9 11\nCX 11 12 11 1 11 3 0 12 4 12 11 12\nH 11\nM 5 6 7 8 9 10 11 12",
+                    "ft_score": 1.0,
+                    "preserved_stabilizers": 0
+                },
+                {
+                    "circuit": "CX 2 0 0 2 2 0\nH 0 4\nCX 0 3 0 4\nH 2\nCX 2 0 3 1 1 3 3 1\nH 1 2 4\nCX 1 2 1 4\nH 3\nCX 3 1\nH 3\nCX 2 3\nH 4\nCX 4 2 4 3 3 4 4 3\nH 3\nCX 3 4\nH 4\nCX 4 3\nH 2\nS 2 2\nH 2\nS 0 0 2 2\nH 5\nCX 5 6 5 0 5 3\nH 6\nCX 1 6 2 6\nH 6\nCX 5 6\nH 5 7\nCX 7 8 7 1 7 4\nH 8\nCX 2 8 3 8\nH 8\nCX 7 8\nH 7 9\nCX 9 10 9 0 9 2\nH 10\nCX 3 10 4 10\nH 10\nCX 9 10\nH 9 11\nCX 11 12 11 1 11 3\nH 12\nCX 0 12 4 12\nH 12\nCX 11 12\nH 11\nM 5 6 7 8 9 10 11 12",
+                    "ft_score": 0.8333333333333334,
+                    "preserved_stabilizers": 4
+                }
+            ]
+        },
+        {
+            "code_name": "Steane",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:40:43.608418",
+            "end_time": "2026-03-18T16:45:47.715005",
+            "runtime_seconds": 304.106587,
+            "best_output": {
+                "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2 2 4 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7\nCX 7 0 7 2 7 4 7 6\nH 7\nCX 0 8 1 8 4 8 5 8\nM 7 8",
+                "ft_score": 0.6129032258064516,
+                "ft_check": false,
+                "all_stabilized": true,
+                "stabilizer_details": {
+                    "XXIIXXI": true,
+                    "XIXIXIX": true,
+                    "IIIXXXX": true,
+                    "ZZIIZZI": true,
+                    "ZIZIZIZ": true,
+                    "IIIZZZZ": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2 2 4 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 6
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0 0 7 1 8\nH 0 9\nCX 9 0\nH 9\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2 2 4 4 2 4 10 5 2 6 2 4 3 3 4 4 3 4 11\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nM 7 8 9 10 11",
+                    "ft_score": 0.339622641509434,
+                    "preserved_stabilizers": 5
+                },
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 3 0 4\nH 1\nCX 1 0 1 4 1 6 4 2 2 4 4 2 5 2 6 2 4 3 3 4 4 3\nH 3\nCX 3 5 3 6 4 5 6 4 6 5 5 6 6 5\nH 7\nCX 7 0 7 2 7 4 7 6\nH 7\nCX 0 8 1 8 4 8 5 8\nM 7 8",
+                    "ft_score": 0.6129032258064516,
+                    "preserved_stabilizers": 6
+                }
+            ]
+        },
+        {
+            "code_name": "Shor",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:45:48.410807",
+            "end_time": "2026-03-18T16:50:52.158118",
+            "runtime_seconds": 303.747311,
+            "best_output": {
+                "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 2 0 3 0 8\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7",
+                "ft_score": 0.0,
+                "ft_check": false,
+                "all_stabilized": true,
+                "stabilizer_details": {
+                    "XXXXXXIII": true,
+                    "XXXIIIXXX": true,
+                    "ZZIIIIIII": true,
+                    "ZIZIIIIII": true,
+                    "IIIZZIIII": true,
+                    "IIIZIZIII": true,
+                    "IIIIIIZZI": true,
+                    "IIIIIIZIZ": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "CX 1 0 0 1 1 0\nH 0\nCX 0 2 0 3 0 8\nH 1\nCX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 8
+                }
+            ]
+        },
+        {
+            "code_name": "Tetrahedral",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:50:53.398706",
+            "end_time": "2026-03-18T16:55:57.732630",
+            "runtime_seconds": 304.333924,
+            "best_output": {
+                "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13\nH 15\nCX 15 0 15 1 15 2 15 3 15 4 15 5 15 6 15 7\nH 15 16\nCX 16 1 16 2 16 4 16 5 16 8 16 9 16 11 16 12\nH 16 17\nCX 17 2 17 3 17 5 17 6 17 9 17 10 17 11 17 13\nH 17 18\nCX 18 4 18 5 18 6 18 7 18 11 18 12 18 13 18 14\nH 18\nCX 0 19 1 19 2 19 3 19 1 20 2 20 4 20 5 20 2 21 3 21 5 21 6 21 4 22 5 22 6 22 7 22 1 23 4 23 8 23 12 23 2 24 5 24 9 24 11 24 2 25 3 25 9 25 10 25 4 26 5 26 11 26 12 26 5 27 6 27 11 27 13 27 6 28 7 28 13 28 14 28",
+                "ft_score": 0.935483870967742,
+                "ft_check": false,
+                "all_stabilized": true,
+                "stabilizer_details": {
+                    "XXXXXXXXIIIIIII": true,
+                    "IXXIXXIIXXIXXII": true,
+                    "IIXXIXXIIXXXIXI": true,
+                    "IIIIXXXXIIIXXXX": true,
+                    "ZZZZIIIIIIIIIII": true,
+                    "IZZIZZIIIIIIIII": true,
+                    "IIZZIZZIIIIIIII": true,
+                    "IIIIZZZZIIIIIII": true,
+                    "IZIIZIIIZIIIZII": true,
+                    "IIZIIZIIIZIZIII": true,
+                    "IIZZIIIIIZZIIII": true,
+                    "IIIIZZIIIIIZZII": true,
+                    "IIIIIZZIIIIZIZI": true,
+                    "IIIIIIZZIIIIIZZ": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 14
+                },
+                {
+                    "circuit": "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13\nH 15\nCX 15 0 15 1 15 2 15 3 15 4 15 5 15 6 15 7\nH 15 16\nCX 16 1 16 2 16 4 16 5 16 8 16 9 16 11 16 12\nH 16 17\nCX 17 2 17 3 17 5 17 6 17 9 17 10 17 11 17 13\nH 17 18\nCX 18 4 18 5 18 6 18 7 18 11 18 12 18 13 18 14\nH 18\nCX 0 19 1 19 2 19 3 19 1 20 2 20 4 20 5 20 2 21 3 21 5 21 6 21 4 22 5 22 6 22 7 22 1 23 4 23 8 23 12 23 2 24 5 24 9 24 11 24 2 25 3 25 9 25 10 25 4 26 5 26 11 26 12 26 5 27 6 27 11 27 13 27 6 28 7 28 13 28 14 28",
+                    "ft_score": 0.935483870967742,
+                    "preserved_stabilizers": 14
+                }
+            ]
+        },
+        {
+            "code_name": "Hamming",
+            "original_score": 0.0,
+            "start_time": "2026-03-18T16:56:05.404703",
+            "end_time": "2026-03-18T17:01:09.626987",
+            "runtime_seconds": 304.222284,
+            "best_output": {
+                "circuit": "CX 7 0 0 7 7 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8",
+                "ft_score": 0.0,
+                "ft_check": false,
+                "all_stabilized": false,
+                "stabilizer_details": {
+                    "IIIIIIIXXXXXXXX": true,
+                    "IIIXXXXIIIIXXXX": false,
+                    "IXXIIXXIIXXIIXX": false,
+                    "XIXIXIXIXIXIXIX": false,
+                    "IIIIIIIZZZZZZZZ": false,
+                    "IIIZZZZIIIIZZZZ": false,
+                    "IZZIIZZIIZZIIZZ": false,
+                    "ZIZIZIZIZIZIZIZ": true
+                },
+                "ALL TRUE": false
+            },
+            "generated_circuits": [
+                {
+                    "circuit": "CX 7 0 0 7 7 0\nH 3\nCX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1\nH 1\nCX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14\nH 3\nCX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5\nH 7\nCX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8",
+                    "ft_score": 0.0,
+                    "preserved_stabilizers": 2
+                }
+            ]
+        }
+    ]
+}

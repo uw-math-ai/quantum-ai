@@ -188,9 +188,10 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
         result = check_stabilizers(circuit.circuit, circuit.stabilizers)
         print("".join(['.' if s else '!' for s in result.values()]))
         preserved = sum(1 for ok in result.values() if ok)
+        all_stabilized = all(result.values())
 
         # check error propagation and fault tolerance
-        error_propagation_results, fault_tolerance_results = check_fault_tolerance(circuit.circuit, circuit.data_qubits, ancillas, distance)
+        error_propagation_results, fault_tolerance_results = check_fault_tolerance(circuit.circuit, circuit.data_qubits, ancillas, distance)        
 
         # Sort propagation results by highest data weight (worst faults)
         sorted_errors = sorted(
@@ -210,6 +211,7 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
         all_candidates.append({
             "circuit": str(parsed),
             "ft_score": score,
+            "all_stabilized": all_stabilized,
             "preserved_stabilizers": preserved,
         })
 

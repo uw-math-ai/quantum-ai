@@ -1,16 +1,51 @@
 import stim
 
-circuit_str = """CX 7 0 0 7 7 0
-H 3
-CX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1
-H 1
-CX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14
-H 3
-CX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6
-H 7
-CX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8"""
+def load_circuit(filename):
+    with open(filename, 'r') as f:
+        return stim.Circuit(f.read())
 
-c = stim.Circuit(circuit_str)
-for i, inst in enumerate(c):
-    if i == 6:
-        print(f"Line {i} targets: {[t.value for t in inst.targets_copy()]}")
+def load_stabilizers(filename):
+    with open(filename, 'r') as f:
+        stabs = f.read().split(',')
+    return [s.strip() for s in stabs]
+
+def check_stabilizers(circuit, stabilizers):
+    sim = stim.TableauSimulator()
+    sim.do(circuit)
+    tableau = sim.current_inverse_tableau()
+    tableau = tableau.inverse()
+    
+    satisfied = []
+    unsatisfied = []
+    
+    # Better way:
+    # Use canonicalization or check if stabilizer is +1 eigenstate
+    # sim.measure_observable(p) should be deterministic +1
+    
+    for i, s in enumerate(stabilizers):
+        p = stim.PauliString(s)
+        obs = sim.peek_observable_expectation(p)
+        if obs == 1:
+            satisfied.append(s)
+        else:
+            unsatisfied.append((i, s, obs))
+            
+    return satisfied, unsatisfied
+
+if __name__ == "__main__":
+    circuit = load_circuit("baseline.stim")
+    
+    # Manually defined stabilizers since file creation might be tedious
+    stabs_str = "IIIIXIIIIIXIIIXIXIXIIIIIXIIIIIIIIIIII, IIIIIXIIIIIIXIIXIIIXIIIIIIIIIIIIIIIII, IIIIIIIIIIIIIIIIIXIIXXIIIIIIIIIXIIIII, IIIIIIIIIIIIIIIIIIIIIIXIIXIIIIIIIIIXX, IIIXIIIIIIIIIIIIIIIIIIXXIIXIIXIIIIIIX, XIIIIIXIIIIIIIIIIIIIIIIIIIIIIIIIXXIII, IIIIIIIIIXIIIIIXIIIXIIIIIIIIXIIIIIIII, XIIIIIIIIIIIIIIIXIIIIIIIXIXIIXIIXIIII, IXXIIIIIIIIIIIIIIIIIIIIIIIIXIIXIIIIII, IXXIIIIXXIIXIIIIIIIIIIIIIIIIIIIIIIXII, IIIIXIIIXIIIIIXIIIIIIIIIIIIIIIIIIIXII, IIIIIIIIIIXIIIIIIXXIIXIIIIIIIIIIIIIII, XIIXIXXIIIIIXIIIIIIIIIIIIIIIIXIIIIIII, IIXIIIIIIIIXIXIIIIIIIIIIIIIIIIXIIIIII, IIIIIIIXIIIXIXIIIIIIIIXXIXIIIIIIIIIII, IIIIIIIXXIIIIIXIXIIIIIIXIIXIIIIIIIIII, IIIIIIIIIIIIIIIIIIXIIXIIXIIIIIIXXXIII, IIIXIXIIIXIIIIIXIIIIIIIIIIIIIIIIIIIXX, IIIIZIIIIIZIIIZIZIZIIIIIZIIIIIIIIIIII, IIIIIZIIIIIIZIIZIIIZIIIIIIIIIIIIIIIII, IIIIIIIIIIIIIIIIIZIIZZIIIIIIIIIZIIIII, IIIIIIIIIIIIIIIIIIIIIIZIIZIIIIIIIIIZZ, IIIZIIIIIIIIIIIIIIIIIIZZIIZIIZIIIIIIZ, ZIIIIIZIIIIIIIIIIIIIIIIIIIIIIIIIZZIII, IIIIIIIIIZIIIIIZIIIZIIIIIIIIZIIIIIIII, ZIIIIIIIIIIIIIIIZIIIIIIIZIZIIZIIZIIII, IZZIIIIIIIIIIIIIIIIIIIIIIIIZIIZIIIIII, IZZIIIIZZIIZIIIIIIIIIIIIIIIIIIIIIIZII, IIIIZIIIZIIIIIZIIIIIIIIIIIIIIIIIIIZII, IIIIIIIIIIZIIIIIIZZIIZIIIIIIIIIIIIIII, ZIIZIZZIIIIIZIIIIIIIIIIIIIIIIZIIIIIII, IIZIIIIIIIIZIZIIIIIIIIIIIIIIIIZIIIIII, IIIIIIIZIIIZIZIIIIIIIIZZIZIIIIIIIIIII, IIIIIIIZZIIIIIZIZIIIIIIZIIZIIIIIIIIII, IIIIIIIIIIIIIIIIIIZIIZIIZIIIIIIZZZIII, IIIZIZIIIZIIIIIZIIIIIIIIIIIIIIIIIIIZZ"
+    stabilizers = [s.strip() for s in stabs_str.split(',')]
+    
+    satisfied, unsatisfied = check_stabilizers(circuit, stabilizers)
+    print(f"Satisfied: {len(satisfied)}")
+    print(f"Unsatisfied: {len(unsatisfied)}")
+    for i, s, obs in unsatisfied:
+        print(f"Stabilizer {i}: {s} -> {obs}")
+        
+    # Also print circuit instructions with index
+    print("\nCircuit instructions:")
+    for i, instr in enumerate(circuit.flattened()):
+        print(f"{i}: {instr}")

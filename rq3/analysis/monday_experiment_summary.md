@@ -101,7 +101,7 @@ Interpretation:
 - Most successful results are genuine reductions in multi-qubit operations.
 - A small minority are swap-like improvements, so CX-only reduction is generally but not always a true two-qubit win.
 
-## Monday-ready takeaway
+## Takeaway
 
 - **Yes, the method works**, but **not uniformly across all conditions**.
 - It is most reliable under **higher time budget (900s) with multiple attempts**.

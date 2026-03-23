@@ -1,96 +1,113 @@
 import stim
 
-def generate_circuit():
-    with open("circuit_input.stim", "r") as f:
-        circuit_str = f.read()
+def generate():
+    # Construct circuit string
+    s = "CX 1 0 0 1 1 0\nH 0\nCX 0 2 0 3 0 8\n"
     
-    # Parse circuit string to stim circuit object
-    original_circuit = stim.Circuit(circuit_str)
+    anc = 9
+    measurements = []
     
-    with open("stabilizers_correct.txt", "r") as f:
-        stabilizers = [line.strip() for line in f if line.strip()]
-    
-    # We will append the stabilizer checks to the end of the original circuit
-    new_circuit = original_circuit.copy()
-    
-    # Start assigning ancillas from qubit 35 (since data qubits are 0-34)
-    start_ancilla = 35
-    current_ancilla = start_ancilla
-    
-    flag_qubits = []
-    
-    for stab_str in stabilizers:
-        ancilla = current_ancilla
-        current_ancilla += 1
-        # Count weight
-        weight = sum(1 for c in stab_str if c != 'I')
+    def add_check_z_stab(s, anc, flag, qubits):
+        # Measure Z stabilizer (Z tensor Z).
+        # Ancilla (Target) |0>. Flag (Control) |+>.
+        # CX Flag Anc. CX q Anc...
+        s += f"H {flag}\n"
+        s += f"CX {flag} {anc}\n"
+        for q in qubits:
+            s += f"CX {q} {anc}\n"
+            s += f"CX {flag} {anc}\n"
         
-        if weight < 4:
-            # Simple gadget
-            flag_qubits.append(ancilla)
-            new_circuit.append("H", [ancilla])
-            
-            for q_idx, char in enumerate(stab_str):
-                if char == 'I':
-                    continue
-                elif char == 'X':
-                    new_circuit.append("CX", [ancilla, q_idx])
-                elif char == 'Z':
-                    new_circuit.append("CZ", [ancilla, q_idx])
-                elif char == 'Y':
-                    new_circuit.append("S_DAG", [q_idx])
-                    new_circuit.append("CX", [ancilla, q_idx])
-                    new_circuit.append("S", [q_idx])
-            
-            new_circuit.append("H", [ancilla])
-            
-        else:
-            # Flag gadget
-            # Need extra ancilla
-            flag_ancilla = current_ancilla
-            current_ancilla += 1
-            
-            flag_qubits.append(ancilla)
-            flag_qubits.append(flag_ancilla)
-            
-            new_circuit.append("H", [ancilla])
-            new_circuit.append("H", [flag_ancilla])
-            
-            # CX M F (M control, F target)
-            new_circuit.append("CX", [ancilla, flag_ancilla])
-            
-            # Coupling
-            for q_idx, char in enumerate(stab_str):
-                if char == 'I':
-                    continue
-                elif char == 'X':
-                    new_circuit.append("CX", [ancilla, q_idx])
-                elif char == 'Z':
-                    new_circuit.append("CZ", [ancilla, q_idx])
-                elif char == 'Y':
-                    new_circuit.append("S_DAG", [q_idx])
-                    new_circuit.append("CX", [ancilla, q_idx])
-                    new_circuit.append("S", [q_idx])
+        s += f"H {flag}\n"
+        return s
+    
+    def add_check_x_stab(s, anc, flag, qubits):
+        # Measure X stabilizer (X tensor X).
+        # Ancilla (Control) |+>. Flag (Target) |0>.
+        # CX Anc Flag. CX Anc q...
+        s += f"H {anc}\n"
+        s += f"CX {anc} {flag}\n"
+        for q in qubits:
+            s += f"CX {anc} {q}\n"
+            s += f"CX {anc} {flag}\n"
+        
+        s += f"H {anc}\n"
+        return s
 
-            # CX M F
-            new_circuit.append("CX", [ancilla, flag_ancilla])
-            
-            new_circuit.append("H", [ancilla])
-            new_circuit.append("H", [flag_ancilla])
-        
-        # Measurement is implicit at end
-        
-    return new_circuit, flag_qubits
-
-def main():
-    circuit, flags = generate_circuit()
+    # Internal Checks (1-4)
+    # 1. Z0 Z2
+    s += add_check_z_stab("", anc, anc+1, [0, 2])
+    measurements.extend([anc, anc+1])
+    anc += 2
     
-    # Save to file
-    with open("candidate.stim", "w") as f:
-        f.write(str(circuit))
-        
-    # Print flags for easy reading
-    print("FLAGS:", flags)
+    # 2. Z0 Z3
+    s += add_check_z_stab("", anc, anc+1, [0, 3])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # 3. Z0 Z8
+    s += add_check_z_stab("", anc, anc+1, [0, 8])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # 4. X0 X2 X3 X8
+    s += add_check_x_stab("", anc, anc+1, [0, 2, 3, 8])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # Continue Part 2
+    s += "H 1\n"
+    s += "CX 1 0 2 1 1 2 2 1 2 1 3 2 2 3 3 2 3 2 3 4 3 5 7 6 6 7 7 6 6 7 8 6 8 7\n"
+    
+    # Final Checks (1-9)
+    # 1. Z0 Z1
+    s += add_check_z_stab("", anc, anc+1, [0, 1])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # 2. Z0 Z2
+    s += add_check_z_stab("", anc, anc+1, [0, 2])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # 3. Z3 Z4
+    s += add_check_z_stab("", anc, anc+1, [3, 4])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # 4. Z3 Z5
+    s += add_check_z_stab("", anc, anc+1, [3, 5])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # 5. Z6 Z7
+    s += add_check_z_stab("", anc, anc+1, [6, 7])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # 6. Z6 Z8
+    s += add_check_z_stab("", anc, anc+1, [6, 8])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # 7. X0..X5
+    s += add_check_x_stab("", anc, anc+1, [0, 1, 2, 3, 4, 5])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # 8. X0..X2 X6..X8
+    s += add_check_x_stab("", anc, anc+1, [0, 1, 2, 6, 7, 8])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # 9. X0 X1 X2 (Logical Z)
+    s += add_check_x_stab("", anc, anc+1, [0, 1, 2])
+    measurements.extend([anc, anc+1])
+    anc += 2
+    
+    # Final Measurements
+    s += "M " + " ".join(map(str, measurements)) + "\n"
+    
+    return s
 
 if __name__ == "__main__":
-    main()
+    print(generate())

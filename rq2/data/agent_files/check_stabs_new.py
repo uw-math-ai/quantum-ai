@@ -1,31 +1,23 @@
-
 import stim
-import sys
-from inputs_task import circuit_str, stabilizers
 
-def check_stabs():
-    circuit = stim.Circuit(circuit_str)
-    sim = stim.TableauSimulator()
-    sim.do(circuit)
-    
-    # stabs defined in current_inputs.py
-    
-    failed = []
-    
-    for i, s in enumerate(stabilizers):
-        s = s.replace(" ", "")
-        try:
-            ps = stim.PauliString(s)
-            expect = sim.peek_observable_expectation(ps)
-            if expect != 1:
-                failed.append((i, str(ps), expect))
-        except Exception as e:
-            print(f"Error checking stabilizer {i}: {e}")
-            
-    print(f"Total stabilizers: {len(stabilizers)}")
-    print(f"Failed: {len(failed)}")
-    for i, s, e in failed:
-        print(f" {i}: {s[:30]}... Expectation: {e}")
+stabilizers = []
+with open('stabilizers.txt', 'r') as f:
+    for line in f:
+        if line.strip():
+            stabilizers.append(stim.PauliString(line.strip()))
 
-if __name__ == "__main__":
-    check_stabs()
+print(f"Loaded {len(stabilizers)} stabilizers.")
+
+bad_pairs = []
+for i in range(len(stabilizers)):
+    for j in range(i+1, len(stabilizers)):
+        if not stim.PauliString.commutes(stabilizers[i], stabilizers[j]):
+            bad_pairs.append((i, j))
+
+print(f"Found {len(bad_pairs)} anti-commuting pairs.")
+if bad_pairs:
+    print("First 5 pairs:")
+    for i, j in bad_pairs[:5]:
+        print(f"{i}, {j}")
+        print(f"S[{i}]: {stabilizers[i]}")
+        print(f"S[{j}]: {stabilizers[j]}")

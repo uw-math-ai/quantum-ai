@@ -1,22 +1,13 @@
 
-import stim
-from current_inputs import CIRCUIT, STABILIZERS
+with open(r"data\gemini-3-pro-preview\agent_files_ft\stabilizers.txt", "r") as f:
+    stabs = f.read().splitlines()
 
-def check():
-    c = stim.Circuit(CIRCUIT)
-    sim = stim.TableauSimulator()
-    sim.do(c)
-    
-    unsatisfied = []
-    for i, s in enumerate(STABILIZERS):
-        p = stim.PauliString(s)
-        expect = sim.peek_observable_expectation(p)
-        if expect != 1:
-            unsatisfied.append((i, s, expect))
-            
-    print(f"Unsatisfied: {len(unsatisfied)}")
-    for i, s, obs in unsatisfied:
-        print(f"Stabilizer {i}: {s} -> {obs}")
+weights = []
+for s in stabs:
+    w = sum(1 for c in s if c in "XYZ")
+    weights.append(w)
 
-if __name__ == "__main__":
-    check()
+print(f"Number of stabilizers: {len(stabs)}")
+print(f"Max weight: {max(weights)}")
+print(f"Average weight: {sum(weights)/len(weights)}")
+print(f"Weights distribution: {sorted(weights)}")

@@ -1,18 +1,102 @@
 import stim
+import sys
 
-circuit_str = """CX 7 0 0 7 7 0
-H 3
-CX 3 0 4 0 5 0 6 0 8 0 10 0 12 0 13 0 2 1 1 2 2 1
-H 1
-CX 1 3 1 6 1 9 1 12 1 13 3 2 2 3 3 2 2 6 2 8 2 10 2 12 2 14
-H 3
-CX 3 5 3 8 3 11 3 12 3 13 3 14 5 4 4 5 5 4 6 4 9 4 10 4 11 4 12 4 6 5 5 6 6 5 8 5 9 5 10 5 13 5 14 5 8 6 6 8 8 6
-H 7
-CX 7 8 7 9 7 10 7 11 7 12 7 13 7 14 9 8 10 8 11 8 12 8 13 8 14 8"""
+def get_rank(rows, num_cols):
+    if not rows: return 0
+    m = [list(r) for r in rows]
+    pivot_row = 0
+    num_rows = len(m)
+    for col in range(num_cols):
+        if pivot_row >= num_rows: break
+        swap_idx = -1
+        for r in range(pivot_row, num_rows):
+            if m[r][col]:
+                swap_idx = r
+                break
+        if swap_idx == -1: continue
+        m[pivot_row], m[swap_idx] = m[swap_idx], m[pivot_row]
+        for r in range(pivot_row + 1, num_rows):
+            if m[r][col]:
+                for c in range(col, num_cols):
+                    m[r][c] ^= m[pivot_row][c]
+        pivot_row += 1
+    return pivot_row
 
-try:
-    c = stim.Circuit(circuit_str)
-    print("Circuit is valid")
-    print(c)
-except Exception as e:
-    print(f"Circuit is invalid: {e}")
+def analyze_and_extract(circuit_path, stabs_path):
+    with open(circuit_path, 'r') as f:
+        circuit_str = f.read()
+    circuit = stim.Circuit(circuit_str)
+    ops = list(circuit)
+    num_qubits = 45
+    
+    with open(stabs_path, 'r') as f:
+        stab_lines = [l.strip() for l in f if l.strip()]
+    stabs = []
+    for l in stab_lines:
+        try: stabs.append(stim.PauliString(l.replace(',', '').replace(' ', '')))
+        except: pass
+    
+    stab_rows = []
+    for s in stabs:
+        row = []
+        for k in range(num_qubits):
+            row.append(1 if s[k] in [1, 2] else 0)
+        for k in range(num_qubits):
+            row.append(1 if s[k] in [2, 3] else 0)
+        stab_rows.append(row)
+        
+    num_cols = 2 * num_qubits
+    base_rank = get_rank(stab_rows, num_cols)
+    
+    extra_measurements = []
+    
+    for i in range(len(ops)):
+        op = ops[i]
+        
+        suffix_circuit = stim.Circuit()
+        suffix_circuit.append("I", [num_qubits - 1])
+        for j in range(i+1, len(ops)):
+            suffix_circuit.append(ops[j])
+        
+        try: t = stim.Tableau.from_circuit(suffix_circuit)
+        except: t = stim.Tableau(num_qubits)
+            
+        targets = op.targets_copy()
+        qubits = [tg.value for tg in targets if tg.is_qubit_target]
+        
+        for q in qubits:
+            for p_val in [1, 3]: 
+                ps = stim.PauliString(num_qubits)
+                ps[q] = p_val
+                try: out_ps = t(ps)
+                except: continue
+                
+                w = out_ps.weight
+                if w > 4:
+                    caught = False
+                    for s in stabs:
+                        if not out_ps.commutes(s):
+                            caught = True
+                            break
+                    
+                    if not caught:
+                        row = []
+                        for k in range(num_qubits):
+                            val = out_ps[k]
+                            row.append(1 if val in [1, 2] else 0)
+                        for k in range(num_qubits):
+                            val = out_ps[k]
+                            row.append(1 if val in [2, 3] else 0)
+                        
+                        new_rank = get_rank(stab_rows + [row], num_cols)
+                        if new_rank > base_rank:
+                            extra_measurements.append(str(out_ps))
+    
+    unique_extras = sorted(list(set(extra_measurements)))
+    print(f"Extra logical operators to measure: {len(unique_extras)}")
+    for e in unique_extras:
+        print(f"LOGICAL: {e}")
+
+if __name__ == "__main__":
+    analyze_and_extract("data/gemini-3-pro-preview/agent_files_ft/original.stim", 
+                        "data/gemini-3-pro-preview/agent_files_ft/stabilizers_correct.txt")

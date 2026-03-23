@@ -1,36 +1,55 @@
-import collections
+import stim
+import sys
 
-input_circuit_str = """
-CX 73 0 0 73 73 0\nH 0 10 11 15 16 17\nCX 0 10 0 11 0 15 0 16 0 17 0 18 0 27 0 74 0 75 0 80\nH 9 72 73\nCX 9 0 72 0 73 0 18 1 1 18 18 1 9 1 72 1 73 1 27 2 2 27 27 2 9 2 72 2 73 2 73 3 3 73 73 3 3 36 3 45 36 4 4 36 36 4 45 5 5 45 45 5 63 6 6 63 63 6 6 54 6 74 6 75 9 6 54 7 7 54 54 7 9 7 9 8 8 9 9 8 10 9 9 10 10 9 9 19 9 28 9 74\nH 18\nCX 18 9 72 9 19 10 10 19 19 10 18 10 72 10 28 11 11 28 28 11 18 11 72 11 18 12 12 18 18 12 12 37 12 46 37 13 13 37 37 13 46 14 14 46 46 14 74 15 15 74 74 15 15 55 15 64 55 16 16 55 55 16 64 17 17 64 64 17 28 18 18 28 28 18 18 20 18 29 18 75\nH 27\nCX 27 18 72 18 20 19 19 20 20 19 27 19 72 19 29 20 20 29 29 20 27 20 72 20 27 21 21 27 27 21 21 38 21 47 38 22 22 38 38 22 47 23 23 47 47 23 75 24 24 75 75 24 24 56 24 65 56 25 25 56 56 25 65 26 26 65 65 26 72 27 27 72 72 27\nH 37 46\nCX 27 30 27 37 27 46 27 72 27 76 27 77\nH 28 73\nCX 28 27 73 27 72 28 28 72 72 28 72 28 73 28 30 29 29 30 30 29 72 29 73 29 73 30 30 73 73 30 30 39 30 48 39 31 31 39 39 31 48 32 32 48 48 32 66 33 33 66 66 33 33 57 33 76 33 77 72 33 57 34 34 57 57 34 72 34 72 35 35 72 72 35 37 36 36 37 37 36 36 38 36 39 36 76\nH 37\nCX 37 36 38 37 37 38 38 37 38 37 39 38 38 39 39 38 39 38 39 40 39 49 49 41 41 49 49 41 76 42 42 76 76 42 42 58 42 67 58 43 43 58 58 43 67 44 44 67 67 44 46 45 45 46 46 45 45 47 45 48 45 77\nH 46\nCX 46 45 47 46 46 47 47 46 47 46 48 47 47 48 48 47 48 47 48 49 48 50 77 51 51 77 77 51 51 59 51 68 59 52 52 59 59 52 68 53 53 68 68 53 74 54 54 74 74 54 54 66 54 75 54 78 54 79\nH 63\nCX 63 54 75 55 55 75 75 55 63 55 66 56 56 66 66 56 63 56 63 57 57 63 63 57 57 76 57 77 76 58 58 76 76 58 77 59 59 77 77 59 79 60 60 79 79 60 60 69 60 78 60 79 71 60 80 60 79 61 61 79 79 61 71 61 80 61 69 62 62 69 69 62 71 62 80 62 75 63 63 75 75 63 63 66 63 75 63 78\nH 74\nCX 74 63 66 64 64 66 66 64 74 64 75 65 65 75 75 65 74 65 74 66 66 74 74 66 66 76 66 77 76 67 67 76 76 67 77 68 68 77 77 68 78 69 69 78 78 69 69 70 69 79 71 69 80 69 79 70 70 79 79 70 71 70 80 70 79 71 71 79 79 71 79 71 80 71 74 72 72 74 74 72 72 74 72 75 72 80\nH 73\nCX 73 72 75 73 73 75 75 73 75 73 75 74 75 76 75 77 79 78 78 79 79 78 78 79 80 78 80 79"""
+def analyze():
+    try:
+        with open(r"C:\Users\anpaz\Repos\quantum-ai\rq2\data\gemini-3-pro-preview\agent_files_ft\stabilizers.txt", "r") as f:
+            stabilizers = [line.strip() for line in f if line.strip()]
+        
+        with open(r"C:\Users\anpaz\Repos\quantum-ai\rq2\data\gemini-3-pro-preview\agent_files_ft\circuit.stim", "r") as f:
+            circuit_str = f.read()
+        
+        circuit = stim.Circuit(circuit_str)
+        num_qubits = circuit.num_qubits
+        print(f"Circuit num_qubits: {num_qubits}")
+        
+        stab_len = len(stabilizers[0])
+        print(f"Stabilizer length: {stab_len}")
+        print(f"Number of stabilizers: {len(stabilizers)}")
+        
+        # Check if circuit prepares the stabilizers
+        sim = stim.TableauSimulator()
+        sim.do(circuit)
+        
+        preserved = 0
+        for s_str in stabilizers:
+            # Create a PauliString from the stabilizer string.
+            # We assume the stabilizer string targets qubits 0, 1, ..., N-1.
+            # If the circuit has M > N qubits, the extra qubits are ancillas.
+            # We need to map the Pauli string to the correct qubits.
+            
+            # Since the stabilizer string is length N, and we assume data qubits are 0..N-1,
+            # we can just use stim.PauliString(s_str).
+            
+            try:
+                p = stim.PauliString(s_str)
+            except Exception as e:
+                print(f"Error parsing stabilizer: {s_str[:20]}... {e}")
+                continue
+                
+            # Check expectation
+            # peek_observable_expectation returns +1, -1, or 0.
+            # If the state is stabilized by P, it should be +1.
+            exp = sim.peek_observable_expectation(p)
+            if exp == 1:
+                preserved += 1
+            
+        print(f"Preserved stabilizers: {preserved} / {len(stabilizers)}")
+            
+    except Exception as e:
+        print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
 
-def parse_circuit(circuit_str):
-    ops = []
-    lines = circuit_str.strip().split('\n')
-    for line in lines:
-        parts = line.strip().split(' ')
-        gate = parts[0]
-        targets = [int(x) for x in parts[1:]]
-        ops.append({'gate': gate, 'targets': targets})
-    return ops
-
-ops = parse_circuit(input_circuit_str)
-
-qubit_counts = collections.defaultdict(int)
-cx_pairs = []
-
-for op in ops:
-    if op['gate'] == 'CX':
-        targets = op['targets']
-        for i in range(0, len(targets), 2):
-            c = targets[i]
-            t = targets[i+1]
-            qubit_counts[c] += 1
-            qubit_counts[t] += 1
-            cx_pairs.append((c, t))
-
-sorted_qubits = sorted(qubit_counts.items(), key=lambda x: x[1], reverse=True)
-print("Qubit interaction counts (top 15):")
-for q, count in sorted_qubits[:15]:
-    print(f"Qubit {q}: {count}")
-
-print(f"Total CX gates: {len(cx_pairs)}")
+if __name__ == "__main__":
+    analyze()

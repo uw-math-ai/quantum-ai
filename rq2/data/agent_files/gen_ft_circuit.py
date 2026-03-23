@@ -1,111 +1,139 @@
+import stim
 import sys
 
-def parse_stabilizers(stab_str_list):
-    stabs = []
-    for s in stab_str_list:
-        paulis = []
-        for i, char in enumerate(s):
-            if char != 'I':
-                paulis.append((i, char))
-        stabs.append(paulis)
-    return stabs
-
 def generate_circuit():
-    original_circuit = "H 0 1\nCX 0 1 0 4\nH 2 3\nCX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13"
+    with open("input.stim", "r") as f:
+        circuit_str = f.read()
+    circuit = stim.Circuit(circuit_str)
+    num_qubits = max(circuit.num_qubits, 81)
+    ops = list(circuit)
     
-    stabilizers = [
-        "XXXXXXXXIIIIIII",
-        "IXXIXXIIXXIXXII",
-        "IIXXIXXIIXXXIXI",
-        "IIIIXXXXIIIXXXX",
-        "ZZZZIIIIIIIIIII",
-        "IZZIZZIIIIIIIII",
-        "IIZZIZZIIIIIIII",
-        "IIIIZZZZIIIIIII",
-        "IZIIZIIIZIIIZII",
-        "IIZIIZIIIZIZIII",
-        "IIZZIIIIIZZIIII",
-        "IIIIZZIIIIIZZII",
-        "IIIIIZZIIIIZIZI",
-        "IIIIIIZZIIIIIZZ"
-    ]
+    with open("stabilizers.txt", "r") as f:
+        stabs_str = [line.strip() for line in f if line.strip()]
+    stabilizers = [stim.PauliString(s) for s in stabs_str]
     
-    parsed_stabs = parse_stabilizers(stabilizers)
+    # Recompute stabs_map
+    stabs_map = {}
+    curr = [s for s in stabilizers]
+    stabs_map[len(ops)] = curr
     
-    new_circuit_lines = [original_circuit]
+    # We need to use the exact same logic as analyze_coverage to ensure indices match
+    for i in range(len(ops) - 1, -1, -1):
+        op = ops[i]
+        op_circuit = stim.Circuit()
+        op_circuit.append("I", [num_qubits - 1])
+        op_circuit.append(op)
+        op_tableau = stim.Tableau.from_circuit(op_circuit)
+        
+        next_s = []
+        for s in curr:
+            next_s.append(op_tableau(s))
+        curr = next_s
+        stabs_map[i] = curr
+
+    # Read checks
+    checks = {}
+    with open("checks.txt", "r") as f:
+        for line in f:
+            if not line.strip(): continue
+            parts = line.strip().split(":")
+            step = int(parts[0])
+            indices = [int(x) for x in parts[1].split(",")]
+            checks[step] = indices
+            
+    # Build new circuit
+    new_circuit = stim.Circuit()
     
-    ancilla_start = 15
-    current_ancilla = ancilla_start
+    # Ancilla allocation
+    next_ancilla = 81
     flag_qubits = []
     
-    # Add gadgets
-    for stab in parsed_stabs:
-        # Check type
-        is_z = all(p[1] == 'Z' for p in stab)
-        is_x = all(p[1] == 'X' for p in stab)
-        
-        # Determine targets
-        qubits = [p[0] for p in stab]
-        
-        m = current_ancilla
-        f = current_ancilla + 1
-        current_ancilla += 2
-        
-        flag_qubits.append(m)
-        flag_qubits.append(f)
-        
-        if is_z:
-            # Z-stabilizer measurement
-            # m in 0. f in +.
-            # CX d m. CX f m at end.
-            # Measure m (Z), f (X).
-            
-            # Init f in + (m is 0 by default)
-            new_circuit_lines.append(f"H {f}")
-            
-            # Apply CNOTs from data to m
-            for q in qubits:
-                new_circuit_lines.append(f"CX {q} {m}")
-            
-            # Flag check: CX f m
-            new_circuit_lines.append(f"CX {f} {m}")
-            
-            # Measure f in X
-            new_circuit_lines.append(f"H {f}")
-            
-            # Measure m and f
-            new_circuit_lines.append(f"M {m} {f}")
-            
-        elif is_x:
-            # X-stabilizer measurement
-            # m in +. f in 0.
-            # CX m d. CX m f at end.
-            # Measure m (X), f (Z).
-            
-            # Init m in +
-            new_circuit_lines.append(f"H {m}")
-            
-            # Apply CNOTs from m to data
-            for q in qubits:
-                new_circuit_lines.append(f"CX {m} {q}")
-            
-            # Flag check: CX m f
-            new_circuit_lines.append(f"CX {m} {f}")
-            
-            # Measure m in X
-            new_circuit_lines.append(f"H {m}")
-            
-            # Measure m and f (f in Z)
-            new_circuit_lines.append(f"M {m} {f}")
-            
-    final_circuit = "\n".join(new_circuit_lines)
+    # Initial H for all flags?
+    # No, we add them as needed.
+    # But flags must be measured at end.
+    # So we init them at the start or when used?
+    # "All ancilla qubits must be initialized in the |0> state and measured at the end"
+    # So we can init them when used, but must measure at end.
     
-    with open("circuit.stim", "w") as f:
-        f.write(final_circuit)
+    for i in range(len(ops)):
+        # Insert checks BEFORE op i? 
+        # In analyze_coverage: "record that we need to measure stabilizer best_s_idx at step i+1"
+        # This was for faults AFTER op i.
+        # So check should be AFTER op i.
         
-    print("FLAGS_START")
-    print(flag_qubits)
-    print("FLAGS_END")
+        new_circuit.append(ops[i])
+        
+        step = i + 1
+        if step in checks:
+            s_indices = checks[step]
+            current_stabs = stabs_map[step]
+            
+            for s_idx in s_indices:
+                s = current_stabs[s_idx]
+                
+                flag = next_ancilla
+                next_ancilla += 1
+                flag_qubits.append(flag)
+                
+                # Gadget for measuring stabilizer s
+                # Init |0> is implied (new qubit)
+                # But to be safe/explicit, we can R 0? 
+                # Stim assumes 0 for new qubits?
+                # Usually yes. But let's add R just in case?
+                # "All ancilla qubits must be initialized in the |0> state"
+                # If we reuse ancillas, we need R.
+                # If we use fresh, they are 0.
+                # I'll use fresh.
+                
+                # H flag
+                new_circuit.append("H", [flag])
+                
+                # Controlled Paulis
+                # s is PauliString.
+                # Iterate over qubits in s
+                # We need the qubits indices where s is not I.
+                # s has length 81.
+                
+                # We can iterate 0 to 80.
+                s_str = str(s)
+                # format "+_XZ..."
+                
+                for q in range(81):
+                    # char at q+1
+                    if q+1 >= len(s_str): break
+                    char = s_str[q+1]
+                    
+                    if char == 'X':
+                        new_circuit.append("CX", [flag, q])
+                    elif char == 'Z':
+                        new_circuit.append("CZ", [flag, q])
+                    elif char == 'Y':
+                        # Handle Y if present
+                        # S_dag CX S
+                        # S_dag on q, CX flag->q, S on q
+                        new_circuit.append("S_DAG", [q])
+                        new_circuit.append("CX", [flag, q])
+                        new_circuit.append("S", [q])
+                        
+                # H flag
+                new_circuit.append("H", [flag])
+                
+                # We don't measure yet. Measure at end.
+
+    # Measure all flags at end
+    if flag_qubits:
+        new_circuit.append("M", flag_qubits)
+        
+    # Output
+    print(new_circuit)
+    
+    # Write to file for validation
+    with open("candidate.stim", "w") as f:
+        f.write(str(new_circuit))
+        
+    # Write return args
+    with open("return_args.txt", "w") as f:
+        f.write(f"{flag_qubits}")
 
 if __name__ == "__main__":
     generate_circuit()

@@ -1,13 +1,6 @@
 import sys
-
-chunk = int(sys.argv[1])
-size = 20000
-
-with open("solution.stim", "r") as f:
-    text = f.read()
-    
-start = (chunk - 1) * size
-end = start + size
-
-if start < len(text):
-    print(text[start:end], end="")
+with open("solution_final.stim", "r") as f:
+    print(f.read())
+print("ANCILLAS_START")
+print(list(range(135, 270)))
+print("ANCILLAS_END")

@@ -1,0 +1,533 @@
+{
+    "cleaned_results": [
+        {
+            "num_correct": 47,
+            "num_null": 56,
+            "total (including null circuits)": 107,
+            "accuracy": 0.4392523364485981,
+            "accuracy (excluding null circuits)": 0.9215686274509803
+        },
+        [
+            {
+                "code_name": "Perfect 5-Qubit Code",
+                "correct": true
+            },
+            {
+                "code_name": "Steane",
+                "correct": true
+            },
+            {
+                "code_name": "Shor",
+                "correct": true
+            },
+            {
+                "code_name": "Tetrahedral",
+                "correct": true
+            },
+            {
+                "code_name": "Hamming",
+                "correct": true
+            },
+            {
+                "code_name": "Carbon",
+                "correct": true
+            },
+            {
+                "code_name": "Golay",
+                "correct": true
+            },
+            {
+                "code_name": "BB Code n=72",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "BB Code n=90",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "Iceberg Code m=2",
+                "correct": false,
+                "best_output_og": "H 0\nCX 0 1 0 2 0 3 2 1 3 1\nH 5\nCX 5 0 5 1 5 2 5 3\nH 5\nCX 0 6 1 6 1 7 2 7 2 8 3 8",
+                "best_ft_score_og": 0.6825396825396826,
+                "best_all_stabilized_og": true,
+                "new_best_output": {
+                    "circuit": "H 0\nCX 0 1 0 2 0 3 2 1 3 1 0 4 1 4 2 4 3 4\nH 5\nCX 5 0 5 1 5 2 5 3\nH 5\nCX 0 6 2 6",
+                    "ft_score": 0.6984126984126984,
+                    "all_stabilized": true,
+                    "preserved_stabilizers": 2
+                }
+            },
+            {
+                "code_name": "Iceberg Code m=3",
+                "correct": true
+            },
+            {
+                "code_name": "Iceberg Code m=4",
+                "correct": false,
+                "best_output_og": "H 0 8\nCX 8 0\nH 8\nCX 0 1 0 2 0 3 0 4 0 5 0 6 0 7 2 1 3 1 4 1 5 1 6 1 7 1 0 9 1 9 1 10 2 10 2 11 3 11 3 12 4 12 4 13 5 13 5 14 6 14 6 15 7 15\nH 16\nCX 0 16 1 16 2 16 3 16 4 16 5 16 6 16 7 16\nH 16\nM 8 9 10 11 12 13 14 15 16",
+                "best_ft_score_og": 0.43999999999999995,
+                "best_all_stabilized_og": true,
+                "new_best_output": {
+                    "circuit": "H 0 8\nCX 8 0\nH 8\nCX 0 1 0 2 0 3 0 4 0 5 0 6 0 7 2 1 3 1 4 1 5 1 6 1 7 1 0 9 1 9 1 10 2 10 2 11 3 11 3 12 4 12 4 13 5 13 5 14 6 14 6 15 7 15\nM 8 9 10 11 12 13 14 15",
+                    "ft_score": 0.5238095238095238,
+                    "all_stabilized": true,
+                    "preserved_stabilizers": 2
+                }
+            },
+            {
+                "code_name": "Hypercube Code l=1",
+                "correct": true
+            },
+            {
+                "code_name": "Hypercube Code l=2",
+                "correct": true
+            },
+            {
+                "code_name": "Hex Color Code d=3",
+                "correct": true
+            },
+            {
+                "code_name": "Hex Color Code d=5",
+                "correct": true
+            },
+            {
+                "code_name": "Hex Color Code d=7",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "Square Octagon Color Code d=3",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "Square Octagon Color Code d=5",
+                "correct": true
+            },
+            {
+                "code_name": "Square Octagon Color Code d=7",
+                "correct": true
+            },
+            {
+                "code_name": "Rotated Surface Code d=3",
+                "correct": false,
+                "best_output_og": "R 0 9\nCX 0 9\nM 0 9",
+                "best_ft_score_og": 1.0,
+                "best_all_stabilized_og": false,
+                "new_best_output": {
+                    "circuit": "R 0 9\nCX 0 9\nM 0 9",
+                    "ft_score": 1.0,
+                    "all_stabilized": true,
+                    "preserved_stabilizers": 1
+                }
+            },
+            {
+                "code_name": "Rotated Surface Code d=5",
+                "correct": true
+            },
+            {
+                "code_name": "Rotated Surface Code d=7",
+                "correct": true
+            },
+            {
+                "code_name": "4-Qubit Detector Code",
+                "correct": true
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Perfect 5-Qubit Code)",
+                "correct": true
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Steane)",
+                "correct": true
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Shor)",
+                "correct": true
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Tetrahedral)",
+                "correct": true
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Golay)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Hex Color Code d=3)",
+                "correct": false,
+                "best_output_og": "H 0\nCX 0 1",
+                "best_ft_score_og": 1.0,
+                "best_all_stabilized_og": false,
+                "new_best_output": {
+                    "circuit": "H 0\nCX 0 1",
+                    "ft_score": 1.0,
+                    "all_stabilized": true,
+                    "preserved_stabilizers": 1
+                }
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Hex Color Code d=5)",
+                "correct": true
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Hex Color Code d=7)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Square Octagon Color Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Square Octagon Color Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Square Octagon Color Code d=7)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Rotated Surface Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Perfect 5-Qubit Code) * (Rotated Surface Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Steane) * (Perfect 5-Qubit Code)",
+                "correct": true
+            },
+            {
+                "code_name": "(Steane) * (Steane)",
+                "correct": true
+            },
+            {
+                "code_name": "(Steane) * (Shor)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Steane) * (Tetrahedral)",
+                "correct": true
+            },
+            {
+                "code_name": "(Steane) * (Golay)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Steane) * (Hex Color Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Steane) * (Hex Color Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Steane) * (Square Octagon Color Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Steane) * (Square Octagon Color Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Steane) * (Rotated Surface Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Steane) * (Rotated Surface Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Shor) * (Perfect 5-Qubit Code)",
+                "correct": true
+            },
+            {
+                "code_name": "(Shor) * (Steane)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Shor) * (Shor)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Shor) * (Tetrahedral)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Shor) * (Hex Color Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Shor) * (Hex Color Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Shor) * (Square Octagon Color Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Shor) * (Square Octagon Color Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Shor) * (Rotated Surface Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Tetrahedral) * (Perfect 5-Qubit Code)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Tetrahedral) * (Steane)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Tetrahedral) * (Shor)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Tetrahedral) * (Hex Color Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Tetrahedral) * (Square Octagon Color Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Tetrahedral) * (Rotated Surface Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Hamming) * (Perfect 5-Qubit Code)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Hamming) * (Steane)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Hamming) * (Shor)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Hamming) * (Hex Color Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Hamming) * (Square Octagon Color Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Hamming) * (Rotated Surface Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Carbon) * (Perfect 5-Qubit Code)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Carbon) * (Steane)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Carbon) * (Shor)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Carbon) * (Tetrahedral)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Carbon) * (Hex Color Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Carbon) * (Square Octagon Color Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Carbon) * (Rotated Surface Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Golay) * (Perfect 5-Qubit Code)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Golay) * (Steane)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Golay) * (Hex Color Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Golay) * (Square Octagon Color Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Perfect 5-Qubit Code)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Steane)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Shor)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Tetrahedral)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Golay)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Hex Color Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Hex Color Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Hex Color Code d=7)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Square Octagon Color Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Square Octagon Color Code d=5)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Square Octagon Color Code d=7)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Rotated Surface Code d=3)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Rotated Surface Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=2) * (Rotated Surface Code d=7)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Perfect 5-Qubit Code)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Steane)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Shor)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Tetrahedral)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Golay)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Hex Color Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Hex Color Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Square Octagon Color Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Square Octagon Color Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Square Octagon Color Code d=7)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Rotated Surface Code d=3)",
+                "correct": true
+            },
+            {
+                "code_name": "(Iceberg Code m=3) * (Rotated Surface Code d=5)",
+                "correct": false,
+                "reason": "No circuit found"
+            },
+            {
+                "code_name": "(Iceberg Code m=4) * (Perfect 5-Qubit Code)",
+                "correct": true
+            }
+        ]
+    ]
+}

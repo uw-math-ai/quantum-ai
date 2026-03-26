@@ -1,5 +1,7 @@
 import json
 
+
+# Used to determine the accuracy of the llm at choosing the best circuit based on fault tolerance score and stabilization
 def clean_ft_results(file_path, output_path):
     with open(file_path, 'r') as f:
         data = json.load(f)
@@ -59,6 +61,7 @@ def clean_ft_results(file_path, output_path):
         "num_correct": num_correct,
         "num_null": num_null,
         "total (including null circuits)": len(data.get("results")),
+        "incorrect": len(data.get("results")) - num_correct - num_null,
         "accuracy": num_correct / len(data.get("results")) if data.get("results") else 0.0, 
         "accuracy (excluding null circuits)": num_correct / (len(data.get("results")) - num_null) if (len(data.get("results")) - num_null) > 0 else 0.0
     }

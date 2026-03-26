@@ -4,6 +4,7 @@
             "num_correct": 66,
             "num_null": 15,
             "total (including null circuits)": 95,
+            "incorrect": 14,
             "accuracy": 0.6947368421052632,
             "accuracy (excluding null circuits)": 0.825
         },

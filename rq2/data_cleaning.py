@@ -26,7 +26,7 @@ def clean_ft_results(file_path, output_path):
 
             generated_circuits = result.get("generated_circuits", [])
             for circuit in generated_circuits:
-                if (circuit.get("all_stabilized") == True and circuit.get("ft_score") > best_ft_score) or (circuit.get("all_stabilized") == True and best_all_stabilized == False and circuit.get("ft_score") >= best_ft_score):
+                if (circuit.get("all_stabilized") == True and circuit.get("ft_score") > best_ft_score) or (circuit.get("all_stabilized") == True and best_all_stabilized == False and circuit.get("ft_score")):
 
                     best_output = circuit
                     best_ft_score = circuit.get("ft_score")

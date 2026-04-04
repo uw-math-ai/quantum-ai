@@ -9,12 +9,12 @@ from copilot import CopilotClient
 from copilot.generated.session_events import SessionEventType, SessionEvent
 from pydantic import BaseModel, Field
 from pathlib import Path
-import json
+
 
 
 from check_stabilizers import check_stabilizers
 from check_error_propagation import check_fault_tolerance, ft_score
-from circuit_metric import is_strictly_more_optimal, compute_metrics
+from circuit_metric import is_strictly_more_optimal
 
 load_dotenv()
 
@@ -352,7 +352,7 @@ def generate_optimized_circuit(
 ) -> dict:
     """
     Optimize an existing Clifford circuit while preserving stabilizers.
-    Uses lexicographic rule: (cx_count, volume, depth).
+    Uses lexicographic rule: (two_qubit_gates, volume, depth).
 
     Args:
         stabilizers: List of stabilizer strings.
@@ -371,13 +371,14 @@ def generate_optimized_circuit(
     """
 
     stabilizers_str = ", ".join(stabilizers)
-    baseline_metrics = compute_metrics(initial_circuit).as_dict()
 
     repo_root = Path(__file__).resolve().parents[1] 
     agent_files_dir = repo_root / "rq3" / "data" / model / "agent_files"
     agent_files_dir.mkdir(parents=True, exist_ok=True)
 
     result = None
+    best_valid_circuit = None   # best valid+better circuit seen across all evaluations
+    best_valid_metrics = None   # its (two_qubit_gates, volume, depth) tuple
     evaluations = []
 
     @define_tool(description=(
@@ -385,16 +386,15 @@ def generate_optimized_circuit(
         "This is the primary evaluation tool. It performs two checks in order:\n\n"
         "1. STABILIZER PRESERVATION – simulates the circuit with a TableauSimulator\n"
         "   to verify that every target stabilizer has expectation +1. If any\n"
-        "   stabilizer is not preserved the circuit is INVALID and cannot be\n"
-        "   submitted via final_circuit.\n\n"
+        "   stabilizer is not preserved the circuit is INVALID.\n\n"
         "2. OPTIMIZATION COMPARISON – compares the candidate against the baseline\n"
         "   using a strict lexicographic rule on three integer metrics:\n"
-        "     a. cx_count  – number of CX (CNOT) gates (primary, most important).\n"
-        "     b. volume    – total gate count in the volume gate set\n"
-        "                    (CX, CY, CZ, H, S, SQRT_X, etc.).\n"
+        "     a. two_qubit_gates – total count of ALL two-qubit gates (CX, CZ, SWAP, etc.) (primary).\n"
+        "     b. volume          – total gate count in the volume gate set (secondary).\n"
+        "     c. depth           – circuit depth (tertiary).\n"
         "   A candidate is 'strictly better' only when the tuple\n"
-        "   (cand.cx_count, cand.volume) is lexicographically less than\n"
-        "   the baseline tuple. Equal tuples are NOT an improvement.\n\n"
+        "   (cand.two_qubit_gates, cand.volume, cand.depth) is lexicographically\n"
+        "   less than the baseline tuple. Equal tuples are NOT an improvement.\n\n"
         "Input:\n"
         "  - candidate: raw Stim circuit text (no Markdown fences). Must be\n"
         "    parseable by stim.Circuit.\n\n"
@@ -402,22 +402,20 @@ def generate_optimized_circuit(
         "  {\n"
         "    'preserved_stabilizers': <int>  (number of stabilizers preserved out of total),\n"
         "    'valid': true/false             (true when ALL stabilizers are preserved),\n"
-        "    'candidate': { 'cx_count': int, 'volume': int, 'depth': int, ... },\n"
-        "    'baseline':  { 'cx_count': int, 'volume': int, 'depth': int, ... },\n"
+        "    'candidate': { 'two_qubit_gates': int, 'volume': int, 'depth': int, ... },\n"
+        "    'baseline':  { 'two_qubit_gates': int, 'volume': int, 'depth': int, ... },\n"
         "    'better': true/false\n"
         "  }\n\n"
         "Output (on parse / error): { 'error': <string> }\n\n"
         "Usage guidance:\n"
-        "  - Call this tool to check every candidate circuit before submitting\n"
-        "    via final_circuit.\n"
-        "  - A circuit must have valid == true AND better == true to be\n"
-        "    accepted by final_circuit.\n"
-        "  - Focus optimization efforts on reducing cx_count first; only then\n"
-        "    try to reduce volume or depth."
+        "  - Call this tool to check every candidate before submitting via final_circuit.\n"
+        "  - When valid == true AND better == true, update your best-so-far and keep\n"
+        "    optimizing — do NOT stop early. Use all available attempts.\n"
+        "  - Prioritize reducing two_qubit_gates first, then volume, then depth."
     ))
     def evaluate_optimization(params: OptimizeParam) -> dict:
         try:
-            parsed = stim.Circuit(params.candidate)
+            stim.Circuit(params.candidate)
         except Exception as e:
             return {"error": f"Failed to parse circuit: {e}"}
 
@@ -438,7 +436,7 @@ def generate_optimized_circuit(
         base = info["baseline"]
 
         print(
-            f"[OPT] CX: {cand['cx_count']} (base {base['cx_count']}), "
+            f"[OPT] 2Q: {cand['two_qubit_gates']} (base {base['two_qubit_gates']}), "
             f"VOL: {cand['volume']} (base {base['volume']}), "
             f"DEPTH: {cand['depth']} (base {base['depth']}) "
             f"{'✓' if better else '✗'} | "
@@ -446,7 +444,7 @@ def generate_optimized_circuit(
             f"{'✓' if all_preserved else '✗'}"
         )
 
-        result = {
+        eval_result = {
             "preserved_stabilizers": preserved,
             "valid": all_preserved,
             "candidate": cand,
@@ -457,33 +455,41 @@ def generate_optimized_circuit(
         # Track this evaluation for intermediate results
         evaluations.append({
             "circuit": params.candidate,
-            **result,
+            **eval_result,
         })
 
-        return result
-    
+        # Update best valid+better seen so far
+        nonlocal best_valid_circuit, best_valid_metrics
+        if all_preserved and better:
+            candidate_key = (cand["two_qubit_gates"], cand["volume"], cand["depth"])
+            if best_valid_metrics is None or candidate_key < best_valid_metrics:
+                best_valid_circuit = params.candidate
+                best_valid_metrics = candidate_key
+
+        return eval_result
+
 
     @define_tool(description=(
-        "Submit the final optimized Stim circuit for acceptance.\n\n"
-        "This tool performs TWO automatic validation checks before accepting:\n"
+        "Submit the final optimized Stim circuit.\n\n"
+        "Call this tool only after exhausting ALL available attempts, with the best\n"
+        "valid+better circuit found across all evaluate_optimization calls.\n\n"
+        "This tool performs two validation checks:\n"
         "  1. Stabilizer preservation – every target stabilizer must be satisfied.\n"
-        "  2. Strict optimization     – the circuit must be lexicographically better \n"
-        "     than the baseline on (cx_count, volume).\n\n"
-        "If either check fails the submission is REJECTED and you should keep \n"
-        "iterating. The tool returns a message indicating success or failure.\n\n"
+        "  2. Strict optimization     – the circuit must be lexicographically better\n"
+        "     than the baseline on (two_qubit_gates, volume, depth).\n\n"
+        "If either check fails the submission is rejected.\n\n"
         "Input:\n"
-        "  - stim_circuit: raw Stim circuit text (no Markdown fences, no prose).\n"
-        "    Must be parseable by stim.Circuit.\n\n"
+        "  - stim_circuit: raw Stim circuit text (no Markdown fences, no prose).\n\n"
         "Output:\n"
-        "  - On success: 'Final optimized circuit accepted. Stop generation.'\n"
-        "  - On failure: a description of what went wrong (stabilizers or metrics).\n\n"
+        "  - On success: confirmation message.\n"
+        "  - On failure: description of what went wrong.\n\n"
         "Best practice:\n"
-        "  - Always call evaluate_optimization first to verify that\n"
-        "    valid == true AND better == true before submitting here.\n"
-        "  - Only call this tool with your final answer."
+        "  - Only call this once, after all attempts are exhausted.\n"
+        "  - Submit the circuit with the lowest (two_qubit_gates, volume, depth) tuple\n"
+        "    that was both valid and better."
     ))
     def final_circuit(params: FinalCircuitParam) -> str:
-        nonlocal result
+        nonlocal result, best_valid_circuit, best_valid_metrics
 
         try:
             parsed = stim.Circuit(params.stim_circuit)
@@ -504,17 +510,23 @@ def generate_optimized_circuit(
         if not better:
             cand = info["candidate"]
             base = info["baseline"]
-
             print(
                 f"[FINAL REJECTED] "
-                f"CX {cand['cx_count']} vs {base['cx_count']}, "
+                f"2Q {cand['two_qubit_gates']} vs {base['two_qubit_gates']}, "
                 f"VOL {cand['volume']} vs {base['volume']}, "
                 f"DEPTH {cand['depth']} vs {base['depth']}"
             )
-
             return "Circuit is NOT strictly more optimal."
 
-        result = parsed
+        cand = info["candidate"]
+        candidate_key = (cand["two_qubit_gates"], cand["volume"], cand["depth"])
+
+        # Accept only if this beats or matches the current best
+        if best_valid_metrics is None or candidate_key <= best_valid_metrics:
+            result = parsed
+            best_valid_circuit = params.stim_circuit
+            best_valid_metrics = candidate_key
+
         return "Final optimized circuit accepted."
 
     # -------------------------------------------------
@@ -531,12 +543,14 @@ def generate_optimized_circuit(
 
     prompt_agent(prompt, tools=[evaluate_optimization, final_circuit], model=model, timeout=timeout)
 
-    # Check if result was populated by the agent
-    if not result:
-        return {"circuit": None, "evaluations": evaluations}
-
+    # Return best found: prefer what agent explicitly submitted via final_circuit,
+    # but fall back to the best internally tracked if the agent failed to submit.
     print('done.')
-    return {"circuit": result, "evaluations": evaluations}
+    if result:
+        return {"circuit": result, "evaluations": evaluations}
+    if best_valid_circuit:
+        return {"circuit": stim.Circuit(best_valid_circuit), "evaluations": evaluations}
+    return {"circuit": None, "evaluations": evaluations}
 
 
 # -------------------------

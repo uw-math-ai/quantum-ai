@@ -10,16 +10,39 @@ Walks a directory tree like:
       gpt5.2/
         ...
 
-Config type is inferred from metadata.max_attempts + metadata.timeout.
-
 Usage:
     python analyze_models.py <data_directory>
 """
 
 import json, sys, os, glob
+from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+
+
+# ── Dataset loader ───────────────────────────────────────────────────
+def load_stabilizer_counts(data_dir: str) -> dict[str, int]:
+    """Return {code_name: num_stabilizers} from circuit_dataset.jsonl."""
+    candidates = [
+        os.path.join(data_dir, "..", "data", "circuit_dataset.jsonl"),
+        os.path.join(data_dir, "..", "..", "data", "circuit_dataset.jsonl"),
+        os.path.join(data_dir, "circuit_dataset.jsonl"),
+    ]
+    for path in candidates:
+        path = os.path.normpath(path)
+        if os.path.exists(path):
+            counts = {}
+            with open(path) as f:
+                for line in f:
+                    rec = json.loads(line)
+                    name = rec.get("source_code", "")
+                    stabs = rec.get("input_stabilizers", [])
+                    if name and stabs:
+                        counts[name] = len(stabs)
+            return counts
+    return {}
+
 
 # ── Config classification ────────────────────────────────────────────
 def classify_config(meta: dict) -> str:
@@ -31,22 +54,18 @@ def classify_config(meta: dict) -> str:
         return "15 att / 300s"
     elif attempts == 15 and timeout > 300:
         return f"15 att / {timeout}s"
-    else:
-        return f"{attempts} att / {timeout}s"
+    return f"{attempts} att / {timeout}s"
 
 CONFIG_ORDER = ["1 attempt", "15 att / 300s", "15 att / 900s"]
+MODELS_TO_ANALYZE = {"claude-opus-4.6", "gpt5.2", "gemini-3-pro-preview"}
+
 
 # ── Stat extraction ──────────────────────────────────────────────────
 def improvement_magnitude(bm: dict, om: dict) -> float:
-    """
-    Return the reduction % for whichever metric triggered the lexicographic
-    is_better check: CX first, then volume, then depth.  Mirrors the runner's
-        (cx, volume, depth) < (cx, volume, depth)
-    """
+    """CX reduction % if CX improved, else volume, else depth (mirrors lexicographic is_better)."""
     cx_b, cx_o = bm.get("cx_count", 0), om.get("cx_count", 0)
     vol_b, vol_o = bm.get("volume", 0), om.get("volume", 0)
     dep_b, dep_o = bm.get("depth", 0), om.get("depth", 0)
-
     if cx_o < cx_b and cx_b > 0:
         return (cx_b - cx_o) / cx_b * 100
     elif cx_o == cx_b and vol_o < vol_b and vol_b > 0:
@@ -56,24 +75,16 @@ def improvement_magnitude(bm: dict, om: dict) -> float:
     return 0.0
 
 
-def extract_stats(data: dict) -> dict:
+def extract_stats(data: dict, stab_counts: dict = None) -> dict:
     results = data.get("results", [])
     total = len(results)
-    valid = sum(1 for r in results if r.get("valid", False))
-    better = sum(1 for r in results if r.get("better", False))
     valid_and_better = sum(1 for r in results if r.get("valid") and r.get("better"))
 
-    # --- Among successes ---
-    cx_reds, vol_reds, dep_reds = [], [], []
-    success_with_opt_metrics = 0
-    cx_reduced_success = 0
+    cx_reds, dep_reds = [], []
     twoq_reduced_success = 0
-    swap_like_success = 0
-
-    # --- Over ALL circuits (failures = 0%) ---
-    cx_reds_all = []
-    dep_reds_all = []
-    improvement_mags_all = []  # lexicographic improvement magnitude
+    success_with_opt_metrics = 0
+    cx_reds_all, improvement_mags_all = [], []
+    all3_improved = cx_vol_improved = cx_only_improved = 0
 
     for r in results:
         bm = r.get("baseline_metrics", {})
@@ -81,109 +92,84 @@ def extract_stats(data: dict) -> dict:
         is_success = r.get("valid") and r.get("better")
 
         if is_success:
-            # Among-successes metrics (unchanged)
             if bm.get("cx_count", 0) > 0:
-                cx_red = (bm["cx_count"] - om["cx_count"]) / bm["cx_count"] * 100
-                cx_reds.append(cx_red)
-            if bm.get("volume", 0) > 0:
-                vol_reds.append((bm["volume"] - om["volume"]) / bm["volume"] * 100)
+                cx_reds.append((bm["cx_count"] - om["cx_count"]) / bm["cx_count"] * 100)
             if bm.get("depth", 0) > 0:
-                dep_red = (bm["depth"] - om["depth"]) / bm["depth"] * 100
-                dep_reds.append(dep_red)
-
+                dep_reds.append((bm["depth"] - om["depth"]) / bm["depth"] * 100)
             if om:
                 success_with_opt_metrics += 1
-                has_cx = "cx_count" in bm and "cx_count" in om
-                has_twoq = "two_qubit_gates" in bm and "two_qubit_gates" in om
-
-                cx_reduced = has_cx and om["cx_count"] < bm["cx_count"]
-                twoq_reduced = has_twoq and om["two_qubit_gates"] < bm["two_qubit_gates"]
-
-                if cx_reduced:
-                    cx_reduced_success += 1
-                if twoq_reduced:
+                if ("two_qubit_gates" in bm and "two_qubit_gates" in om
+                        and om["two_qubit_gates"] < bm["two_qubit_gates"]):
                     twoq_reduced_success += 1
-                if cx_reduced and not twoq_reduced:
-                    swap_like_success += 1
-
-            # Over-all CX and depth (for diagnostic charts)
-            if bm.get("cx_count", 0) > 0:
-                cx_reds_all.append(
-                    (bm["cx_count"] - om.get("cx_count", bm["cx_count"])) / bm["cx_count"] * 100
-                )
-            else:
-                cx_reds_all.append(0.0)
-
-            if bm.get("depth", 0) > 0:
-                dep_reds_all.append(
-                    (bm["depth"] - om.get("depth", bm["depth"])) / bm["depth"] * 100
-                )
-            else:
-                dep_reds_all.append(0.0)
-
-            # Improvement magnitude (matches lexicographic is_better)
+            cx_reds_all.append(
+                (bm["cx_count"] - om.get("cx_count", bm["cx_count"])) / bm["cx_count"] * 100
+                if bm.get("cx_count", 0) > 0 else 0.0
+            )
             improvement_mags_all.append(improvement_magnitude(bm, om))
+
+            cx_imp  = om.get("cx_count", bm.get("cx_count")) < bm.get("cx_count", 0)
+            vol_imp = om.get("volume",   bm.get("volume"))   < bm.get("volume", 0)
+            dep_imp = om.get("depth",    bm.get("depth"))    < bm.get("depth", 0)
+            if cx_imp and vol_imp and dep_imp:
+                all3_improved += 1
+            elif cx_imp and vol_imp:
+                cx_vol_improved += 1
+            elif cx_imp:
+                cx_only_improved += 1
         else:
-            # Failures count as 0%
             cx_reds_all.append(0.0)
-            dep_reds_all.append(0.0)
             improvement_mags_all.append(0.0)
 
     success_rate = valid_and_better / total * 100 if total else 0
-    mean_cx_red_all = np.mean(cx_reds_all) if cx_reds_all else 0
-    mean_dep_red_all = np.mean(dep_reds_all) if dep_reds_all else 0
     mean_improvement_all = np.mean(improvement_mags_all) if improvement_mags_all else 0
-
-    # Benchmark score: 0.50 * success_rate + 0.50 * mean_improvement_all
     score = 0.50 * success_rate + 0.50 * mean_improvement_all
+
+    weighted_score = max_weighted_score = 0
+    if stab_counts:
+        for r in results:
+            n_stab = stab_counts.get(r.get("code_name", ""), 0)
+            max_weighted_score += n_stab
+            if r.get("valid") and r.get("better"):
+                weighted_score += n_stab
 
     return {
         "total": total,
-        "valid": valid,
-        "better": better,
         "valid_and_better": valid_and_better,
-        "valid_rate": valid / total * 100 if total else 0,
-        "better_rate": better / total * 100 if total else 0,
+        "valid_rate": sum(1 for r in results if r.get("valid")) / total * 100 if total else 0,
         "success_rate": success_rate,
-        # Among successes
         "mean_cx_red": np.mean(cx_reds) if cx_reds else 0,
-        "mean_vol_red": np.mean(vol_reds) if vol_reds else 0,
         "mean_dep_red": np.mean(dep_reds) if dep_reds else 0,
-        # Over ALL circuits (failures = 0%)
-        "mean_cx_red_all": mean_cx_red_all,
-        "mean_dep_red_all": mean_dep_red_all,
+        "mean_cx_red_all": np.mean(cx_reds_all) if cx_reds_all else 0,
         "mean_improvement_all": mean_improvement_all,
-        # Benchmark score
         "score": score,
-        # 2Q quality
-        "success_with_opt_metrics": success_with_opt_metrics,
-        "cx_reduced_within_success_rate": (
-            cx_reduced_success / success_with_opt_metrics * 100 if success_with_opt_metrics else 0
-        ),
+        "weighted_score": weighted_score,
+        "max_weighted_score": max_weighted_score,
         "twoq_reduced_within_success_rate": (
-            twoq_reduced_success / success_with_opt_metrics * 100 if success_with_opt_metrics else 0
+            twoq_reduced_success / success_with_opt_metrics * 100
+            if success_with_opt_metrics else 0
         ),
-        "swap_like_within_success_rate": (
-            swap_like_success / success_with_opt_metrics * 100 if success_with_opt_metrics else 0
-        ),
+        "all3_improved": all3_improved,
+        "cx_vol_improved": cx_vol_improved,
+        "cx_only_improved": cx_only_improved,
     }
 
 
 # ── Discovery ────────────────────────────────────────────────────────
 def discover(data_dir: str) -> tuple[dict, list[dict]]:
     """Returns ({model_name: {config_label: stats_dict}}, [raw_rows])"""
+    stab_counts = load_stabilizer_counts(data_dir)
+    if stab_counts:
+        print(f"  Loaded stabilizer counts for {len(stab_counts)} circuits.\n")
+    else:
+        print("  Warning: could not load circuit_dataset.jsonl — stabilizer analysis unavailable.\n")
+
     all_data = {}
-    all_rows = []  # flat list of per-circuit rows for bucket analysis
+    all_rows = []
 
     for model_dir in sorted(glob.glob(os.path.join(data_dir, "*"))):
         if not os.path.isdir(model_dir):
             continue
         model_name = os.path.basename(model_dir)
-        if model_name in ("agent_files",):
-            continue
-
-        # ── Only analyze these models ──
-        MODELS_TO_ANALYZE = {"claude-opus-4.6", "gpt5.2"}
         if model_name not in MODELS_TO_ANALYZE:
             continue
 
@@ -195,144 +181,170 @@ def discover(data_dir: str) -> tuple[dict, list[dict]]:
         for jf in json_files:
             with open(jf) as f:
                 data = json.load(f)
-            meta = data.get("metadata", {})
-            cfg = classify_config(meta)
-            stats = extract_stats(data)
+            cfg = classify_config(data.get("metadata", {}))
+            stats = extract_stats(data, stab_counts)
             configs[cfg] = stats
             print(f"  {model_name:25s}  {cfg:16s}  n={stats['total']:3d}  "
-                  f"success={stats['success_rate']:5.1f}%  "
-                  f"cx_red={stats['mean_cx_red']:5.1f}%  "
-                  f"cx_red_all={stats['mean_cx_red_all']:5.1f}%  "
-                  f"imp_all={stats['mean_improvement_all']:5.1f}%  "
-                  f"SCORE={stats['score']:5.1f}  "
-                  f"2q_red|succ={stats['twoq_reduced_within_success_rate']:5.1f}%  "
-                  f"swap_like|succ={stats['swap_like_within_success_rate']:5.1f}%")
+                  f"success={stats['success_rate']:5.1f}%  score={stats['score']:5.1f}")
 
-            # Collect raw rows for bucket analysis
             for r in data.get("results", []):
                 bm = r.get("baseline_metrics", {})
+                code_name = r.get("code_name", "")
                 all_rows.append({
                     "model": model_name,
                     "cfg": cfg,
                     "success": bool(r.get("valid")) and bool(r.get("better")),
                     "cx_count": bm.get("cx_count"),
-                    "depth": bm.get("depth"),
+                    "num_stabilizers": stab_counts.get(code_name),
+                    "code_name": code_name,
                 })
 
         all_data[model_name] = configs
     return all_data, all_rows
 
 
-# ── Circuit-size bucket analysis ─────────────────────────────────────
-def print_bucket_analysis(all_rows: list[dict]):
-    """Compute CX-count quartiles and report success by size bucket."""
-    cx_vals = sorted([r["cx_count"] for r in all_rows
-                      if isinstance(r["cx_count"], (int, float))])
-    if not cx_vals:
-        print("\nNo CX count data for bucket analysis.")
-        return
-
-    q1 = cx_vals[len(cx_vals) // 4]
-    q2 = cx_vals[len(cx_vals) // 2]
-    q3 = cx_vals[(3 * len(cx_vals)) // 4]
-
-    def cx_bin(v):
-        if v is None:
-            return "unknown"
-        if v <= q1:
-            return "Small"
-        if v <= q2:
-            return "Medium"
-        if v <= q3:
-            return "Large"
-        return "Extra-large"
-
-    print("\n" + "=" * 80)
-    print("  CIRCUIT-SIZE BUCKET ANALYSIS")
-    print(f"  CX-count quartile cutoffs: Q1={q1}, Q2(median)={q2}, Q3={q3}")
-    print(f"  Small: CX ≤ {q1}  |  Medium: {q1} < CX ≤ {q2}  |  "
-          f"Large: {q2} < CX ≤ {q3}  |  Extra-large: CX > {q3}")
-    print("=" * 80)
-
-    # ── Pooled across all models/configs ──
-    from collections import defaultdict
-    pooled = defaultdict(list)
-    for r in all_rows:
-        pooled[cx_bin(r["cx_count"])].append(r)
-
-    print(f"\n  {'Bucket':<14s}  {'CX range':<20s}  {'n':>5s}  {'Success':>8s}  {'Rate':>7s}")
-    print("-" * 65)
-    for bucket in ["Small", "Medium", "Large", "Extra-large"]:
-        rows = pooled.get(bucket, [])
-        n = len(rows)
-        succ = sum(1 for r in rows if r["success"])
-        rate = succ / n * 100 if n else 0
-        if bucket == "Small":
-            rng = f"CX ≤ {q1}"
-        elif bucket == "Medium":
-            rng = f"{q1} < CX ≤ {q2}"
-        elif bucket == "Large":
-            rng = f"{q2} < CX ≤ {q3}"
-        else:
-            rng = f"CX > {q3}"
-        print(f"  {bucket:<14s}  {rng:<20s}  {n:5d}  {succ:8d}  {rate:6.1f}%")
-
-    # ── Per model, pooled across configs ──
-    print(f"\n  {'Model':<25s}  {'Bucket':<14s}  {'n':>5s}  {'Success':>8s}  {'Rate':>7s}")
-    print("-" * 70)
-    by_model_bucket = defaultdict(lambda: defaultdict(list))
-    for r in all_rows:
-        by_model_bucket[r["model"]][cx_bin(r["cx_count"])].append(r)
-
-    for model in sorted(by_model_bucket):
-        for bucket in ["Small", "Medium", "Large", "Extra-large"]:
-            rows = by_model_bucket[model].get(bucket, [])
-            n = len(rows)
-            succ = sum(1 for r in rows if r["success"])
-            rate = succ / n * 100 if n else 0
-            print(f"  {model:<25s}  {bucket:<14s}  {n:5d}  {succ:8d}  {rate:6.1f}%")
-
-    # ── Per config, pooled across models ──
-    print(f"\n  {'Config':<16s}  {'Bucket':<14s}  {'n':>5s}  {'Success':>8s}  {'Rate':>7s}")
-    print("-" * 65)
-    by_cfg_bucket = defaultdict(lambda: defaultdict(list))
-    for r in all_rows:
-        by_cfg_bucket[r["cfg"]][cx_bin(r["cx_count"])].append(r)
-
-    for cfg in CONFIG_ORDER:
-        if cfg not in by_cfg_bucket:
-            continue
-        for bucket in ["Small", "Medium", "Large", "Extra-large"]:
-            rows = by_cfg_bucket[cfg].get(bucket, [])
-            n = len(rows)
-            succ = sum(1 for r in rows if r["success"])
-            rate = succ / n * 100 if n else 0
-            print(f"  {cfg:<16s}  {bucket:<14s}  {n:5d}  {succ:8d}  {rate:6.1f}%")
-
-    print("=" * 80)
-
-
 # ── Score summary ────────────────────────────────────────────────────
 def print_score_summary(all_data: dict):
-    """Print a clean benchmark score summary table."""
-    print("\n" + "=" * 80)
+    print("\n" + "=" * 100)
     print("  RQ3 BENCHMARK SCORES")
     print("  Score = 0.50 × SuccessRate + 0.50 × MeanImprovementMagnitude(all)")
-    print("  Improvement magnitude: CX red % if CX↓, else Vol red % if Vol↓, else Dep red %")
-    print("=" * 80)
+    print("  Weighted Score = Σ I(valid & better) × num_stabilizers / Σ num_stabilizers × 100  (raw counts in parens)")
+    print("=" * 100)
     print(f"  {'Model':<25s}  {'Config':<16s}  {'Success':>8s}  {'CX↓(succ)':>10s}  "
-          f"{'CX↓(all)':>9s}  {'Imp(all)':>9s}  {'SCORE':>6s}")
-    print("-" * 80)
+          f"{'CX↓(all)':>9s}  {'Imp(all)':>9s}  {'SCORE':>6s}  {'Weighted Score':>20s}")
+    print("-" * 100)
     for model in sorted(all_data.keys()):
         for cfg in CONFIG_ORDER:
             s = all_data[model].get(cfg)
             if s is None:
                 continue
+            ws, ms = s["weighted_score"], s["max_weighted_score"]
+            ws_str = f"{ws/ms*100:5.1f}  ({ws:,} / {ms:,})" if ms else "N/A"
             print(f"  {model:<25s}  {cfg:<16s}  {s['success_rate']:7.1f}%  "
                   f"{s['mean_cx_red']:9.1f}%  "
                   f"{s['mean_cx_red_all']:8.1f}%  "
                   f"{s['mean_improvement_all']:8.1f}%  "
-                  f"{s['score']:6.1f}")
+                  f"{s['score']:6.1f}  "
+                  f"{ws_str:>20s}")
+    print("=" * 100)
+
+
+# ── Metric improvement breakdown ────────────────────────────────────
+def print_metric_breakdown(all_data: dict):
+    """For each model×config, report how many successes improved all 3 metrics vs CX only."""
+    total_circuits = next(
+        (s["total"] for m in all_data.values() for s in m.values()), 192
+    )
+    print("\n" + "=" * 95)
+    print("  METRIC IMPROVEMENT BREAKDOWN  (among valid & better circuits)")
+    print(f"  Denominator = total circuits per run ({total_circuits})")
+    print("=" * 95)
+    print(f"  {'Model':<25s}  {'Config':<16s}  {'Successes':>9s}  "
+          f"{'All 3 ↓':>9s}  {'CX+Vol ↓':>9s}  {'CX only ↓':>10s}  {'Other':>6s}")
+    print("-" * 95)
+    for model in sorted(all_data):
+        for cfg in CONFIG_ORDER:
+            s = all_data[model].get(cfg)
+            if s is None:
+                continue
+            n = s["valid_and_better"]
+            t = total_circuits
+            other = n - s["all3_improved"] - s["cx_vol_improved"] - s["cx_only_improved"]
+            print(f"  {model:<25s}  {cfg:<16s}  "
+                  f"{n:4d}/{t} ({n/t*100:4.1f}%)  "
+                  f"{s['all3_improved']:4d} ({s['all3_improved']/t*100:4.1f}%)  "
+                  f"{s['cx_vol_improved']:4d} ({s['cx_vol_improved']/t*100:4.1f}%)  "
+                  f"{s['cx_only_improved']:5d} ({s['cx_only_improved']/t*100:4.1f}%)  "
+                  f"{other:4d} ({other/t*100:4.1f}%)")
+    print("=" * 95)
+
+
+# ── Stabilizer-size analysis ─────────────────────────────────────────
+def print_stabilizer_size_analysis(all_rows: list[dict]):
+    """Success rate by stabilizer-count bucket, per model and per model×config."""
+    stab_vals = sorted([r["num_stabilizers"] for r in all_rows
+                        if isinstance(r["num_stabilizers"], int)])
+    if not stab_vals:
+        print("\nNo stabilizer count data available.")
+        return
+
+    q1 = stab_vals[len(stab_vals) // 4]
+    q2 = stab_vals[len(stab_vals) // 2]
+    q3 = stab_vals[(3 * len(stab_vals)) // 4]
+    buckets_order = ["Small", "Medium", "Large", "Extra-large"]
+
+    def stab_bin(v):
+        if v is None: return None
+        if v <= q1:   return "Small"
+        if v <= q2:   return "Medium"
+        if v <= q3:   return "Large"
+        return "Extra-large"
+
+    print("\n" + "=" * 80)
+    print("  STABILIZER-SIZE ANALYSIS  (does circuit complexity affect success?)")
+    print(f"  Quartiles: Q1={q1}, Q2={q2}, Q3={q3}")
+    print(f"  Small: ≤{q1}  |  Medium: {q1}<n≤{q2}  |  Large: {q2}<n≤{q3}  |  XL: >{q3}")
+    print("=" * 80)
+
+    # ── Per model (pooled across configs) ──
+    by_model_bucket = defaultdict(lambda: defaultdict(list))
+    for r in all_rows:
+        b = stab_bin(r["num_stabilizers"])
+        if b:
+            by_model_bucket[r["model"]][b].append(r)
+
+    print(f"\n  {'Model':<25s}  {'Bucket':<14s}  {'n':>5s}  {'Success':>8s}  {'Rate':>7s}  Trend")
+    print("-" * 75)
+    for model in sorted(by_model_bucket):
+        prev = None
+        for bucket in buckets_order:
+            rows = by_model_bucket[model].get(bucket, [])
+            n = len(rows)
+            rate = sum(1 for r in rows if r["success"]) / n * 100 if n else 0
+            trend = "" if prev is None else ("↑" if rate > prev + 1 else "↓" if rate < prev - 1 else "→")
+            print(f"  {model:<25s}  {bucket:<14s}  {n:5d}  {sum(r['success'] for r in rows):8d}  {rate:6.1f}%  {trend}")
+            prev = rate
+        print()
+
+    # ── Per model × config ──
+    print(f"  {'Model':<25s}  {'Config':<16s}  {'Bucket':<14s}  {'n':>5s}  {'Success':>8s}  {'Rate':>7s}  Trend")
+    print("-" * 95)
+    by_mcb = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    for r in all_rows:
+        b = stab_bin(r["num_stabilizers"])
+        if b:
+            by_mcb[r["model"]][r["cfg"]][b].append(r)
+
+    for model in sorted(by_mcb):
+        for cfg in CONFIG_ORDER:
+            if cfg not in by_mcb[model]:
+                continue
+            prev = None
+            for bucket in buckets_order:
+                rows = by_mcb[model][cfg].get(bucket, [])
+                n = len(rows)
+                rate = sum(1 for r in rows if r["success"]) / n * 100 if n else 0
+                trend = "" if prev is None else ("↑" if rate > prev + 1 else "↓" if rate < prev - 1 else "→")
+                print(f"  {model:<25s}  {cfg:<16s}  {bucket:<14s}  {n:5d}  {sum(r['success'] for r in rows):8d}  {rate:6.1f}%  {trend}")
+                prev = rate
+        print()
+
+    # ── Summary ──
+    print("  SUMMARY — Small → Extra-large:")
+    print(f"  {'Model':<25s}  {'Small':>8s}  {'Medium':>8s}  {'Large':>8s}  {'XLarge':>8s}  {'Δ':>8s}  Verdict")
+    print("-" * 90)
+    for model in sorted(by_model_bucket):
+        rates = []
+        for bucket in buckets_order:
+            rows = by_model_bucket[model].get(bucket, [])
+            n = len(rows)
+            rates.append(sum(1 for r in rows if r["success"]) / n * 100 if n else float("nan"))
+        delta = rates[-1] - rates[0] if not any(np.isnan(r) for r in rates) else float("nan")
+        verdict = ("larger circuits HARDER" if delta < -5 else
+                   "larger circuits easier" if delta > 5 else
+                   "no clear size effect") if not np.isnan(delta) else "insufficient data"
+        rate_strs = "  ".join(f"{r:7.1f}%" if not np.isnan(r) else "    N/A" for r in rates)
+        print(f"  {model:<25s}  {rate_strs}  {f'{delta:+.1f}%' if not np.isnan(delta) else 'N/A':>8s}  {verdict}")
     print("=" * 80)
 
 
@@ -345,31 +357,24 @@ COLORS = {
 
 def plot_all(all_data: dict, output: str):
     models = list(all_data.keys())
-    # Collect all configs that actually appear, sorted by CONFIG_ORDER
     seen_configs = sorted(
         {cfg for m in all_data.values() for cfg in m},
         key=lambda c: CONFIG_ORDER.index(c) if c in CONFIG_ORDER else 99
     )
-    n_models = len(models)
-    n_configs = len(seen_configs)
+    n_models, n_configs = len(models), len(seen_configs)
+    bar_width = 0.8 / max(n_configs, 1)
+    x = np.arange(n_models)
 
     fig, axes = plt.subplots(4, 2, figsize=(14, 17))
     fig.suptitle("Circuit Optimization — Model × Config Comparison",
                  fontsize=15, fontweight="bold")
 
-    bar_width = 0.8 / max(n_configs, 1)
-    x = np.arange(n_models)
-
     def grouped_bars(ax, metric_key, title, ylabel, fmt="{:.0f}%", is_pct=True):
         for i, cfg in enumerate(seen_configs):
-            vals = []
-            for m in models:
-                s = all_data[m].get(cfg)
-                vals.append(s[metric_key] if s else 0)
+            vals = [all_data[m][cfg][metric_key] if cfg in all_data[m] else 0 for m in models]
             offset = (i - (n_configs - 1) / 2) * bar_width
-            bars = ax.bar(x + offset, vals, bar_width,
-                          label=cfg, color=COLORS.get(cfg, f"C{i}"),
-                          edgecolor="white", linewidth=0.5)
+            bars = ax.bar(x + offset, vals, bar_width, label=cfg,
+                          color=COLORS.get(cfg, f"C{i}"), edgecolor="white", linewidth=0.5)
             for bar in bars:
                 h = bar.get_height()
                 if h > 0:
@@ -385,32 +390,121 @@ def plot_all(all_data: dict, output: str):
         ax.legend(fontsize=8, loc="upper left")
         ax.grid(axis="y", alpha=0.3)
 
-    grouped_bars(axes[0, 0], "success_rate",
-                 "Success Rate (Valid & Better)", "Rate (%)")
-    grouped_bars(axes[0, 1], "valid_rate",
-                 "Validity Rate", "Rate (%)")
-    grouped_bars(axes[1, 0], "mean_cx_red",
-                 "Mean CX Reduction (among successes)", "Reduction (%)")
-    grouped_bars(axes[1, 1], "mean_dep_red",
-                 "Mean Depth Reduction (among successes)", "Reduction (%)")
-    grouped_bars(axes[2, 0], "mean_cx_red_all",
-                 "Mean CX Reduction (over all circuits)", "Reduction (%)")
-    grouped_bars(axes[2, 1], "mean_improvement_all",
-                 "Mean Improvement Magnitude (over all circuits)", "Reduction (%)")
-
-    # Score plot (not percentage — raw 0-100 score)
-    grouped_bars(axes[3, 0], "score",
-                 "RQ3 Benchmark Score", "Score (0–100)", fmt="{:.1f}", is_pct=False)
+    grouped_bars(axes[0, 0], "success_rate",    "Success Rate (Valid & Better)", "Rate (%)")
+    grouped_bars(axes[0, 1], "valid_rate",       "Validity Rate", "Rate (%)")
+    grouped_bars(axes[1, 0], "mean_cx_red",      "Mean CX Reduction (among successes)", "Reduction (%)")
+    grouped_bars(axes[1, 1], "mean_dep_red",     "Mean Depth Reduction (among successes)", "Reduction (%)")
+    grouped_bars(axes[2, 0], "mean_cx_red_all",  "Mean CX Reduction (over all circuits)", "Reduction (%)")
+    grouped_bars(axes[2, 1], "mean_improvement_all", "Mean Improvement Magnitude (over all circuits)", "Reduction (%)")
+    grouped_bars(axes[3, 0], "score",            "RQ3 Benchmark Score", "Score (0–100)", fmt="{:.1f}", is_pct=False)
     axes[3, 0].set_ylim(0, 100)
     axes[3, 0].axhline(y=50, color="gray", linestyle="--", alpha=0.3)
-
-    # 2Q quality in remaining slot
-    grouped_bars(axes[3, 1], "twoq_reduced_within_success_rate",
-                 "True 2Q Reduction (among successes)", "Rate (%)")
+    grouped_bars(axes[3, 1], "twoq_reduced_within_success_rate", "True 2Q Reduction (among successes)", "Rate (%)")
 
     plt.tight_layout()
     fig.savefig(output, dpi=180, bbox_inches="tight")
     print(f"\n✓ Chart saved to {output}")
+
+    # Weighted score chart
+    fig2, ax_ws = plt.subplots(figsize=(8, 4))
+    fig2.suptitle("Stabilizer-Weighted Score  (normalized 0–100)", fontsize=12, fontweight="bold")
+    for i, cfg in enumerate(seen_configs):
+        vals = []
+        for m in models:
+            s = all_data[m].get(cfg)
+            ws, ms = (s["weighted_score"], s["max_weighted_score"]) if s else (0, 0)
+            vals.append(ws / ms * 100 if ms else 0)
+        offset = (i - (n_configs - 1) / 2) * bar_width
+        bars = ax_ws.bar(x + offset, vals, bar_width, label=cfg,
+                         color=COLORS.get(cfg, f"C{i}"), edgecolor="white", linewidth=0.5)
+        for bar in bars:
+            h = bar.get_height()
+            if h > 0:
+                ax_ws.text(bar.get_x() + bar.get_width() / 2, h + 0.8,
+                           f"{h:.1f}", ha="center", va="bottom", fontsize=7)
+    ax_ws.set_ylim(0, 110)
+    ax_ws.yaxis.set_major_formatter(mticker.PercentFormatter())
+    ax_ws.set_ylabel("Weighted Score (0–100)")
+    ax_ws.set_xticks(x)
+    ax_ws.set_xticklabels(models, rotation=25, ha="right", fontsize=9)
+    ax_ws.legend(fontsize=8)
+    ax_ws.grid(axis="y", alpha=0.3)
+    fig2.tight_layout()
+    fig2.savefig(output.replace(".png", "_weighted.png"), dpi=180, bbox_inches="tight")
+    print(f"✓ Weighted score chart saved to {output.replace('.png', '_weighted.png')}")
+
+
+def plot_stabilizer_size(all_rows: list[dict], output: str):
+    """One subplot per model, one line per config — success rate vs stabilizer-size bucket."""
+    stab_vals = sorted([r["num_stabilizers"] for r in all_rows
+                        if isinstance(r["num_stabilizers"], int)])
+    if not stab_vals:
+        return
+
+    q1 = stab_vals[len(stab_vals) // 4]
+    q2 = stab_vals[len(stab_vals) // 2]
+    q3 = stab_vals[(3 * len(stab_vals)) // 4]
+
+    def stab_bin(v):
+        if v is None: return None
+        if v <= q1:   return "Small"
+        if v <= q2:   return "Medium"
+        if v <= q3:   return "Large"
+        return "Extra-large"
+
+    buckets = ["Small", "Medium", "Large", "Extra-large"]
+    bucket_labels = [f"Small\n(≤{q1})", f"Medium\n(≤{q2})", f"Large\n(≤{q3})", f"XL\n(>{q3})"]
+
+    by_mcb = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    for r in all_rows:
+        b = stab_bin(r["num_stabilizers"])
+        if b:
+            by_mcb[r["model"]][r["cfg"]][b].append(r)
+
+    models = sorted(by_mcb.keys())
+    CFG_STYLES = {
+        "1 attempt":     {"color": "#4C72B0", "ls": "--",  "marker": "s"},
+        "15 att / 300s": {"color": "#DD8452", "ls": "-.",  "marker": "^"},
+        "15 att / 900s": {"color": "#55A868", "ls": "-",   "marker": "o"},
+    }
+
+    fig, axes = plt.subplots(1, len(models), figsize=(6 * len(models), 5), sharey=True)
+    if len(models) == 1:
+        axes = [axes]
+    fig.suptitle("Success Rate vs Circuit Complexity (# Stabilizers)\nper Model & Config",
+                 fontsize=13, fontweight="bold")
+
+    x = np.arange(len(buckets))
+    for ax, model in zip(axes, models):
+        for cfg in CONFIG_ORDER:
+            if cfg not in by_mcb[model]:
+                continue
+            style = CFG_STYLES.get(cfg, {"color": "gray", "ls": "-", "marker": "o"})
+            rates, ns = [], []
+            for b in buckets:
+                rows = by_mcb[model][cfg].get(b, [])
+                n = len(rows)
+                rates.append(sum(1 for r in rows if r["success"]) / n * 100 if n else np.nan)
+                ns.append(n)
+            valid_idx = [i for i, r in enumerate(rates) if not np.isnan(r)]
+            xi, yi, ni = [x[i] for i in valid_idx], [rates[i] for i in valid_idx], [ns[i] for i in valid_idx]
+            ax.plot(xi, yi, marker=style["marker"], color=style["color"],
+                    linestyle=style["ls"], label=cfg, linewidth=2)
+            for xi_, yi_, n_ in zip(xi, yi, ni):
+                ax.annotate(f"{yi_:.0f}%", (xi_, yi_), textcoords="offset points",
+                            xytext=(0, 6), ha="center", fontsize=7, color=style["color"])
+        ax.set_title(model, fontsize=11, fontweight="bold")
+        ax.set_xticks(x)
+        ax.set_xticklabels(bucket_labels, fontsize=8)
+        ax.set_xlabel("Circuit Complexity (# Stabilizers)")
+        ax.set_ylim(0, 115)
+        ax.yaxis.set_major_formatter(mticker.PercentFormatter())
+        ax.legend(fontsize=8, loc="upper right")
+        ax.grid(axis="y", alpha=0.3)
+    axes[0].set_ylabel("Success Rate (%)")
+    plt.tight_layout()
+    fig.savefig(output, dpi=180, bbox_inches="tight")
+    print(f"✓ Stabilizer-size chart saved to {output}")
 
 
 # ── Main ─────────────────────────────────────────────────────────────
@@ -428,10 +522,12 @@ def main():
         sys.exit(1)
 
     print_score_summary(all_data)
-    print_bucket_analysis(all_rows)
+    print_metric_breakdown(all_data)
+    print_stabilizer_size_analysis(all_rows)
 
-    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model_comparison.png")
-    plot_all(all_data, output_path)
+    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model_comparison.png")
+    plot_all(all_data, out)
+    plot_stabilizer_size(all_rows, out.replace("model_comparison", "stabilizer_size_analysis"))
 
 
 if __name__ == "__main__":

@@ -2,8 +2,9 @@
 import os
 import stim
 import asyncio
+from datetime import datetime
 from dotenv import load_dotenv
-from copilot.types import Tool, Attachment
+from copilot.types import Tool, Attachment, PermissionHandler
 from copilot.tools import define_tool
 from copilot import CopilotClient
 from copilot.generated.session_events import SessionEventType, SessionEvent
@@ -16,7 +17,7 @@ from check_stabilizers import check_stabilizers
 from check_error_propagation import check_fault_tolerance, ft_score
 from circuit_metric import is_strictly_more_optimal
 
-load_dotenv()
+load_dotenv(Path(__file__).parent / ".env")
 
 class CircuitParam(BaseModel):
     circuit: str = Field(description="The Stim circuit description as a string")
@@ -75,20 +76,21 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
         attachments = []
 
     async def run():
-        client = CopilotClient({"auto_start": True})
+        client = CopilotClient(auto_start=True)
         try:
             resolved_model, provider = _resolve_model_and_provider(model)
-            session_config = {
+
+            create_kwargs: dict = {
+                "on_permission_request": PermissionHandler.approve_all,
                 "model": resolved_model,
                 "tools": tools,
-                "system_message": {
-                    "content": system_message,
-                },
             }
+            if system_message:
+                create_kwargs["system_message"] = {"content": system_message}
             if provider:
-                session_config["provider"] = provider
+                create_kwargs["provider"] = provider
 
-            session = await client.create_session(session_config)
+            session = await client.create_session(**create_kwargs)
 
             response = ""
 
@@ -101,7 +103,7 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
 
             session.on(handle_event)
 
-            await session.send_and_wait({"prompt": prompt, "attachments": attachments}, timeout=timeout)
+            await session.send_and_wait(prompt, attachments=attachments or None, timeout=timeout)
             return response
         finally:
             await client.stop()
@@ -372,8 +374,9 @@ def generate_optimized_circuit(
 
     stabilizers_str = ", ".join(stabilizers)
 
-    repo_root = Path(__file__).resolve().parents[1] 
-    agent_files_dir = repo_root / "rq3" / "data" / model / "agent_files"
+    repo_root = Path(__file__).resolve().parents[1]
+    run_id = datetime.now().strftime("%y%m%d.%H%M%S")
+    agent_files_dir = repo_root / "rq3" / "data" / model / "agent_files" / run_id
     agent_files_dir.mkdir(parents=True, exist_ok=True)
 
     result = None

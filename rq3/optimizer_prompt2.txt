@@ -31,16 +31,53 @@ Optimization rule (lexicographic):
 Note: two_qubit_gates counts ALL two-qubit entangling gates (CX, CZ, SWAP, etc.), not just CX.
 Reducing any two-qubit gate type is equally valuable since all propagate errors between qubits.
 
-## Strategies to try (individually and optionally in combinations)
-Try these as a toolbox, not a fixed single path. Use judgment to determine which strategies are valid.
-- Tableau/stabilizer Gaussian-elimination-based synthesis (baseline / resynthesis)
-- Reordering of stabilizer generators before synthesis
-- Qubit permutation / relabeling search (random and heuristic)
-- Local Clifford normalization / canonicalization before synthesis
-- Graph-state / LC-equivalent transformations (if applicable), then synthesize and map back
-- CNOT network resynthesis / cancellation passes
-- Gate commutation + cancellation + peephole simplification
-- Layering / scheduling improvements to reduce depth
+## Computation-first approach
+Before guessing at gate modifications, use Python + stim to compute candidates correctly.
+Write scripts to {agent_files_dir} and run them. Key stim patterns:
+
+```python
+import stim
+
+# Extract tableau from the baseline circuit
+circ = stim.Circuit("""...""")
+tab = circ.to_tableau()
+
+# Resynthesize — try multiple methods and pick the shortest
+c_elim = tab.to_circuit(method="elimination")
+c_graph = tab.to_circuit(method="graph_state")
+
+# Qubit permutation: relabel qubits before synthesis, map back after
+from itertools import permutations
+# try random permutations of range(n_qubits), reindex the tableau, resynthesize
+
+# Check stabilizer preservation directly
+sim = stim.TableauSimulator()
+sim.do(candidate_circuit)
+pauli = stim.PauliString("XZZXI")
+preserved = sim.peek_observable_expectation(pauli) > 0
+```
+
+Resynthesis via stim gives correct circuits guaranteed — use it as your primary approach,
+not a fallback. Peephole/cancellation passes are fine for refinement after resynthesis.
+
+## Strategies to try (in roughly this priority order)
+Do NOT just name a strategy — actually implement it in a script or as a concrete circuit.
+
+1. **Stim resynthesis** — extract tableau from baseline, call `tab.to_circuit(method="elimination")`
+   and `tab.to_circuit(method="graph_state")`. Submit whichever has fewer two-qubit gates.
+2. **Qubit permutation + resynthesis** — try several qubit relabelings before extracting the tableau,
+   resynthesize, map qubits back. Often finds shorter circuits.
+3. **Stabilizer generator reordering** — reorder the rows of the tableau before synthesis.
+   Different row orderings yield different CNOT networks via Gaussian elimination.
+4. **CNOT cancellation passes** — scan the circuit for adjacent inverse pairs (CX a b, CX a b → identity)
+   and triple patterns (CX a b, CX b a, CX a b → SWAP). Apply cancellations then recheck validity.
+5. **Gate commutation + peephole** — commute single-qubit gates through CX, merge consecutive
+   single-qubit gates on the same qubit, eliminate identity gates.
+6. **Depth scheduling** — reorder commuting gates into parallel layers to reduce depth without
+   changing gate count.
+
+Mix strategies: e.g., resynthesize first, then apply cancellation passes on the result.
+If one strategy stalls after 3-4 attempts, switch to a different one rather than repeating variants.
 
 Tooling / attempt-budget rules:
 - You may call evaluate_optimization to test a candidate circuit. It checks BOTH stabilizer preservation AND optimization metrics in a single call.
@@ -54,17 +91,16 @@ Tooling / attempt-budget rules:
   - Best = strictly more optimal than the baseline by the lexicographic rule (better == true).
   - If multiple valid+better candidates found, the best is the one with the lowest (two_qubit_gates, volume, depth) tuple.
 - Do NOT call or rely on repository tools besides evaluate_optimization and final_circuit.
-- If you need temporary/scratch files, write them into: {agent_files_dir}
+- Writing and running Python scripts in {agent_files_dir} does NOT count as an attempt.
 
 Required workflow:
 1. Start from the baseline circuit as the current reference.
 2. Propose a candidate rewrite (from baseline or best-so-far).
 3. Call evaluate_optimization on the candidate — this checks stabilizers AND metrics in one step (uses one attempt).
-4. If valid == true AND better == true, update your best-so-far. Do NOT stop — continue trying to find an even better circuit using your remaining attempts.
-5. Always use the best-so-far as the new reference for further optimization attempts.
-6. Continue until ALL attempts are exhausted, always trying to improve on the current best.
-7. After all attempts are exhausted, call final_circuit with the best valid+better candidate found.
-8. If no valid+better candidate was found after all attempts, still call final_circuit with the best valid candidate (the harness may reject it).
+4. If valid == true AND better == true, call final_circuit immediately with this circuit. Do NOT continue searching for further improvements.
+5. You MUST stop after {attempts} attempts regardless.
+6. After stopping, call final_circuit with the best valid+better candidate found.
+7. If no valid+better candidate was found, still call final_circuit with the best valid candidate (the harness may reject it).
 
 Output / submission rules:
 - Do NOT output Markdown code fences, prose, or extra markers.

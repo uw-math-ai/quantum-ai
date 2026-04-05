@@ -42,6 +42,7 @@ def optimize_circuits_from_dataset(
     attempts: int = 10,
     timeout: int = 6000,
     prompt_path: str = "optimizer_prompt2.txt",
+    limit: int | None = None,
 ) -> None:
     """
     Optimize all circuits in a JSONL dataset and write results to a JSON file.
@@ -97,6 +98,8 @@ def optimize_circuits_from_dataset(
 
     try:
         for line_num, rec in iter_jsonl(dataset):
+            if limit is not None and len(results) >= limit:
+                break
             started_at = datetime.now().isoformat()
 
             # --- extract fields safely ---
@@ -252,6 +255,12 @@ def main():
         default="optimizer_prompt2.txt",
         help="Path to the prompt template file (default: optimizer_prompt2.txt)",
     )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Only process the first N circuits (default: all)",
+    )
 
     args = parser.parse_args()
 
@@ -262,6 +271,7 @@ def main():
         attempts=args.attempts,
         timeout=args.timeout,
         prompt_path=args.prompt,
+        limit=args.limit,
     )
 
 

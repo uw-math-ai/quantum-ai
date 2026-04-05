@@ -31,55 +31,17 @@ Optimization rule (lexicographic):
 Note: two_qubit_gates counts ALL two-qubit entangling gates (CX, CZ, SWAP, etc.), not just CX.
 Reducing any two-qubit gate type is equally valuable since all propagate errors between qubits.
 
-## Computation-first approach
-Before guessing at gate modifications, use Python + stim to compute candidates correctly.
-Write scripts to {agent_files_dir} and run them. Key stim patterns:
+## Optimization strategies
+Think carefully about the mathematical structure of the stabilizer state before proposing candidates. Use these as a toolbox — not a fixed path. If one approach stalls after 3-4 attempts, switch to a different one.
 
-```python
-import stim
+- **Graph-state / LC-equivalent representation** — any stabilizer state is LC-equivalent to a graph state. A graph state on n qubits can be prepared with one CZ per edge plus local single-qubit gates. Reasoning about the underlying graph structure (which qubits need to be entangled) may reveal a much more compact circuit than the baseline.
+- **Gaussian elimination on stabilizer generators** — treat the stabilizer generators as rows of a binary matrix over GF(2) and apply row operations to find a canonical form. Different orderings of generators yield different CNOT networks.
+- **Qubit relabeling** — a permutation of qubit labels can expose cancellations or reduce the CNOT depth of the synthesis. Try heuristic relabelings and reason about which permutation minimizes entanglement overhead.
+- **CNOT cancellation** — adjacent identical CX gates cancel (CX a b; CX a b = I). Triple patterns (CX a b; CX b a; CX a b) implement a SWAP and can sometimes be removed or replaced.
+- **Gate commutation + peephole** — single-qubit gates commute through CX in predictable ways (X commutes through control, Z commutes through target, etc.). Use this to merge or cancel consecutive single-qubit gates on the same qubit.
+- **Depth scheduling** — reorder commuting gates into parallel layers to reduce depth without changing gate count.
 
-# Extract tableau from the baseline circuit
-circ = stim.Circuit("""...""")
-tab = circ.to_tableau()
-
-# Resynthesize — try multiple methods and pick the shortest
-c_elim = tab.to_circuit(method="elimination")
-c_graph = tab.to_circuit(method="graph_state")
-
-# Qubit permutation: relabel qubits before synthesis, map back after
-from itertools import permutations
-# try random permutations of range(n_qubits), reindex the tableau, resynthesize
-
-# Check stabilizer preservation directly
-sim = stim.TableauSimulator()
-sim.do(candidate_circuit)
-pauli = stim.PauliString("XZZXI")
-preserved = sim.peek_observable_expectation(pauli) > 0
-```
-
-Resynthesis via stim gives correct circuits guaranteed — use it as your primary approach,
-not a fallback. Peephole/cancellation passes are fine for refinement after resynthesis.
-
-## Strategies to try (in roughly this priority order)
-Do NOT just name a strategy — actually implement it in a script or as a concrete circuit.
-
-1. **Stim resynthesis** — extract tableau from baseline, call `tab.to_circuit(method="elimination")`
-   and `tab.to_circuit(method="graph_state")`. Submit whichever has fewer two-qubit gates.
-2. **Qubit permutation + resynthesis** — try several qubit relabelings before extracting the tableau,
-   resynthesize, map qubits back. Often finds shorter circuits.
-3. **Stabilizer generator reordering** — reorder the rows of the tableau before synthesis.
-   Different row orderings yield different CNOT networks via Gaussian elimination.
-4. **CNOT cancellation passes** — scan the circuit for adjacent inverse pairs (CX a b, CX a b → identity)
-   and triple patterns (CX a b, CX b a, CX a b → SWAP). Apply cancellations then recheck validity.
-5. **Gate commutation + peephole** — commute single-qubit gates through CX, merge consecutive
-   single-qubit gates on the same qubit, eliminate identity gates.
-6. **Depth scheduling** — reorder commuting gates into parallel layers to reduce depth without
-   changing gate count.
-
-Mix strategies: e.g., resynthesize first, then apply cancellation passes on the result.
-If one strategy stalls after 3-4 attempts, switch to a different one rather than repeating variants.
-
-Tooling / attempt-budget rules:
+## Attempt-budget rules
 - You may call evaluate_optimization to test a candidate circuit. It checks BOTH stabilizer preservation AND optimization metrics in a single call.
   - The response includes 'valid' (true/false), 'preserved_stabilizers' (int), and 'better' (true/false).
   - A candidate is VALID only when valid == true (all stabilizers preserved).
@@ -91,13 +53,13 @@ Tooling / attempt-budget rules:
   - Best = strictly more optimal than the baseline by the lexicographic rule (better == true).
   - If multiple valid+better candidates found, the best is the one with the lowest (two_qubit_gates, volume, depth) tuple.
 - Do NOT call or rely on repository tools besides evaluate_optimization and final_circuit.
-- Writing and running Python scripts in {agent_files_dir} does NOT count as an attempt.
+- If you need scratch space, write to: {agent_files_dir}
 
 Required workflow:
 1. Start from the baseline circuit as the current reference.
 2. Propose a candidate rewrite (from baseline or best-so-far).
 3. Call evaluate_optimization on the candidate — this checks stabilizers AND metrics in one step (uses one attempt).
-4. If valid == true AND better == true, call final_circuit immediately with this circuit. Do NOT continue searching for further improvements.
+4. If valid == true AND better == true, call final_circuit immediately with this circuit. Continue searching for further improvements.
 5. You MUST stop after {attempts} attempts regardless.
 6. After stopping, call final_circuit with the best valid+better candidate found.
 7. If no valid+better candidate was found, still call final_circuit with the best valid candidate (the harness may reject it).

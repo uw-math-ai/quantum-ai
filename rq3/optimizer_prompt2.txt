@@ -53,16 +53,18 @@ Think carefully about the mathematical structure of the stabilizer state before 
   - Best = strictly more optimal than the baseline by the lexicographic rule (better == true).
   - If multiple valid+better candidates found, the best is the one with the lowest (two_qubit_gates, volume, depth) tuple.
 - Do NOT call or rely on repository tools besides evaluate_optimization and final_circuit.
-- If you need scratch space, write to: {agent_files_dir}
+- If you need temporary/scratch files, write them into: {agent_files_dir}
 
 Required workflow:
 1. Start from the baseline circuit as the current reference.
 2. Propose a candidate rewrite (from baseline or best-so-far).
 3. Call evaluate_optimization on the candidate — this checks stabilizers AND metrics in one step (uses one attempt).
-4. If valid == true AND better == true, call final_circuit immediately with this circuit. Continue searching for further improvements.
-5. You MUST stop after {attempts} attempts regardless.
-6. After stopping, call final_circuit with the best valid+better candidate found.
-7. If no valid+better candidate was found, still call final_circuit with the best valid candidate (the harness may reject it).
+4. If valid == true AND better == true, update your best-so-far and continue trying to find an even better circuit.
+5. Always use the best-so-far as the new reference for further optimization attempts.
+6. Stop early (before exhausting all attempts) if you have genuinely exhausted your optimization ideas — i.e., you have tried all promising strategies and further attempts are unlikely to improve. Do NOT stop just because you found one improvement.
+7. You MUST stop after {attempts} attempts regardless.
+8. After stopping, call final_circuit with the best valid+better candidate found.
+9. If no valid+better candidate was found, still call final_circuit with the best valid candidate (the harness may reject it).
 
 Output / submission rules:
 - Do NOT output Markdown code fences, prose, or extra markers.

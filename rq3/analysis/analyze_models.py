@@ -62,15 +62,16 @@ MODELS_TO_ANALYZE = {"claude-opus-4.6", "gpt5.2", "gemini-3-pro-preview"}
 
 # ── Stat extraction ──────────────────────────────────────────────────
 def improvement_magnitude(bm: dict, om: dict) -> float:
-    """CX reduction % if CX improved, else volume, else depth (mirrors lexicographic is_better)."""
-    cx_b, cx_o = bm.get("cx_count", 0), om.get("cx_count", 0)
+    """2Q-gate reduction % if 2Q improved, else volume, else depth (mirrors lexicographic is_better)."""
+    twoq_b = bm.get("two_qubit_gates", bm.get("cx_count", 0))
+    twoq_o = om.get("two_qubit_gates", om.get("cx_count", 0))
     vol_b, vol_o = bm.get("volume", 0), om.get("volume", 0)
     dep_b, dep_o = bm.get("depth", 0), om.get("depth", 0)
-    if cx_o < cx_b and cx_b > 0:
-        return (cx_b - cx_o) / cx_b * 100
-    elif cx_o == cx_b and vol_o < vol_b and vol_b > 0:
+    if twoq_o < twoq_b and twoq_b > 0:
+        return (twoq_b - twoq_o) / twoq_b * 100
+    elif twoq_o == twoq_b and vol_o < vol_b and vol_b > 0:
         return (vol_b - vol_o) / vol_b * 100
-    elif cx_o == cx_b and vol_o == vol_b and dep_o < dep_b and dep_b > 0:
+    elif twoq_o == twoq_b and vol_o == vol_b and dep_o < dep_b and dep_b > 0:
         return (dep_b - dep_o) / dep_b * 100
     return 0.0
 
@@ -84,7 +85,14 @@ def extract_stats(data: dict, stab_counts: dict = None) -> dict:
     twoq_reduced_success = 0
     success_with_opt_metrics = 0
     cx_reds_all, improvement_mags_all = [], []
-    all3_improved = cx_vol_improved = cx_only_improved = 0
+    # Metric improvement breakdown (among valid+better circuits)
+    all3_improved = 0        # 2Q↓ + vol↓ + dep↓
+    twoq_vol_improved = 0    # 2Q↓ + vol↓  (dep same/higher)
+    twoq_dep_improved = 0    # 2Q↓ + dep↓  (vol same/higher)
+    twoq_only_improved = 0   # 2Q↓ only
+    vol_dep_improved = 0     # vol↓ + dep↓  (2Q same)
+    vol_only_improved = 0    # vol↓ only    (2Q same)
+    dep_only_improved = 0    # dep↓ only    (2Q same, vol same)
 
     for r in results:
         bm = r.get("baseline_metrics", {})
@@ -107,15 +115,32 @@ def extract_stats(data: dict, stab_counts: dict = None) -> dict:
             )
             improvement_mags_all.append(improvement_magnitude(bm, om))
 
-            cx_imp  = om.get("cx_count", bm.get("cx_count")) < bm.get("cx_count", 0)
-            vol_imp = om.get("volume",   bm.get("volume"))   < bm.get("volume", 0)
-            dep_imp = om.get("depth",    bm.get("depth"))    < bm.get("depth", 0)
-            if cx_imp and vol_imp and dep_imp:
+            # Use two_qubit_gates if available, fall back to cx_count
+            twoq_b = bm.get("two_qubit_gates", bm.get("cx_count", 0))
+            twoq_o = om.get("two_qubit_gates", om.get("cx_count", twoq_b))
+            vol_b  = bm.get("volume", 0)
+            vol_o  = om.get("volume", vol_b)
+            dep_b  = bm.get("depth", 0)
+            dep_o  = om.get("depth", dep_b)
+
+            twoq_imp = twoq_o < twoq_b
+            vol_imp  = vol_o  < vol_b
+            dep_imp  = dep_o  < dep_b
+
+            if twoq_imp and vol_imp and dep_imp:
                 all3_improved += 1
-            elif cx_imp and vol_imp:
-                cx_vol_improved += 1
-            elif cx_imp:
-                cx_only_improved += 1
+            elif twoq_imp and vol_imp:
+                twoq_vol_improved += 1
+            elif twoq_imp and dep_imp:
+                twoq_dep_improved += 1
+            elif twoq_imp:
+                twoq_only_improved += 1
+            elif vol_imp and dep_imp:
+                vol_dep_improved += 1
+            elif vol_imp:
+                vol_only_improved += 1
+            else:
+                dep_only_improved += 1
         else:
             cx_reds_all.append(0.0)
             improvement_mags_all.append(0.0)
@@ -149,8 +174,12 @@ def extract_stats(data: dict, stab_counts: dict = None) -> dict:
             if success_with_opt_metrics else 0
         ),
         "all3_improved": all3_improved,
-        "cx_vol_improved": cx_vol_improved,
-        "cx_only_improved": cx_only_improved,
+        "twoq_vol_improved": twoq_vol_improved,
+        "twoq_dep_improved": twoq_dep_improved,
+        "twoq_only_improved": twoq_only_improved,
+        "vol_dep_improved": vol_dep_improved,
+        "vol_only_improved": vol_only_improved,
+        "dep_only_improved": dep_only_improved,
     }
 
 
@@ -231,17 +260,19 @@ def print_score_summary(all_data: dict):
 
 # ── Metric improvement breakdown ────────────────────────────────────
 def print_metric_breakdown(all_data: dict):
-    """For each model×config, report how many successes improved all 3 metrics vs CX only."""
+    """For each model×config, break down what metric combinations were improved."""
     total_circuits = next(
         (s["total"] for m in all_data.values() for s in m.values()), 192
     )
-    print("\n" + "=" * 95)
+    print("\n" + "=" * 125)
     print("  METRIC IMPROVEMENT BREAKDOWN  (among valid & better circuits)")
     print(f"  Denominator = total circuits per run ({total_circuits})")
-    print("=" * 95)
+    print("  2Q = two-qubit gates (CX/CZ/SWAP),  Vol = total gate count,  Dep = circuit depth")
+    print("=" * 125)
     print(f"  {'Model':<25s}  {'Config':<16s}  {'Successes':>9s}  "
-          f"{'All 3 ↓':>9s}  {'CX+Vol ↓':>9s}  {'CX only ↓':>10s}  {'Other':>6s}")
-    print("-" * 95)
+          f"{'2Q+Vol+Dep':>11s}  {'2Q+Vol':>8s}  {'2Q+Dep':>8s}  {'2Q only':>8s}  "
+          f"{'Vol+Dep':>8s}  {'Vol only':>9s}  {'Dep only':>9s}")
+    print("-" * 125)
     for model in sorted(all_data):
         for cfg in CONFIG_ORDER:
             s = all_data[model].get(cfg)
@@ -249,14 +280,21 @@ def print_metric_breakdown(all_data: dict):
                 continue
             n = s["valid_and_better"]
             t = total_circuits
-            other = n - s["all3_improved"] - s["cx_vol_improved"] - s["cx_only_improved"]
+
+            def fmt(k):
+                v = s[k]
+                return f"{v:3d} ({v/t*100:4.1f}%)"
+
             print(f"  {model:<25s}  {cfg:<16s}  "
                   f"{n:4d}/{t} ({n/t*100:4.1f}%)  "
-                  f"{s['all3_improved']:4d} ({s['all3_improved']/t*100:4.1f}%)  "
-                  f"{s['cx_vol_improved']:4d} ({s['cx_vol_improved']/t*100:4.1f}%)  "
-                  f"{s['cx_only_improved']:5d} ({s['cx_only_improved']/t*100:4.1f}%)  "
-                  f"{other:4d} ({other/t*100:4.1f}%)")
-    print("=" * 95)
+                  f"{fmt('all3_improved'):>11s}  "
+                  f"{fmt('twoq_vol_improved'):>8s}  "
+                  f"{fmt('twoq_dep_improved'):>8s}  "
+                  f"{fmt('twoq_only_improved'):>8s}  "
+                  f"{fmt('vol_dep_improved'):>8s}  "
+                  f"{fmt('vol_only_improved'):>9s}  "
+                  f"{fmt('dep_only_improved'):>9s}")
+    print("=" * 125)
 
 
 # ── Stabilizer-size analysis ─────────────────────────────────────────

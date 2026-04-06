@@ -102,9 +102,10 @@ def compute_benchmark_score(cleaned2_path: Path, benchmark_weights: dict[str, in
             num_scored_positive += 1
         weighted_score_sum += weight * score
 
-    benchmark_score = (weighted_score_sum / total_benchmark_weight * 100) if total_benchmark_weight else 0.0
+    benchmark_score = (weighted_score_sum / total_benchmark_weight) if total_benchmark_weight else 0.0
     return {
         "benchmark_score": benchmark_score,
+        "benchmark_score_fraction": f"{weighted_score_sum:.6f} out of {total_benchmark_weight}",
         "weighted_score_sum": weighted_score_sum,
         "total_weight": total_benchmark_weight,
         "num_codes": num_codes,
@@ -127,7 +128,7 @@ def main() -> None:
             }
             print(
                 f"{date_code} | {model_name}: "
-                f"benchmark_score={score_data['benchmark_score']:.6f}, "
+                f"benchmark_score={score_data['benchmark_score_fraction']}, "
                 f"num_codes={score_data['num_codes']}, "
                 f"num_positive_scores={score_data['num_positive_scores']}"
             )

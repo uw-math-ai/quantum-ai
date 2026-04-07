@@ -23,6 +23,7 @@ def clean_ft_results(file_path, output_path):
             best_output = best.get("circuit")
             best_ft_score = best.get("ft_score")
             best_all_stabilized = best.get("all_stabilized")
+            # og_score = best.get("ft_score")
 
             generated_circuits = result.get("generated_circuits", [])
             for circuit in generated_circuits:

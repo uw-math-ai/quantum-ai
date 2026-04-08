@@ -178,13 +178,31 @@ def check_fault_tolerance(circuit: str, data_qubits: list[int], flag_qubits: lis
             return results, False
     return results, True
 
-def ft_score(circuit: str, data_qubits: list[int], flag_qubits: list[int], d: int = 3, p: float = 1.0) -> float:
-    '''Compute the fault-tolerance score based on weighted undetected faults.
+def flags_with_xy_without_fault(circuit: str, flag_qubits: list[int]) -> dict[int, str]:
+    """Return flag qubits that end in an X/Y Bloch axis without injected faults."""
+    if not flag_qubits:
+        return {}
 
-    FT = 1 - sum(weight(f)^p for undetected faults with weight(f) > floor((d-1)/2))
-             / sum(weight(f)^p for faults with weight(f) > floor((d-1)/2))
-    where weight(f) is the number of data-qubit errors and undetected means no X on any flag qubit.
+    sim = stim.TableauSimulator()
+    sim.do(stim.Circuit(circuit))
+
+    flagged = {}
+    for q in flag_qubits:
+        bloch = str(sim.peek_bloch(q))
+        if bloch.endswith("X") or bloch.endswith("Y"):
+            flagged[q] = bloch
+    return flagged
+
+def ft_score(circuit: str, data_qubits: list[int], flag_qubits: list[int], d: int = 3) -> float:
+    '''Compute the fault-tolerance score based on weighted undetected faults.
+    FT = 1 - (1/|T(S(C))|) * \\sum_{C' \\in T(S(C))} 1{C' is undetected}
+
+    If any flag qubit already ends in X or Y without injected faults, return 0.0.
+    If |T(S(C))| = 0 (no faults cause > threshold data errors), return 1.0.
     '''
+    if flags_with_xy_without_fault(circuit, flag_qubits):
+        return 0.0
+
     results = check_error_propagation(circuit, data_qubits, flag_qubits)
     threshold = (d - 1) // 2
     numerator = 0.0
@@ -192,10 +210,9 @@ def ft_score(circuit: str, data_qubits: list[int], flag_qubits: list[int], d: in
     for r in results:
         weight = r["data_weight"]
         if weight > threshold:
-            weighted = float(weight ** p)
-            denominator += weighted
+            denominator += 1
             if r["flag_weight"] == 0:
-                numerator += weighted
+                numerator += 1
     if denominator == 0.0:
         return 1.0
     return 1.0 - (numerator / denominator)

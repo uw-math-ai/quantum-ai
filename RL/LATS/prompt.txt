@@ -12,6 +12,7 @@ Circuit Constraints:
 - The final quantum state must be a +1 eigenstate of every provided stabilizer generator.
 - Produce a valid Stim circuit with at most {max_gates} gates.
 
+You will be given a partial circuit, choose [the next gate, complete the circuit, OR next 10 steps]
 Available Gates:
 - Single-qubit gates: {one_qubit_gates}
   Apply by calling apply_one_qubit_gate with gate name and target qubit index.

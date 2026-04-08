@@ -1,46 +1,92 @@
-import stim
+import sys
 
-original_str = """H 0 1
-CX 0 1 0 4
-H 2 3
-CX 1 2 1 3 1 4 1 5 1 8 1 14 2 4 2 5 2 6 2 9 2 10 4 3 3 4 4 3 3 6 3 10 4 5 4 7 4 8 4 11 4 14 5 6 5 7 5 9 5 11 5 12 6 7 6 12 6 13 7 13 11 8 12 8 13 8 14 8 9 10 12 9 13 9 14 9 12 10 13 10 14 10 12 11 11 12 12 11 11 12 13 11 14 11 13 12 14 12 14 13"""
+def parse_circuit(circuit_str):
+    operations = []
+    lines = circuit_str.strip().split('\n')
+    for line in lines:
+        parts = line.strip().split()
+        if not parts: continue
+        gate = parts[0]
+        if gate.startswith('#'): continue
+        qubits = []
+        for x in parts[1:]:
+            try:
+                qubits.append(int(x))
+            except ValueError:
+                pass
+        operations.append((gate, qubits))
+    return operations
 
-c = stim.Circuit(original_str)
-new_c = stim.Circuit()
+def analyze_degrees(operations):
+    control_counts = {}
+    for gate, qubits in operations:
+        if gate == "CX":
+            for i in range(0, len(qubits), 2):
+                c = qubits[i]
+                control_counts[c] = control_counts.get(c, 0) + 1
+    return control_counts
 
-instructions = list(c)
+def generate_ft_circuit(input_path, output_path):
+    with open(input_path, 'r') as f:
+        content = f.read()
+    
+    ops = parse_circuit(content)
+    degrees = analyze_degrees(ops)
+    
+    max_idx = 0
+    for gate, qubits in ops:
+        if qubits:
+            max_idx = max(max_idx, max(qubits))
+            
+    next_idx = max_idx + 1
+    new_ops = []
+    added_ancillas = []
+    
+    BUSY_THRESHOLD = 3
+    
+    for gate, qubits in ops:
+        if gate == "H":
+            for q in qubits:
+                # Check if q is busy
+                if degrees.get(q, 0) > BUSY_THRESHOLD:
+                    # Apply Z-check gadget
+                    # Uses 1 ancilla 'a'
+                    a = next_idx
+                    next_idx += 1
+                    added_ancillas.append(a)
+                    
+                    # 1. H q
+                    new_ops.append(f"H {q}")
+                    
+                    # 2. Check Z error on q
+                    # Prepare a in |+>
+                    new_ops.append(f"H {a}")
+                    # CX a q (propagates Z from q to a)
+                    new_ops.append(f"CX {a} {q}")
+                    # Measure a in X (H then measure)
+                    new_ops.append(f"H {a}")
+                    # Measurement is implicit at end of circuit
+                    
+                else:
+                    new_ops.append(f"H {q}")
+        elif gate == "CX":
+            q_str = " ".join(str(x) for x in qubits)
+            new_ops.append(f"CX {q_str}")
+        elif gate == "S":
+            q_str = " ".join(str(x) for x in qubits)
+            new_ops.append(f"S {q_str}")
+        else:
+            q_str = " ".join(str(x) for x in qubits)
+            new_ops.append(f"{gate} {q_str}")
+            
+    with open(output_path, 'w') as f:
+        for line in new_ops:
+            f.write(line + "\n")
+            
+    print(f"Generated. Ancillas: {added_ancillas}")
 
-# Initial setup
-new_c.append(instructions[0])
-new_c.append(instructions[1])
-new_c.append(instructions[2])
-
-# Ancillas
-# 15, 16, 17: X-checks on 1, 2, 3
-# 18: Z_0 Z_4 check
-# 19: X_0 X_4 check
-
-# X-checks on 1, 2, 3
-# H A, CX A Q, H A
-new_c.append("H", [15, 16, 17])
-new_c.append("CX", [15, 1, 16, 2, 17, 3])
-new_c.append("H", [15, 16, 17])
-
-# Z_0 Z_4 check (Ancilla 18)
-# CX 0 18, CX 4 18
-new_c.append("CX", [0, 18, 4, 18])
-
-# X_0 X_4 check (Ancilla 19)
-# H 19, CX 19 0, CX 19 4, H 19
-new_c.append("H", [19])
-new_c.append("CX", [19, 0, 19, 4])
-new_c.append("H", [19])
-
-# Rest of circuit
-for i in range(3, len(instructions)):
-    new_c.append(instructions[i])
-
-# Measurements
-new_c.append("M", [15, 16, 17, 18, 19])
-
-print(new_c)
+if __name__ == "__main__":
+    generate_ft_circuit(
+        r"C:\Users\anpaz\Repos\quantum-ai\rq2\data\gemini-3-pro-preview\agent_files_ft\circuit.stim",
+        r"C:\Users\anpaz\Repos\quantum-ai\rq2\data\gemini-3-pro-preview\agent_files_ft\circuit_candidate.stim"
+    )

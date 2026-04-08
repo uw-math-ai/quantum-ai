@@ -1,248 +1,364 @@
-import json
 import stim
 
-def parse_stabilizers(filename):
-    with open(filename, 'r') as f:
-        lines = [line.strip() for line in f if line.strip()]
-    return lines
+circuit_str = """H 0
+CX 0 45 0 64
+H 30 60
+CX 30 0 60 0 45 1 1 45 45 1
+H 1
+CX 1 64
+H 15
+CX 15 1 60 1 30 2 2 30 30 2
+H 3 7 15 21 33 37 51 64 65 67
+CX 2 3 2 7 2 15 2 21 2 33 2 37 2 51 2 64 2 65 2 67 60 2 64 3 3 64 64 3
+H 3
+CX 3 15
+H 7 21 33 37 51 64 65 67
+CX 7 3 21 3 33 3 37 3 51 3 60 3 64 3 65 3 67 3 15 4 4 15 15 4
+H 4 7 21 33 37 51 64 65 67
+CX 4 7 4 21 4 33 4 37 4 51 4 64 4 65 4 67 60 4 31 5 5 31 31 5
+H 5 65
+CX 5 46 5 65 5 68
+H 45 61
+CX 45 5 60 5 61 5 46 6 6 46 46 6
+H 6
+S 6 45
+H 12 13 42 43 65 66 71 72
+CX 6 12 6 13 6 33 6 42 6 43 6 45 6 64 6 65 6 66 6 71 6 72 6 74
+H 16
+CX 16 6 60 6 61 6 65 7 7 65 65 7
+H 7 16 45
+CX 7 16 7 45 7 68
+H 12 13 33 42 43 64 66 71 72 74
+CX 12 7 13 7 33 7 42 7 43 7 60 7 61 7 64 7 66 7 71 7 72 7 74 7 45 8 8 45 45 8
+H 8
+S 8
+H 12 13 33 42 43 64 66 71 72 74
+CX 8 12 8 13 8 16 8 33 8 42 8 43 8 64 8 66 8 71 8 72 8 74 60 8 61 8 16 9 9 16 16 9
+H 9
+CX 9 12 9 13 9 33 9 42 9 43 9 64 9 66 9 71 9 72 9 74 60 9 61 9 32 10 10 32 32 10
+H 10 66
+CX 10 47 10 66 10 68 10 69 10 70
+H 30 62
+CX 30 10 60 10 61 10 62 10 47 11 11 47 47 11
+H 11
+S 11 30
+H 66
+CX 11 12 11 13 11 21 11 30 11 33 11 37 11 42 11 43 11 51 11 64 11 65 11 66 11 67 11 71 11 72 11 74
+H 17
+CX 17 11 60 11 61 11 62 11 66 12 12 66 66 12
+H 12 17 30
+CX 12 17 12 30 12 68 12 69 12 70
+H 13 21 33 37 42 43 51 64 65 66 67 71 72 74
+CX 13 12 21 12 33 12 37 12 42 12 43 12 51 12 60 12 61 12 62 12 64 12 65 12 66 12 67 12 71 12 72 12 74 12 30 13 13 30 30 13
+H 13
+S 13
+H 21 30 33 37 42 43 51 64 65 66 67 71 72 74
+CX 13 17 13 21 13 30 13 33 13 37 13 42 13 43 13 51 13 64 13 65 13 66 13 67 13 71 13 72 13 74 60 13 61 13 62 13 17 14 14 17 17 14
+H 14
+CX 14 21 14 30 14 33 14 37 14 42 14 43 14 51 14 64 14 65 14 66 14 67 14 71 14 72 14 74 60 14 61 14 62 14 60 15 15 60 60 15
+H 16 17 19 20 23 24 28 29 31 45 60 63 74
+CX 15 16 15 17 15 19 15 20 15 23 15 24 15 28 15 29 15 30 15 31 15 45 15 48 15 60 15 61 15 63 15 68 15 69 15 74 33 15 62 15 64 15 64 16 16 64 64 16
+H 16
+CX 16 68 16 69
+S 18 48
+H 18 33 48
+CX 18 16 33 16 48 16 62 16 18 17 17 18 18 17
+H 17
+S 17 33
+H 33 68 69
+CX 33 17 48 17 62 17 68 17 69 17 33 18 18 33 33 18
+H 18
+S 18
+H 68 69
+CX 18 68 18 69
+H 48
+CX 48 18 62 18 48 19 19 48 48 19
+S 19
+CX 62 19 34 20 20 34 34 20
+H 20 67 71
+CX 20 49 20 67 20 71 60 20 61 20 63 20 49 21 21 49 49 21
+H 21
+S 21 60
+H 71 74
+CX 21 30 21 42 21 43 21 49 21 51 21 60 21 66 21 71 21 72 21 74 48 21 61 21 63 21 71 22 22 71 71 22
+H 22 48 60
+CX 22 48 22 60 22 67
+H 30 42 43 49 51 66 72 74
+CX 30 22 42 22 43 22 49 22 51 22 61 22 63 22 66 22 72 22 74 22 60 23 23 60 60 23
+H 23
+S 23
+H 30 42 43 49 51 66 72 74
+CX 23 30 23 42 23 43 23 48 23 49 23 51 23 66 23 72 23 74 61 23 63 23 48 24 24 48 48 24
+H 24
+CX 24 30 24 42 24 43 24 49 24 51 24 66 24 72 24 74 61 24 63 24 35 25 25 35 35 25
+H 25 72
+CX 25 50 25 70 25 72 31 25 61 25 62 25 63 25 50 26 26 50 50 26
+H 26
+S 26 31
+H 67 72
+CX 26 30 26 31 26 37 26 42 26 43 26 65 26 66 26 67 26 72 26 74 34 26 61 26 62 26 63 26 72 27 27 72 72 27
+H 27 31 34
+CX 27 31 27 34 27 70
+H 30 37 42 43 65 66 67 74
+CX 30 27 37 27 42 27 43 27 61 27 62 27 63 27 65 27 66 27 67 27 74 27 31 28 28 31 31 28
+H 28
+S 28
+H 30 37 42 43 65 66 67 74
+CX 28 30 28 34 28 37 28 42 28 43 28 65 28 66 28 67 28 74 61 28 62 28 63 28 34 29 29 34 34 29
+H 29
+CX 29 30 29 37 29 42 29 43 29 65 29 66 29 67 29 74 61 29 62 29 63 29 46 30 30 46 46 30
+H 30 51 67
+CX 30 51 30 67 30 68 30 69 30 73
+H 36
+CX 36 30 62 30 63 30 49 31 31 49 49 31
+H 32 35 47 50 51 74
+CX 31 32 31 35 31 36 31 46 31 47 31 48 31 49 31 50 31 51 31 62 31 64 31 67 31 73 31 74 51 31 62 31 63 31 62 32 32 62 62 32
+H 51
+CX 32 35 32 46 32 47 32 48 32 49 32 50 32 51 32 62 32 64 32 67 32 73 32 74 36 32 63 32 36 33 33 36 36 33
+H 33
+CX 33 67 33 68 33 69 33 73
+H 67 68 69 73
+CX 51 33 63 33 67 33 68 33 69 33 73 33 51 34 34 51 51 34 63 34 67 34 68 34 69 34 73 34 37 35 35 37 37 35
+H 68 69 71
+CX 35 36 35 45 35 46 35 48 35 49 35 51 35 52 35 60 35 61 35 63 35 64 35 65 35 68 35 69 35 71 35 74 63 35 65 35 52 36 36 52 52 36
+H 36 65 67 73
+CX 36 65 36 67 36 73 63 36 71 36 65 37 37 65 65 37
+H 71
+CX 37 67 37 71 37 73
+H 67 73
+CX 63 37 67 37 73 37 71 38 38 71 71 38
+S 38
+H 38
+S 38
+H 67 73
+CX 38 67 38 73
+S 63
+H 45 46 48 49 51 52 60 61 63 64 68 69 74
+CX 45 38 46 38 48 38 49 38 51 38 52 38 60 38 61 38 63 38 64 38 68 38 69 38 74 38 63 39 39 63 63 39
+H 39
+S 39
+H 45 46 48 49 51 52 60 61 64 68 69 74
+CX 39 45 39 46 39 48 39 49 39 51 39 52 39 60 39 61 39 64 39 68 39 69 39 74
+H 67 73
+CX 67 39 73 39 71 40 40 71 71 40
+H 40
+CX 40 53 40 68 45 40 61 40 53 41 41 53 53 41
+H 41
+S 41 45
+H 68
+CX 41 42 41 45 41 66 41 68 60 41 61 41 68 42 42 68 68 42
+H 42 45 60
+CX 42 45 42 60
+H 66 68
+CX 61 42 66 42 68 42 45 43 43 45 45 43
+H 43
+S 43
+H 66 68
+CX 43 60 43 66 43 68 61 43 60 44 44 60 60 44
+H 44
+CX 44 66 44 68 61 44 63 45 45 63 63 45
+H 45
+CX 45 54 45 69 45 70 61 45 64 45 54 46 46 54 54 46
+H 46
+S 46 64 67
+H 69 73
+CX 46 64 46 66 46 67 46 68 46 69 46 73 48 46 61 46 69 47 47 69 69 47
+H 47 48 64
+CX 47 48 47 64 47 70
+H 66 67 68 73
+CX 61 47 66 47 67 47 68 47 73 47 64 48 48 64 64 48
+H 48
+S 48
+H 66 67 68 73
+CX 48 64 48 66 48 67 48 68 48 73 61 48 64 49 49 64 64 49
+H 49
+CX 49 66 49 67 49 68 49 73 61 49 71 50 50 71 71 50
+H 50
+CX 50 55 50 70 62 50 55 51 51 55 55 51
+H 51
+S 51 62
+H 70 74
+CX 51 54 51 62 51 63 51 70 51 74 65 51 70 52 52 70 70 52
+H 52 62 65
+CX 52 62 52 65
+H 54 63 74
+CX 54 52 63 52 74 52 62 53 53 62 62 53
+H 53
+S 53
+H 54 63 74
+CX 53 54 53 63 53 65 53 74 65 54 54 65 65 54
+H 54
+CX 54 63 54 65 54 74 62 55 55 62 62 55
+H 55 67
+CX 55 56 55 67 61 55 69 55
+H 56
+S 56 69
+H 67
+CX 56 66 56 67 56 68 56 69 56 73 61 56 71 56 67 57 57 67 67 57
+H 57 69 71
+CX 57 69 57 71
+H 66 68 73
+CX 61 57 66 57 68 57 73 57 69 58 58 69 69 58
+H 58
+S 58
+H 66 68 73
+CX 58 66 58 68 58 71 58 73 61 58 71 59 59 71 71 59
+H 59
+CX 59 66 59 68 59 73 61 59 61 60 60 61 61 60
+H 72
+CX 60 66 60 67 60 68 60 72 66 60 68 60 67 61 61 67 67 61
+H 61 66
+CX 61 66 72 61 66 62 62 66 66 62
+H 72
+CX 62 72 68 62 68 63 63 68 68 63
+H 63
+CX 63 72
+H 72
+CX 72 63 72 64 64 72 72 64 68 65 65 68 68 65
+H 74
+CX 65 69 65 73 65 74 68 65 69 66 66 69 69 66
+H 66 68 74
+CX 66 68 66 73 66 74 72 66 68 67 67 68 68 67
+H 72
+CX 67 72 67 73
+H 73 74
+CX 73 67 74 67 74 68 68 74 74 68
+H 68 73
+CX 68 72 68 73
+H 72 73
+CX 72 68 73 68 72 69 69 72 72 69
+H 73
+CX 69 73 74 70 70 74 74 70
+H 70
+CX 70 71 70 73 74 70
+H 71
+S 71 73 74
+CX 71 73 71 74 72 71 73 72 72 73 73 72
+H 72
+S 72
+H 73 74
+CX 72 73 72 74 74 73 73 74 74 73
+H 73
+S 73
+CX 73 74
+H 74 7 17 18 19 22 33 38 62 67
+S 7 7 17 17 18 18 19 19 22 22 33 33 38 38 62 62 67 67
+H 7 17 18 19 22 33 38 62 67
+S 5 5 7 7 8 8 9 9 10 10 11 11 12 12 14 14 15 15 17 17 19 19 20 20 22 22 23 23 24 24 25 25 26 26 27 27 29 29 32 32 37 37 39 39 40 40 41 41 42 42 44 44 45 45 46 46 47 47 49 49 50 50 51 51 52 52 54 54 55 55 56 56 57 57 59 59 60 60 62 62 65 65 67 67 70 70 71 71 72 72 74 74"""
 
-def anticommutes(p1, p2):
-    anti_count = 0
-    for q_idx_str, p_char in p1.items():
-        q_idx = int(q_idx_str)
-        if q_idx >= len(p2):
-            continue
-        stab_char = p2[q_idx]
-        if p_char == 'I' or stab_char == 'I':
-            continue
-        if p_char == stab_char:
-            continue
-        anti_count += 1
-    return (anti_count % 2) == 1
+stabilizers_str = [
+    "XZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXI", "IXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZXIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXZZX", "XIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIXZZ", "ZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZXIXZ", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIXXXXXXXXXXIIIIIXXXXXXXXXXIIIIIIIIIIXXXXXXXXXXIIIIIXXXXXXXXXXIIIIIIIIII", "IIIIIIIIIIXXXXXXXXXXIIIIIXXXXXXXXXXIIIIIIIIIIXXXXXXXXXXXXXXXIIIIIXXXXXIIIII", "IIIIIIIIIIIIIIIIIIIIXXXXXXXXXXXXXXXXXXXXIIIIIIIIIIIIIIIXXXXXXXXXXXXXXXXXXXX", "ZZZZZZZZZZZZZZZZZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIZZZZZZZZZZIIIIIZZZZZZZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIZZZZZZZZZZIIIIIZZZZZZZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIZZZZZZZZZZZZZZZZZZZZIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII", "IIIIIZZZZZIIIIIIIIIIZZZZZIIIIIIIIIIIIIIIZZZZZIIIIIIIIIIIIIIIZZZZZIIIIIIIIII", "IIIIIIIIIIZZZZZIIIIIIIIIIZZZZZIIIIIIIIIIIIIIIZZZZZIIIIIZZZZZIIIIIIIIIIIIIII", "IIIIIIIIIIZZZZZZZZZZIIIIIIIIIIIIIIIIIIIIIIIIIZZZZZZZZZZIIIIIIIIIIIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIZZZZZZZZZZIIIIIIIIIIIIIIIIIIIIIIIIIZZZZZZZZZZIIIIIIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIZZZZZZZZZZIIIIIIIIIIIIIIIIIIIIZZZZZIIIIIZZZZZIIIII", "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIZZZZZZZZZZIIIIIIIIIIIIIIIIIIIIIIIIIZZZZZZZZZZ"
+]
 
-def generate(base_file, stab_file, json_file, output_file):
-    with open(base_file, 'r') as f:
-        base_circuit = f.read().strip()
-    
-    with open(json_file, 'r') as f:
-        data = json.load(f)
-    
-    stabilizers = parse_stabilizers(stab_file)
-    errors = data.get('error_propagation', [])
-    
-    # Score stabilizers
-    stab_scores = {s: 0 for s in stabilizers}
-    for err in errors:
-        final_paulis = err['final_paulis']
-        for s in stabilizers:
-            if anticommutes(final_paulis, s):
-                stab_scores[s] += 1
-    
-    # Pick top stabilizers
-    sorted_stabs = sorted(stab_scores.items(), key=lambda x: x[1], reverse=True)
-    top_stabs = [s for s, score in sorted_stabs if score > 0]
-    
-    # Add checks
-    # If no errors detected (e.g. first run of logic but no valid stabs?), pick some generic ones?
-    # But here we have scores.
-    # Let's take top 10 unique ones to be safe, or all that detect something.
-    # The output circuit must be a string.
-    
-    # Check distinct stabilizers to avoid redundancy?
-    # We can just add all that have score > 0, up to a limit.
-    # Let's add top 5.
-    
-    selected_stabs = top_stabs[:5]
-    
-    print(f"Selected {len(selected_stabs)} stabilizers to check.")
-    
-    # Build circuit string
-    new_circuit = base_circuit + "\n"
-    
-    ancilla_idx = 28 # Start after 0-27
-    flag_qubits = []
-    
-    for s in selected_stabs:
-        # Add check for s
-        # s is a string of length 28
-        # We need to measure it.
-        # Format: H anc; CNOTs; H anc; M anc.
-        
-        # Determine check type.
-        # If S contains X, we use CX ancilla target.
-        # If S contains Z, we use CX target ancilla.
-        # If mixed? We can do basis change on data? No, that disturbs data state?
-        # Standard graph state stabilizers are usually uniform (all X or all Z) or specific.
-        # The provided stabilizers are X...X or Z...Z or mixed?
-        # "ZIZIZIZ..." -> Mixed? No, Z and I.
-        # "XIXIXIX..." -> X and I.
-        # "ZZIIZZ..." -> Z and I.
-        # "XXIIXX..." -> X and I.
-        # It seems they are Pauli strings with I.
-        # Are there any Y?
-        # The list has X... and Z...
-        # Wait, let's check `stabilizers_prompt.txt`.
-        # All chars are X, Z, I. No Y.
-        # And they don't seem to mix X and Z in the same stabilizer.
-        # e.g. "XXII..." all X. "ZZII..." all Z.
-        # So we can just assume X-type or Z-type.
-        
-        is_x_type = 'X' in s
-        is_z_type = 'Z' in s
-        
-        if is_x_type and is_z_type:
-            # Mixed X and Z.
-            # "All ancilla qubits must be initialized in |0>..."
-            # To measure X_i Z_j:
-            # Ancilla A.
-            # H A.
-            # For X_i: CX A i.
-            # For Z_j: CX j A.
-            # H A.
-            # M A.
-            pass
-        
-        flag_qubit = ancilla_idx
-        flag_qubits.append(flag_qubit)
-        ancilla_idx += 1
-        
-        # Append instructions
-        # Use single line for H
-        new_circuit += f"H {flag_qubit}\n"
-        
-        # CNOTs
-        cnot_ops = []
-        for q_idx, char in enumerate(s):
-            if char == 'X':
-                # Measure X: H A, CX A Q, H A (measures X of Q -> Z of A)
-                # Wait. Standard parity check:
-                # Check operator P = X_q.
-                # We want to measure eigenvalue of P.
-                # Circuit: Prepare A in +, apply Control-P (A controls P on system). Measure A in X.
-                # Control-X is CNOT (A control, Q target).
-                # Measure A in X (H then M).
-                # Correct.
-                cnot_ops.append(f"CX {flag_qubit} {q_idx}")
-            elif char == 'Z':
-                # Check operator P = Z_q.
-                # Control-Z is CZ (A control, Q target).
-                # Or CNOT (Q control, A target).
-                # If we use CNOT(Q, A):
-                # If Q is |1> (Z=-1), A flips.
-                # If Q is |0> (Z=+1), A stays.
-                # So Z of A becomes Z_A * Z_Q.
-                # Measuring A in X basis?
-                # No. CNOT(Q, A) copies Z of Q to X of A?
-                # Let's trace:
-                # A in +, Q arbitrary.
-                # CX Q A:
-                # |+>|0> -> |+>|0>
-                # |+>|1> -> |+>|1> (Wait, CX(1,0) -> 1,1. CX(1,1) -> 1,0. |+> = 0+1. 0->0, 1->1? No.
-                # Let's use Hadamard test logic.
-                # We want to measure Z.
-                # Use CZ(A, Q).
-                # Stim has CZ.
-                # But typically we prefer CNOT.
-                # CZ(A, Q) = H(Q) CX(A, Q) H(Q) ? No.
-                # CZ(A, Q) is symmetric.
-                # CNOT(Q, A) is related.
-                # Let's just use `CX` as Stim supports it.
-                # For Z check: `CX Q A`. (Q control, A target).
-                # If Q is 1, A flips X.
-                # Measure A in X basis?
-                # Initial A: |0> -> H -> |+>.
-                # If flipped (X applied): |+> -> |+>. No. X|+> = |+>.
-                # Wait. X|+> = |+>. X|-> = -|->.
-                # So `CX Q A` does NOT copy Z info to phase of A?
-                # `CX Q A`:
-                # |0>_Q |+>_A -> |0> |+>
-                # |1>_Q |+>_A -> |1> X|+> = |1> |+>.
-                # No kickback.
-                # To get kickback (phase flip on A), we need target to be |->.
-                # Initial A |0> -> H -> |+>.
-                # We want Z check.
-                # We need `CZ A Q`.
-                # If we use `CX`, we can use `CX A Q` surrounded by H on Q? No, don't touch Q basis.
-                # `CX Q A` with A in |->?
-                # No, we start A in |0>.
-                # If we do `H A`. Then `CZ A Q`. Then `H A`.
-                # `CZ` is available.
-                # Does `CZ` work?
-                # `CZ 0 1` in Stim.
-                # Yes.
-                # Can I use `CX`?
-                # `CZ(c,t)` is equivalent to `H(t) CX(c,t) H(t)`.
-                # I prefer not to add H on data qubits if I can avoid it (structure).
-                # But `CZ` is a primitive.
-                # Is `CZ` allowed? "described in Stim format". Stim supports CZ.
-                # But does the *hardware* support it? The prompt doesn't say.
-                # Assuming Stim gates are allowed.
-                # Using CZ is safer for Z checks.
-                # Or I can use `CX` with correct basis.
-                # For Z check, we check Z parity.
-                # A in |+>.
-                # `CZ A Q` for each Q.
-                # `H A`. `M A`.
-                # This measures Z...Z.
-                # Correct.
-                # So for Z: use `CZ flag_qubit q_idx`.
-                # For X: use `CX flag_qubit q_idx`. (A control, Q target).
-                # Is that right?
-                # Check X parity:
-                # `CX A Q`.
-                # A in |+>.
-                # If Q is in Z eigenstate? No, check X.
-                # `CX A Q`: Propagates X from A to Q?
-                # No, we want to measure X of Q.
-                # X of Q propagates to Z of A? No.
-                # Z of Q propagates to Z of A?
-                # `CX A Q`:
-                # |+>_A |0>_Q -> |00> + |11> (Bell state).
-                # This is getting confusing.
-                # Standard Parity Check:
-                # Measure Z operator: `H(A)`, `CNOT(Q, A)`, `H(A)`? No.
-                # To measure Z: `H(A)`, `CZ(A,Q)`, `H(A)`.
-                # To measure X: `H(A)`, `CNOT(A,Q)`, `H(A)`.
-                # Let's verify `CNOT(A,Q)` for X measurement.
-                # We want to measure eigenvalue of X_Q.
-                # Operator C_X = CNOT(A,Q).
-                # P = X_Q.
-                # Does A control P?
-                # If A=1, apply X to Q.
-                # Yes, CNOT(A,Q) is "Controlled-X".
-                # So if we prepare A in |+>, apply Controlled-X, measure A in X, we measure X eigenvalue?
-                # Yes. Hadamard test for unitary U=X.
-                # Re( <psi| U |psi> ).
-                # If |psi> is X eigenstate with ev +1: X|psi>=|psi>. Controlled-X acts as I on A. A stays |+>. M gives 0.
-                # If |psi> is X eigenstate with ev -1: X|psi>=-|psi>. Controlled-X adds phase -1 if A=1. A becomes |->. M gives 1.
-                # Correct.
-                # So:
-                # X check: `CX flag q`.
-                # Z check: `CZ flag q`.
-                
-                # But does `stim` have `CZ`? Yes.
-                # The input circuit uses `CX` and `H`.
-                # Maybe I should stick to `CX`?
-                # `CZ i j` is valid stim.
-                # I'll use `CZ`.
-                
-                if char == 'X':
-                    cnot_ops.append(f"CX {flag_qubit} {q_idx}")
-                elif char == 'Z':
-                    cnot_ops.append(f"CZ {flag_qubit} {q_idx}")
-        
-        # Add ops
-        if cnot_ops:
-            new_circuit += " ".join(cnot_ops) + "\n"
-        
-        # Final H and M
-        new_circuit += f"H {flag_qubit}\nM {flag_qubit}\n"
+circuit = stim.Circuit(circuit_str)
+next_ancilla = 75
+ancillas_used = []
 
-    with open(output_file, 'w') as f:
-        f.write(new_circuit)
-    
-    print(json.dumps(flag_qubits))
+# S[28] correction
+# We iterate over all stabilizers and append measurements.
+# When we hit S[28] (index 28), we remember the measurement index.
+# At the end, we apply correction.
+# The correction is Y 65 Y 68 controlled by M of S[28].
+# Wait, Stim `CY rec[-k] 65` works? No.
+# Stim logic: `CY` takes qubits.
+# Conditionals: `CX rec[-1] 10` is not supported directly as a gate on qubit `rec[-1]`.
+# Stim 1.12+ supports `CX` controlled by record?
+# No, Stim uses `CNOT` where control can be a measurement record target?
+# Actually, `stim.Circuit.append("CX", [stim.target_rec(-1), 10])` works.
+# This means "If rec[-1] is True, apply X to 10".
+# Yes, this is exactly what I need.
 
-if __name__ == "__main__":
-    import sys
-    generate(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+measurement_indices = {}
+current_meas_index = -1
+
+for i, s_str in enumerate(stabilizers_str):
+    anc = next_ancilla
+    ancillas_used.append(anc)
+    next_ancilla += 1
+    
+    circuit.append("R", [anc])
+    circuit.append("H", [anc])
+    
+    # Pauli gates
+    # Format: XZZX...
+    s = stim.PauliString(s_str)
+    
+    # We need to apply Controlled-P
+    # Control is ancilla (X basis).
+    # If ancilla is in X basis (after H), we need to entangle.
+    # Standard: H on ancilla, then controlled-Paulis, H on ancilla, Measure Z.
+    # If stabilizer is P, we want to measure P.
+    # U = exp(i pi/2 P x A)?
+    # Standard circuit:
+    # Initialize A in |+>.
+    # Apply Controlled-P (control A, target data).
+    # Measure A in X basis (H then M).
+    # Controlled-P?
+    # Controlled-Z is native.
+    # Controlled-X is CNOT.
+    # Controlled-Y is CY.
+    # So for each qubit q in P:
+    # If P[q] = X, apply CX(A, q).
+    # If P[q] = Z, apply CZ(A, q).
+    # If P[q] = Y, apply CY(A, q).
+    
+    # Wait, check commutation.
+    # If we apply product of these, is it Controlled-P?
+    # Yes, because Pauli terms commute (usually) or the order matters?
+    # Pauli terms on DIFFERENT qubits commute.
+    # So order doesn't matter.
+    
+    for q in range(len(s)):
+        p = s[q]
+        if p == 1: # X
+            circuit.append("CX", [anc, q])
+        elif p == 2: # Y
+            circuit.append("CY", [anc, q])
+        elif p == 3: # Z
+            circuit.append("CZ", [anc, q])
+            
+    circuit.append("H", [anc])
+    circuit.append("M", [anc])
+    current_meas_index += 1
+    measurement_indices[i] = current_meas_index
+
+# Apply correction for S[28]
+# Index of S[28] is 28.
+rec_index = measurement_indices[28]
+# We want `rec[rec_index - total_measurements]`?
+# No, stim `rec` targets are relative to current end.
+# `rec[-1]` is last measurement.
+# `rec[-2]` is second to last.
+# `rec[-(total - index)]`?
+# Total measurements = 74.
+# Index 0 is `rec[-74]`.
+# Index 28 is `rec[-(74 - 28)]` = `rec[-46]`.
+# Let's compute offset.
+offset = len(stabilizers_str) - measurement_indices[28]
+# i.e. how many measurements ago.
+# if it was last, offset = 1.
+# if it was 28th (0-indexed), and total 74.
+# 28 is the 29th measurement.
+# Remaining 74 - 29 = 45 measurements after it.
+# So it is at -46.
+target_rec = stim.target_rec(-offset)
+
+# Correction: Y 65 Y 68
+# Decompose CY rec 65 into S 65, CX rec 65, Sdag 65
+circuit.append("S", [65])
+circuit.append("CX", [target_rec, 65])
+circuit.append("S_DAG", [65])
+
+# Decompose CY rec 68
+circuit.append("S", [68])
+circuit.append("CX", [target_rec, 68])
+circuit.append("S_DAG", [68])
+
+# Write output
+with open("solution.stim", "w") as f:
+    f.write(str(circuit))
+    
+with open("ancillas.txt", "w") as f:
+    f.write(str(ancillas_used))
+
+print("Solution generated.")

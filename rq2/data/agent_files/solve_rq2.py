@@ -1,188 +1,233 @@
 import stim
 import sys
-import os
+from collections import defaultdict
 
-def solve():
-    # Load circuit
-    with open("input.stim", "r") as f:
-        circuit_text = f.read()
+def get_stabilizers():
+    stabs = []
+    with open('stabilizers.txt', 'r') as f:
+        for line in f:
+            if line.strip():
+                stabs.append(stim.PauliString(line.strip()))
+    return stabs
+
+def analyze_and_solve():
+    c_in = stim.Circuit.from_file('input.stim')
+    stabs = get_stabilizers()
     
-    circuit = stim.Circuit(circuit_text)
+    # 1. Identify Dangerous Faults
+    # A fault is (instruction_index, target_index, type)
+    # We simulate the circuit and track error propagation.
     
-    # Identify max qubit index
-    max_qubit = 0
-    for instr in circuit:
-        for t in instr.targets_copy():
-            if t.is_qubit_target:
-                max_qubit = max(max_qubit, t.value)
+    num_qubits = max(c_in.num_qubits, 100)
+    # Check max qubit in stabs
+    max_q = 0
+    for s in stabs:
+        max_q = max(max_q, len(s))
+    num_qubits = max(num_qubits, max_q)
     
-    next_flag = max_qubit + 1
-    
-    # Simulation to track state
-    sim = stim.TableauSimulator()
-    
-    # New circuit construction
-    new_circuit = stim.Circuit()
-    
-    # Track accumulated error spread
-    # spread_X[q] = number of data qubits affected by X error on q
-    # spread_Z[q] = number of data qubits affected by Z error on q
-    spread_X = {q: 1 for q in range(max_qubit + 1)}
-    spread_Z = {q: 1 for q in range(max_qubit + 1)}
-    
-    LIMIT = 2 
-    
-    # Pre-computation of data qubits set for counting
-    data_qubits = set(range(max_qubit + 1))
-    
-    for instr in circuit:
-        name = instr.name
-        
-        if name == "CX":
+    # Build operations list for easier indexing
+    ops = []
+    for instr in c_in:
+        if instr.name in ['CX', 'SWAP', 'CZ', 'CY']:
             targets = instr.targets_copy()
-            # Iterate pairs
-            for i in range(0, len(targets), 2):
-                c = targets[i].value
-                t = targets[i+1].value
-                
-                # Check PRE-conditions? 
-                # No, we check post-conditions or accumulate and check.
-                # Accumulate spread
-                
-                # X on c spreads to t
-                # spread_X[c] += spread_X[t] ? 
-                # No. X_c -> X_c X_t.
-                # The set of qubits affected by X_c becomes Union(set_X_c, set_X_t).
-                # But X_t is just {t}.
-                # So set_X_c += {t}.
-                # But what if t is already in set_X_c? 
-                # Unlikely in simple spread, but possible.
-                # Let's simplify: simply increment count.
-                spread_X[c] += 1
-                
-                # Z on t spreads to c
-                # Z_t -> Z_t Z_c
-                spread_Z[t] += 1
-                
-                # Apply CX to simulator and circuit
-                op = stim.CircuitInstruction("CX", [targets[i], targets[i+1]])
-                new_circuit.append(op)
-                sim.do(op)
-                
-                # Check if we need to flag X on c
-                if spread_X[c] >= LIMIT:
-                    # Find stabilizer to check X on c
-                    # Needs to anticommute with X_c => Has Z or Y on c
-                    stabs = sim.canonical_stabilizers()
-                    best_S = None
-                    min_weight = 9999
-                    
-                    for s in stabs:
-                        p_at_c = s[c]
-                        if p_at_c == 2 or p_at_c == 3: # Y or Z
-                            w = s.weight
-                            if w < min_weight:
-                                min_weight = w
-                                best_S = s
-                            if w == 2: 
-                                break
-                    
-                    if best_S is not None:
-                        # Create check gadget
-                        flag = next_flag
-                        next_flag += 1
-                        
-                        # Measure S using flag
-                        # Prep |+>
-                        new_circuit.append(stim.CircuitInstruction("R", [flag]))
-                        new_circuit.append(stim.CircuitInstruction("H", [flag]))
-                        sim.do(stim.CircuitInstruction("R", [flag]))
-                        sim.do(stim.CircuitInstruction("H", [flag]))
-                        
-                        qubits_indices = [k for k in range(len(best_S)) if best_S[k] != 0]
-                        for q in qubits_indices:
-                            p = best_S[q]
-                            if p == 1: # X
-                                op_g = stim.CircuitInstruction("CX", [flag, q])
-                            elif p == 2: # Y
-                                op_g = stim.CircuitInstruction("CY", [flag, q])
-                            elif p == 3: # Z
-                                op_g = stim.CircuitInstruction("CZ", [flag, q])
-                            new_circuit.append(op_g)
-                            sim.do(op_g)
-                            
-                        # Measure X
-                        new_circuit.append(stim.CircuitInstruction("H", [flag]))
-                        new_circuit.append(stim.CircuitInstruction("M", [flag]))
-                        sim.do(stim.CircuitInstruction("H", [flag]))
-                        sim.do(stim.CircuitInstruction("M", [flag]))
-                        
-                        # Reset spread
-                        spread_X[c] = 1
-                
-                # Check if we need to flag Z on t
-                if spread_Z[t] >= LIMIT:
-                    # Find stabilizer to check Z on t
-                    # Needs to anticommute with Z_t => Has X or Y on t
-                    stabs = sim.canonical_stabilizers()
-                    best_S = None
-                    min_weight = 9999
-                    
-                    for s in stabs:
-                        p_at_t = s[t]
-                        if p_at_t == 1 or p_at_t == 2: # X or Y
-                            w = s.weight
-                            if w < min_weight:
-                                min_weight = w
-                                best_S = s
-                            if w == 2: 
-                                break
-                                
-                    if best_S is not None:
-                        # Create check gadget
-                        flag = next_flag
-                        next_flag += 1
-                        
-                        new_circuit.append(stim.CircuitInstruction("R", [flag]))
-                        new_circuit.append(stim.CircuitInstruction("H", [flag]))
-                        sim.do(stim.CircuitInstruction("R", [flag]))
-                        sim.do(stim.CircuitInstruction("H", [flag]))
-                        
-                        qubits_indices = [k for k in range(len(best_S)) if best_S[k] != 0]
-                        for q in qubits_indices:
-                            p = best_S[q]
-                            if p == 1: 
-                                op_g = stim.CircuitInstruction("CX", [flag, q])
-                            elif p == 2: 
-                                op_g = stim.CircuitInstruction("CY", [flag, q])
-                            elif p == 3: 
-                                op_g = stim.CircuitInstruction("CZ", [flag, q])
-                            new_circuit.append(op_g)
-                            sim.do(op_g)
-                            
-                        new_circuit.append(stim.CircuitInstruction("H", [flag]))
-                        new_circuit.append(stim.CircuitInstruction("M", [flag]))
-                        sim.do(stim.CircuitInstruction("H", [flag]))
-                        sim.do(stim.CircuitInstruction("M", [flag]))
-                        
-                        spread_Z[t] = 1
-
-        else:
-            new_circuit.append(instr)
-            sim.do(instr)
-            
-    # Write output
-    with open("gen_ft_solution.stim", "w") as f:
-        f.write(str(new_circuit))
-        
-    print(f"Generated circuit with {len(new_circuit)} instructions.")
-    print(f"Next flag index: {next_flag}")
+            for k in range(0, len(targets), 2):
+                ops.append((instr.name, [targets[k].value, targets[k+1].value]))
+        elif instr.name in ['H', 'S', 'X', 'Y', 'Z', 'I', 'RX', 'RY', 'RZ']:
+            targets = instr.targets_copy()
+            for t in targets:
+                ops.append((instr.name, [t.value]))
+        # Ignore others for now
     
-    # Save ancilla indices
-    with open("ancillas.txt", "w") as f:
-        # ancillas are from max_qubit + 1 to next_flag - 1
-        ancillas = list(range(max_qubit + 1, next_flag))
-        f.write(",".join(map(str, ancillas)))
+    N = len(ops)
+    print(f"Analyzing {N} ops...")
+    
+    t_suffix = stim.Tableau(num_qubits)
+    
+    dangerous_errors = [] # List of PauliStrings (error on data)
+    
+    # Backward pass to find error weights
+    for i in range(N-1, -1, -1):
+        name, targs = ops[i]
+        
+        # Simulate faults at this location
+        # Faults: X, Y, Z on each target
+        for q in targs:
+            for p in ['X', 'Y', 'Z']:
+                # Get the propagated error at the end
+                res = None
+                if p == 'X': res = t_suffix.x_output(q)
+                elif p == 'Y': res = t_suffix.y_output(q)
+                elif p == 'Z': res = t_suffix.z_output(q)
+                
+                # Check weight on data qubits (0..80)
+                # We assume data qubits are those touched by the circuit/stabilizers
+                # Stabs are length 81. So 0..80.
+                w = 0
+                error_on_data = stim.PauliString(num_qubits)
+                
+                # Manual weight count on first 81 qubits
+                # Also construct the PauliString for checking commutativity
+                # Stim's weight is total weight.
+                # If circuit uses ancillas, we should ignore them?
+                # The input circuit uses 0..80. No ancillas yet.
+                # So res.weight is accurate.
+                
+                if res.weight > 3:
+                     dangerous_errors.append(res)
+        
+        # Update tableau
+        mini = stim.Circuit()
+        mini.append('I', [num_qubits-1])
+        mini.append(name, targs)
+        t_op = stim.Tableau.from_circuit(mini)
+        t_suffix = t_op.then(t_suffix)
 
-if __name__ == "__main__":
-    solve()
+    print(f"Found {len(dangerous_errors)} dangerous faults.")
+    
+    # 2. Select Stabilizers to Measure
+    selected_indices = set()
+    
+    undetected = 0
+    
+    # Optimize: Greedy coverage
+    # dangerous_errors is a list of PauliStrings.
+    # We want to pick stabs such that for every error E in dangerous_errors,
+    # there is at least one S in selected stabs s.t. commute(E, S) == False.
+    
+    # To optimize, we can check which errors are already covered.
+    
+    uncovered_errors = []
+    for E in dangerous_errors:
+        uncovered_errors.append(E)
+        
+    print(f"Covering {len(uncovered_errors)} errors...")
+    
+    # Simple Greedy:
+    # 1. Check which are already covered by chosen stabs (initially none)
+    # 2. Pick a stab that covers the most remaining errors.
+    # But checking commutativity is fast.
+    
+    # Optimization: Filter stabs by weight. Prefer weight <= 4.
+    stabs_w4 = [ (i, s) for i, s in enumerate(stabs) if s.weight <= 4 ]
+    stabs_high = [ (i, s) for i, s in enumerate(stabs) if s.weight > 4 ]
+    print(f"Stabilizers: {len(stabs_w4)} low-weight, {len(stabs_high)} high-weight.")
+
+    # Prioritize low weight.
+    # First pass: Try to cover with ONLY low weight (<=4)
+    # If remaining > 0, then use high weight.
+    
+    candidates = stabs_w4
+    
+    # ... logic for loop ...
+    
+    chosen_stabs = []
+    
+    # Loop for low weight
+    while remaining:
+        best_stab_idx = -1
+        best_covered_set = set()
+        
+        for s_idx, s in candidates:
+            if s_idx in [x[0] for x in chosen_stabs]:
+                continue
+            
+            # Check how many remaining it covers
+            covered_now = set()
+            for err_idx in remaining:
+                E = detectable_errors[err_idx]
+                if not E.commutes(s):
+                    covered_now.add(err_idx)
+            
+            if len(covered_now) > len(best_covered_set):
+                best_covered_set = covered_now
+                best_stab_idx = s_idx
+        
+        if best_stab_idx == -1:
+            print("Warning: Could not cover all errors with low-weight stabilizers.")
+            break
+            
+        chosen_stabs.append((best_stab_idx, stabs[best_stab_idx]))
+        remaining -= best_covered_set
+        print(f"Selected stab {best_stab_idx} (weight {stabs[best_stab_idx].weight}), remaining errors: {len(remaining)}")
+
+    # Second pass: High weight if needed
+    if remaining:
+        print("Attempting to cover remaining with high-weight stabilizers...")
+        candidates = stabs_high
+        while remaining:
+            best_stab_idx = -1
+            best_covered_set = set()
+            
+            for s_idx, s in candidates:
+                if s_idx in [x[0] for x in chosen_stabs]:
+                    continue
+                
+                covered_now = set()
+                for err_idx in remaining:
+                    E = detectable_errors[err_idx]
+                    if not E.commutes(s):
+                        covered_now.add(err_idx)
+                
+                if len(covered_now) > len(best_covered_set):
+                    best_covered_set = covered_now
+                    best_stab_idx = s_idx
+            
+            if best_stab_idx == -1:
+                print("Error: Could not cover remaining errors even with high-weight!")
+                break
+                
+            chosen_stabs.append((best_stab_idx, stabs[best_stab_idx]))
+            remaining -= best_covered_set
+            print(f"Selected stab {best_stab_idx} (weight {stabs[best_stab_idx].weight}), remaining errors: {len(remaining)}")
+
+    
+    # 3. Generate Output Circuit
+    c_out = c_in.copy()
+    
+    # Append measurements
+    # Use ancillas starting from max(num_qubits used in stabs or circuit) + 1
+    # num_qubits calculation earlier:
+    # num_qubits = max(num_qubits, max_q)
+    # This max_q was length of stabs.
+    # So num_qubits is sufficient.
+    
+    next_ancilla = num_qubits
+    
+    for s_idx, s in chosen_stabs:
+        anc = next_ancilla
+        next_ancilla += 1
+        
+        # Init
+        c_out.append('R', [anc]) 
+        
+        c_out.append('H', [anc])
+        
+        indices = [k for k in range(len(s)) if s[k] != 0]
+        for q in indices:
+            p = s[q]
+            if p == 1: # X
+                c_out.append('CX', [anc, q])
+            elif p == 2: # Y
+                c_out.append('CY', [anc, q])
+            elif p == 3: # Z
+                c_out.append('CZ', [anc, q])
+        c_out.append('H', [anc])
+        c_out.append('M', [anc])
+        
+    return c_out, [q for q in range(81, next_ancilla)]
+
+if __name__ == '__main__':
+    c_final, ancillas = analyze_and_solve()
+    
+    # Output to stdout for capture (or file)
+    # The tool expects me to call return_result.
+    # I will write the result to a file "solution.stim" and "ancillas.txt"
+    # So I can read them and call return_result.
+    
+    with open('solution.stim', 'w') as f:
+        f.write(str(c_final))
+        
+    with open('ancillas.txt', 'w') as f:
+        f.write(str(ancillas))
+    
+    print("Solution generated.")

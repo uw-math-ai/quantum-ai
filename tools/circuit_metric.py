@@ -148,13 +148,16 @@ def is_strictly_more_optimal(
         tick_is_barrier=tick_is_barrier,
     )
 
-    better = (cand.cx_count, cand.volume) < (base.cx_count, base.volume)
+    better = (
+        (cand.two_qubit_gates, cand.volume, cand.depth)
+        < (base.two_qubit_gates, base.volume, base.depth)
+    )
 
     return better, {
         "candidate": cand.as_dict(),
         "baseline": base.as_dict(),
         "better": better,
-        "comparison_rule": "lexicographic: (cx_count, volume, depth)",
+        "comparison_rule": "lexicographic: (two_qubit_gates, volume, depth)",
         "tick_is_barrier": tick_is_barrier,
         "volume_gates": sorted(volume_gates),
     }

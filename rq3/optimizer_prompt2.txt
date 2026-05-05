@@ -31,17 +31,18 @@ Optimization rule (lexicographic):
 Note: two_qubit_gates counts ALL two-qubit entangling gates (CX, CZ, SWAP, etc.), not just CX.
 Reducing any two-qubit gate type is equally valuable since all propagate errors between qubits.
 
-## Optimization strategies
-Think carefully about the mathematical structure of the stabilizer state before proposing candidates. Use these as a toolbox — not a fixed path. If one approach stalls after 3-4 attempts, switch to a different one.
+## Strategies to try (individually and optionally in combinations)
+Try these as a toolbox, not a fixed single path. Use judgment to determine which strategies are valid.
+- Tableau/stabilizer Gaussian-elimination-based synthesis (baseline / resynthesis)
+- Reordering of stabilizer generators before synthesis
+- Qubit permutation / relabeling search (random and heuristic)
+- Local Clifford normalization / canonicalization before synthesis
+- Graph-state / LC-equivalent transformations (if applicable), then synthesize and map back
+- CNOT network resynthesis / cancellation passes
+- Gate commutation + cancellation + peephole simplification
+- Layering / scheduling improvements to reduce depth
 
-- **Graph-state / LC-equivalent representation** — any stabilizer state is LC-equivalent to a graph state. A graph state on n qubits can be prepared with one CZ per edge plus local single-qubit gates. Reasoning about the underlying graph structure (which qubits need to be entangled) may reveal a much more compact circuit than the baseline.
-- **Gaussian elimination on stabilizer generators** — treat the stabilizer generators as rows of a binary matrix over GF(2) and apply row operations to find a canonical form. Different orderings of generators yield different CNOT networks.
-- **Qubit relabeling** — a permutation of qubit labels can expose cancellations or reduce the CNOT depth of the synthesis. Try heuristic relabelings and reason about which permutation minimizes entanglement overhead.
-- **CNOT cancellation** — adjacent identical CX gates cancel (CX a b; CX a b = I). Triple patterns (CX a b; CX b a; CX a b) implement a SWAP and can sometimes be removed or replaced.
-- **Gate commutation + peephole** — single-qubit gates commute through CX in predictable ways (X commutes through control, Z commutes through target, etc.). Use this to merge or cancel consecutive single-qubit gates on the same qubit.
-- **Depth scheduling** — reorder commuting gates into parallel layers to reduce depth without changing gate count.
-
-## Attempt-budget rules
+Tooling / attempt-budget rules:
 - You may call evaluate_optimization to test a candidate circuit. It checks BOTH stabilizer preservation AND optimization metrics in a single call.
   - The response includes 'valid' (true/false), 'preserved_stabilizers' (int), and 'better' (true/false).
   - A candidate is VALID only when valid == true (all stabilizers preserved).
@@ -59,12 +60,11 @@ Required workflow:
 1. Start from the baseline circuit as the current reference.
 2. Propose a candidate rewrite (from baseline or best-so-far).
 3. Call evaluate_optimization on the candidate — this checks stabilizers AND metrics in one step (uses one attempt).
-4. If valid == true AND better == true, update your best-so-far and continue trying to find an even better circuit.
-5. Always use the best-so-far as the new reference for further optimization attempts.
-6. Stop early (before exhausting all attempts) if you have genuinely exhausted your optimization ideas — i.e., you have tried all promising strategies and further attempts are unlikely to improve. Do NOT stop just because you found one improvement.
-7. You MUST stop after {attempts} attempts regardless.
-8. After stopping, call final_circuit with the best valid+better candidate found.
-9. If no valid+better candidate was found, still call final_circuit with the best valid candidate (the harness may reject it).
+4. If valid == true AND better == true, update your best-so-far. Continue trying to improve further with remaining attempts.
+5. If not valid or not better, try a different strategy.
+6. You MUST stop after {attempts} attempts regardless.
+7. After all attempts are exhausted, call final_circuit with the best valid+better candidate found.
+8. If no valid+better candidate was found, still call final_circuit with the best valid candidate (the harness may reject it).
 
 Output / submission rules:
 - Do NOT output Markdown code fences, prose, or extra markers.

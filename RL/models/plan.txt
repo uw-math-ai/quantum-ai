@@ -1,0 +1,292 @@
+State Preparation Embedding GNN Design Document
+
+Status
+- Implemented and smoke-tested.
+- Primary implementation: RL/models/StatePrepGNN.py
+- Primary tests: RL/tests/test_state_prep_gnn.py
+- AlphaZero heads implementation: RL/models/StatePrepGNN.py
+- AlphaZero heads tests: RL/tests/test_state_prep_alphazero_heads.py
+
+1. Problem Statement
+We need a graph neural network that embeds stabilizer-tableau structure for backward state preparation. The model should:
+- Consume a graph derived from a tableau, not raw tableau in forward.
+- Produce a d-dimensional embedding for every node.
+- Support caching by separating graph construction from model forward pass.
+- Support batched execution, including variable-size tableaux.
+
+2. Inputs and Outputs
+
+2.1 Forward Input
+Forward accepts a pre-built PyG graph object (Data or Batch) with:
+- x: node feature matrix
+- edge_index: directed edge list
+- edge_attr: edge features
+
+2.2 Forward Output
+Forward returns EmbeddingGNNOutput with:
+- node_embeddings: shape (total_nodes, d)
+- batch_index: graph/component id per node
+- graph_ptr: cumulative node boundaries per component
+
+2.3 Post-processing Helper
+EmbeddingGNNOutput.split_embeddings() returns a list of per-component embedding tensors using graph_ptr boundaries.
+
+3. Graph Construction Specification
+
+3.1 Tableau Convention
+For n qubits, observation tableau shape is n x (2n + 1):
+- Columns 0..n-1: X part
+- Columns n..2n-1: Z part
+- Column 2n: phase bit
+
+3.2 Node Set
+- Qubit nodes: n nodes, feature [1, 0]
+- Stabilizer nodes: n nodes, feature [0, phase_sign]
+	- phase_sign = +1 when phase bit is 0
+	- phase_sign = -1 when phase bit is 1
+- Virtual node: 1 node, feature configurable (default [0, 0])
+
+3.3 Edge Set
+- Bipartite edges between stabilizer j and qubit i with edge feature [X_ji, Z_ji]
+- Omit bipartite edge when X_ji = 0 and Z_ji = 0
+- All bipartite edges are bidirectional
+- Virtual node connects bidirectionally to all non-virtual nodes
+- Virtual edges use neutral feature [0, 0]
+
+3.4 Node Ordering Invariant
+Node order is fixed as:
+1. qubit nodes
+2. stabilizer nodes
+3. virtual node
+
+This invariant allows direct qubit extraction using the first n rows of each component embedding.
+
+4. API Design
+
+4.1 Model Class
+- EmbeddingGNN(embedding_dim, num_layers=3, dropout=0.0)
+- Edge-aware message passing uses GINEConv with edge_dim=2.
+
+4.2 Static Graph Builders
+- build_graph(tableau, virtual_node_feature=(0.0, 0.0))
+	- builds one graph component from one tableau
+- build_batch_graph(tableaux, virtual_node_feature=(0.0, 0.0))
+	- supports three forms:
+		- single 2D tableau
+		- dense 3D batch with shared shape
+		- list/tuple of tableaux with variable n
+	- each input tableau becomes a disconnected component in the returned Batch
+
+4.3 Forward for Cached Graphs
+Forward does not rebuild graphs. This is intentional for caching and repeated inference/training over static or reused graph structures.
+
+5. Batching and Component Recovery
+
+5.1 Component Identification
+- batch_index marks per-node component id.
+- graph_ptr stores contiguous boundaries for each component in node_embeddings.
+
+5.2 Split Utility
+split_embeddings() returns list[Tensor], one tensor per connected component.
+
+5.3 Qubit Embedding Extraction
+For each component with n qubits, qubit embeddings are component_embeddings[:n].
+
+6. Error Handling and Validation
+- Fails clearly if torch_geometric is unavailable.
+- Validates tableau shape constraints for single-tableau graph building.
+- Validates non-empty sequence for variable-size batch input.
+- Validates required graph attributes in forward (x, edge_index, edge_attr).
+
+7. Performance Considerations
+- Graph construction is separated from forward to enable caching.
+- This avoids repeated tableau-to-graph conversion overhead in training loops.
+- Mixed-size batching is supported through disconnected Batch components.
+
+8. Test Coverage and Results
+Implemented smoke tests verify:
+- Node/edge construction correctness and phase mapping.
+- Forward output shapes for single and batched inputs.
+- Gradient flow through the model.
+- Variable-size sequence batching and component boundaries.
+- split_embeddings helper correctness.
+
+Current smoke test status:
+- 4 tests passed in RL/tests/test_state_prep_gnn.py
+
+9. Known Constraints
+- Edge feature dimension is fixed at 2 ([X, Z]).
+- Virtual edges are neutral ([0, 0]) and not explicitly typed.
+- Forward expects a PyG Data/Batch object, not raw tableau.
+
+10. Integration Notes
+- Dependency declared in RL/requirements.txt: torch-geometric
+- Typical flow:
+	1. Build graph once via build_graph or build_batch_graph.
+	2. Cache graph object.
+	3. Call model forward repeatedly.
+	4. Use split_embeddings and ordering invariant for downstream node-type-specific logic.
+
+11. Future Extensions
+- Optional explicit node type id tensor for downstream models.
+- Optional virtual-edge indicator channel if relation typing becomes useful.
+- Optional pooling heads for graph-level objectives.
+
+12. AlphaZero Heads Design and Implementation
+
+12.1 Objective
+Add two output heads on top of qubit/node embeddings for AlphaZero-style training:
+- StatePrepActionHead: policy over environment actions.
+- StatePrepValueHead: scalar value in [0, 1].
+
+This section now reflects implemented behavior.
+
+12.2 Integration Point
+The heads will consume EmbeddingGNN outputs:
+- Per-graph qubit embeddings extracted via ordering invariant and split_embeddings().
+- Optional graph-level pooled embedding for value head.
+
+Expected model stack:
+1. EmbeddingGNN forward on pre-built graph batch.
+2. Split embeddings per component.
+3. For each component, slice qubit embeddings [:n].
+4. Run action/value heads.
+
+12.3 StatePrepActionHead Design
+
+Inputs per graph
+- qubit_emb: shape (n, d)
+- one_qubit_gates list length: G1
+- two_qubit_gates list length: G2
+
+Submodule A: Single-qubit MLP
+- Shared MLP applied to each qubit embedding.
+- Input: (n, d)
+- Output: (n, G1)
+- Semantics: score for each one-qubit gate on each target qubit.
+
+Submodule B: Two-qubit MLP
+- Build ordered pairs (control=i, target=j) with i != j.
+- Pair embedding: concat(qubit_emb[i], qubit_emb[j]) -> shape (2d)
+- Batch size: n*(n-1) ordered pairs.
+- Shared MLP input: (n*(n-1), 2d)
+- Output: (n*(n-1), G2)
+- Semantics: score for each two-qubit gate for each (control, target) pair.
+
+Two-qubit self-pair handling (required)
+- Environment now excludes control == target (i -> i) actions from the action space.
+- Action head should not emit policy entries for i == j pairs.
+
+Flattening and concatenation
+- Flatten single-qubit scores in qubit-major ordering:
+	- index order: target qubit outer loop, gate inner loop.
+	- shape: (n * G1,)
+- Flatten two-qubit scores in qubit-major ordering compatible with BackwardStatePrepEnv:
+	- index order uses env pair mapping for i != j only:
+	  pair_idx = control * (n - 1) + (target if target < control else target - 1)
+	  then gate inner loop.
+	- shape: (n*(n-1) * G2,)
+- Concatenate:
+	- policy_vector = [single_flat, two_qubit_flat]
+	- final shape: (n * G1 + n*(n-1) * G2,)
+- Apply softmax over final flattened policy_vector to get action probabilities.
+
+Compatibility requirement
+- Final ordering must exactly match BackwardStatePrepEnv action encoding:
+	- one_qubit_limit = n * G1
+	- two-qubit index offset uses pair_idx(control, target) * G2 + gate_idx
+	  with pair_idx skipping i == j as above.
+
+Batch handling
+- Variable n per component implies ragged action vectors.
+- Implemented behavior: compute policy per graph component and return a list[Tensor]
+	of action probabilities.
+- Optional future collation strategy: pad to max action length with mask for minibatch training.
+
+12.4 StatePrepValueHead Design
+
+Input per graph
+- component node embeddings: shape (2n + 1, d)
+
+Pooling
+- Mean pool over all nodes (qubit + stabilizer + virtual):
+	- pooled = mean(node_embeddings, dim=0)
+	- shape: (d,)
+
+MLP
+- Input: (d,)
+- Output: scalar logit
+- Apply sigmoid to constrain output to [0, 1].
+
+Training target (circuit-size agnostic)
+- Value supervision should use distance-to-go as a proportion of Aaronson-Gottesman circuit length.
+- Suggested target form:
+	- value_target = 1 - (remaining_steps / ag_circuit_length)
+	- clipped to [0, 1]
+- This keeps value labels normalized across different circuit sizes.
+
+Batch handling
+- Compute one value per graph component.
+- Implemented return shape: tensor of shape (B,), where B is the number of graph components.
+
+12.5 API Surface (Implemented)
+
+Modules
+- StatePrepActionHead(nn.Module)
+- StatePrepValueHead(nn.Module)
+- StatePrepAlphaZeroModel(nn.Module)
+
+Wrapper module behavior
+- StatePrepAlphaZeroModel contains EmbeddingGNN + ActionHead + ValueHead.
+- forward(graph) returns:
+	- embeddings: EmbeddingGNNOutput
+	- policy_probs: list[Tensor], one per component
+	- values: Tensor of shape (B,)
+
+12.6 Numerical and Training Notes
+- API returns policy probabilities directly for both training and inference usage.
+- For training with cross-entropy/KL on probs, use numerically stable log/clamp handling.
+- Value head target range [0,1] matches sigmoid output.
+- Consider temperature scaling in policy sampling at inference time.
+- If using legacy checkpoints/heads that assumed n^2 pairs, remap or retrain due to changed policy indexing.
+- Implementation supports n=1 (single-qubit-only action space with no two-qubit branch output).
+- Implementation aligns graph/head tensors to module device in forward for GPU compatibility.
+
+12.7 Validation Coverage (Implemented Tests)
+- Shape tests for single-graph case:
+	- policy length = n*G1 + n*(n-1)*G2
+	- value in [0,1]
+- Ordering tests:
+	- verify specific policy entries map to expected action indices based on env encoding.
+- Invalid-action tests:
+	- verify head does not produce i == j entries at all.
+	- verify env rejects explicit (gate, i, i) with ValueError.
+- Batch tests with variable n:
+	- per-graph policy lengths differ as expected.
+	- per-graph value count equals number of components.
+- Probability tests:
+	- policy_probs sums to 1 per graph.
+- Gradient flow tests:
+	- backprop through both heads and GNN end-to-end.
+
+Implemented test files
+- RL/tests/test_state_prep_gnn.py
+- RL/tests/test_state_prep_alphazero_heads.py
+
+Current combined smoke status
+- 10 tests passed across the two files above.
+
+12.8 Implementation Sequence (Completed)
+1. Added StatePrepActionHead with single/two-qubit MLP branches.
+2. Added deterministic ordered-pair generation aligned with env pair indexing.
+3. Added StatePrepValueHead with mean pooling + sigmoid MLP.
+4. Added StatePrepAlphaZeroModel wrapper wiring trunk and heads.
+5. Added unit tests for shapes, ordering-compatible lengths, probabilities, and gradients.
+
+12.9 Open Decisions
+- Whether to include masked padded batch output for variable action lengths.
+- Exact hidden sizes/depth for both head MLPs.
+- Decision needed: keep a compatibility shim for old n^2 policy checkpoints, or treat the reduced indexing as a clean break.
+
+12.10 Recommendation
+- Use the new reduced action space everywhere (env + policy head) so invalid two-qubit self-actions are structurally impossible.

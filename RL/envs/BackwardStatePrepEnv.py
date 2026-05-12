@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Optional, Literal
 
 import sys
+import copy
 
 import gymnasium as gym
 import numpy as np
@@ -47,7 +48,7 @@ class BackwardStatePrepEnv(gym.Env[npt.NDArray[np.int8], int]):
     Columns are [X-part | Z-part | phase], one row per Z-stabilizer generator.
 
     Action space: Discrete - one-qubit gates on any qubit, two-qubit gates on
-    any ordered pair of qubits, plus a terminal "done" action.
+    ordered control/target pairs with control != target.
     """
 
     metadata = {"render_modes": ["string", "diagram"]}
@@ -85,10 +86,11 @@ class BackwardStatePrepEnv(gym.Env[npt.NDArray[np.int8], int]):
             for i, gate in enumerate(config.one_qubit_gates + config.two_qubit_gates)
         }
 
-        # Action space: 1q gates × n qubits  +  2q gates × n² qubit pairs
+        # Action space: 1q gates × n qubits  +  2q gates × n*(n-1) ordered pairs
+        self.num_two_qubit_pairs = n * (n - 1)
         self.action_space = spaces.Discrete(
             len(config.one_qubit_gates) * n
-            + len(config.two_qubit_gates) * n ** 2
+            + len(config.two_qubit_gates) * self.num_two_qubit_pairs
         )
 
         # Observation: binary z-stabilizers tableau  shape (n, 2n+1)
@@ -173,7 +175,8 @@ class BackwardStatePrepEnv(gym.Env[npt.NDArray[np.int8], int]):
 
         Encoding (qubit-major):
           1q: target * num_1q_gates + gate_idx
-          2q: one_qubit_limit + (control * n + target) * num_2q_gates + gate_idx
+                    2q: one_qubit_limit + pair_idx(control, target) * num_2q_gates + gate_idx
+                            where pair_idx skips control == target.
         """
         n = self.num_qubits
         num_1q = len(self.config.one_qubit_gates)
@@ -191,8 +194,11 @@ class BackwardStatePrepEnv(gym.Env[npt.NDArray[np.int8], int]):
             gate, control, target = action
             if gate not in self.config.two_qubit_gates:
                 raise ValueError(f"Unknown two-qubit gate: {gate!r}")
+            if control == target:
+                raise ValueError("Invalid two-qubit action: control and target must differ.")
             gate_idx = self.gate_map[gate] - len(self.config.one_qubit_gates)
-            return one_qubit_limit + (control * n + target) * num_2q + gate_idx
+            pair_idx = self._pair_to_index(control, target)
+            return one_qubit_limit + pair_idx * num_2q + gate_idx
 
         raise ValueError(f"Invalid action format: {action!r}")
 
@@ -218,10 +224,34 @@ class BackwardStatePrepEnv(gym.Env[npt.NDArray[np.int8], int]):
         offset   = action_int - one_qubit_limit
         pair_idx = offset // num_2q
         gate_idx = offset % num_2q
-        control  = pair_idx // n
-        target   = pair_idx % n
+        control, target = self._index_to_pair(pair_idx)
         gate = list(self.config.two_qubit_gates)[gate_idx]
         return (gate, control, target)
+
+    def _pair_to_index(self, control: int, target: int) -> int:
+        """Map an ordered (control, target) pair with control != target to [0, n*(n-1))."""
+        n = self.num_qubits
+        if not (0 <= control < n and 0 <= target < n):
+            raise ValueError(
+                f"Qubit indices out of bounds for n={n}: control={control}, target={target}"
+            )
+        if control == target:
+            raise ValueError("Invalid two-qubit pair: control and target must differ.")
+
+        # Row-major over control, skipping the diagonal entry in each row.
+        return control * (n - 1) + (target if target < control else target - 1)
+
+    def _index_to_pair(self, pair_idx: int) -> tuple[int, int]:
+        """Inverse mapping of _pair_to_index for pair_idx in [0, n*(n-1))."""
+        n = self.num_qubits
+        max_pairs = n * (n - 1)
+        if pair_idx < 0 or pair_idx >= max_pairs:
+            raise ValueError(f"Two-qubit pair index {pair_idx} out of bounds [0, {max_pairs}).")
+
+        control = pair_idx // (n - 1)
+        rem = pair_idx % (n - 1)
+        target = rem if rem < control else rem + 1
+        return control, target
 
     def get_state_preparation_circuit(self) -> stim.Circuit:
         """Return the current circuit that prepares the target state from |0...0>."""
@@ -236,6 +266,22 @@ class BackwardStatePrepEnv(gym.Env[npt.NDArray[np.int8], int]):
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    def get_mcts_state(self) -> dict[str, Any]:
+        """Return a lightweight snapshot used by MCTS search workers."""
+        return {
+            "curr_circ": self.curr_circ.copy(),
+            "steps_taken": int(self.steps_taken),
+            "appended_gates": copy.deepcopy(self.appended_gates),
+            "last_fidelity": float(self.last_fidelity),
+        }
+
+    def set_mcts_state(self, state: dict[str, Any]) -> None:
+        """Restore snapshot produced by get_mcts_state()."""
+        self.curr_circ = state["curr_circ"].copy()
+        self.steps_taken = int(state["steps_taken"])
+        self.appended_gates = copy.deepcopy(state["appended_gates"])
+        self.last_fidelity = float(state["last_fidelity"])
 
     def _compute_fidelity(self, obs) -> float:
         """

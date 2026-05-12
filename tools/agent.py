@@ -78,12 +78,15 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
         attachments = []
 
     async def run():
-        client = CopilotClient(auto_start=True)
+        client = CopilotClient(options={"auto_start": True})
         try:
             resolved_model, provider = _resolve_model_and_provider(model)
 
+            def _approve_all_permission(_, __):
+                return {"kind": "approved", "rules": []}
+
             create_kwargs: dict = {
-                "on_permission_request": PermissionHandler.approve_all,
+                "on_permission_request": _approve_all_permission,
                 "model": resolved_model,
                 "tools": tools,
             }
@@ -92,7 +95,7 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
             if provider:
                 create_kwargs["provider"] = provider
 
-            session = await client.create_session(**create_kwargs)
+            session = await client.create_session(create_kwargs)
 
             response = ""
 
@@ -105,7 +108,7 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
 
             session.on(handle_event)
 
-            await session.send_and_wait(prompt, attachments=attachments or None, timeout=timeout)
+            await session.send_and_wait(options={"prompt": prompt, "attachments": attachments or None}, timeout=timeout)
             return response
         finally:
             await client.stop()
@@ -328,8 +331,8 @@ def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1,
         stabilizers_str=stabilizers_str,
         qubits_count=qubits_count,
         qubits_count_less_1=qubits_count - 1,
-        # attempts=attempts,
-        # agent_files_dir=agent_files_dir
+        attempts=attempts,
+        agent_files_dir=agent_files_dir
     )
 
     system_message = SYSTEM_PROMPT_TEMPLATE.format(
@@ -591,7 +594,8 @@ def main():
         "XIXZZ",
         "ZXIXZ"
         ]
-    model = "claude-opus-4.6"
+    model = "gpt-4.1"
+    # model = "claude-opus-4.6"
     # model = "claude-sonnet-4.5"
     # model = "gemini-3-pro-preview"
     # model = "gpt-5.2"

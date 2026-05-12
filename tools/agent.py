@@ -11,13 +11,15 @@ from copilot.generated.session_events import SessionEventType, SessionEvent
 from pydantic import BaseModel, Field
 from pathlib import Path
 
-
-
 from check_stabilizers import check_stabilizers
 from check_error_propagation import check_fault_tolerance, ft_score
 from circuit_metric import is_strictly_more_optimal
 
 load_dotenv(Path(__file__).parent / ".env")
+
+# Load system prompt template once at module startup
+with open("tools/system_prompt.txt", "r") as f:
+    SYSTEM_PROMPT_TEMPLATE = f.read()
 
 class CircuitParam(BaseModel):
     circuit: str = Field(description="The Stim circuit description as a string")
@@ -235,16 +237,20 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
         non_ft_circuit=non_ft_circuit,
         distance=distance,
         stabilizers_str=stabilizers_str,
+        # attempts=attempts,
+        # agent_files_dir=agent_files_dir
+    )
+
+    system_message = SYSTEM_PROMPT_TEMPLATE.format(
+        N=attempts,
         agent_files_dir=agent_files_dir,
-        attempts=attempts,
+        tools="validate_circuit, return_result",
+        return_tool="return_result"
     )
 
     print(prompt)
 
-    try:
-        prompt_agent(prompt, tools=[validate_circuit, return_result], model=model, timeout=timeout)
-    except Exception as e:
-        print(f"  ⚠ generate_ft_state_prep caught exception: {e}")
+    prompt_agent(prompt, system_message=system_message, tools=[validate_circuit, return_result], model=model, timeout=timeout)
 
     if result is None:
         return None, all_candidates
@@ -322,13 +328,20 @@ def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1,
         stabilizers_str=stabilizers_str,
         qubits_count=qubits_count,
         qubits_count_less_1=qubits_count - 1,
-        attempts=attempts,
-        agent_files_dir=agent_files_dir
+        # attempts=attempts,
+        # agent_files_dir=agent_files_dir
+    )
+
+    system_message = SYSTEM_PROMPT_TEMPLATE.format(
+        N=attempts,
+        agent_files_dir=agent_files_dir,
+        tools="check_stabilizers_tool, final_circuit",
+        return_tool="final_circuit"
     )
 
     print(prompt)
 
-    prompt_agent(prompt, tools=[check_stabilizers_tool, final_circuit], model=model, timeout=timeout)
+    prompt_agent(prompt, system_message=system_message, tools=[check_stabilizers_tool, final_circuit], model=model, timeout=timeout)
 
     # Check if result was populated by the agent
     if not result:
@@ -538,13 +551,20 @@ def generate_optimized_circuit(
     prompt = prompt_template.format(
         stabilizers_str=stabilizers_str,
         initial_circuit=initial_circuit,
-        attempts=attempts,
+        # attempts=attempts,
+        # agent_files_dir=str(agent_files_dir),
+    )
+
+    system_message = SYSTEM_PROMPT_TEMPLATE.format(
+        N=attempts,
         agent_files_dir=str(agent_files_dir),
+        tools="evaluate_optimization, final_circuit",
+        return_tool="final_circuit"
     )
 
     print(prompt)
 
-    prompt_agent(prompt, tools=[evaluate_optimization, final_circuit], model=model, timeout=timeout)
+    prompt_agent(prompt, system_message=system_message, tools=[evaluate_optimization, final_circuit], model=model, timeout=timeout)
 
     # Return best found: prefer what agent explicitly submitted via final_circuit,
     # but fall back to the best internally tracked if the agent failed to submit.

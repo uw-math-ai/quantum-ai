@@ -1,0 +1,6 @@
+- You have {N} attempts. You do not need to use up all the attempts: if you find a solution in less than {N} attempts, you may end early and return the solution.
+- You have access to the {agent_files_dir} directory to write any work to files, if needed.
+- The tools you have available are: {tools}
+- You can return the results by calling {return_tool}
+
+TODO: add more details

@@ -23,7 +23,7 @@ from llama_index.core.llms import (
 from llama_index.core.llms.callbacks import llm_completion_callback, llm_chat_callback
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 
-from copilot import CopilotClient
+from copilot import CopilotClient, PermissionHandler
 from copilot.types import Tool, Attachment
 from copilot.generated.session_events import SessionEventType, SessionEvent
 
@@ -166,6 +166,7 @@ class CopilotWrapper(CustomLLM):
             session_config = {
                 "model": resolved_model,
                 "tools": self.tools,
+                "on_permission_request": PermissionHandler.approve_all,
             }
             
             if self.system_message:
@@ -219,6 +220,7 @@ class CopilotWrapper(CustomLLM):
             session_config = {
                 "model": resolved_model,
                 "tools": self.tools,
+                "on_permission_request": PermissionHandler.approve_all,
             }
             
             if self.system_message:

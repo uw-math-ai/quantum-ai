@@ -74,40 +74,6 @@ def generate_circuits_from_data(
                     prompt_file=prompt_file
                 )
                 end_time = datetime.now()
-                # generated_candidates = list(generated_ft_circuits)
-                # generated_candidates = []
-                # best_candidate = None
-                # best_score = -1
-
-                # for circ in generated_ft_circuits:
-                #     try:
-                #         circ_str = str(circ)
-
-                #         used_qubits = set()
-                #         for inst in circ:
-                #             for t in inst.targets_copy():
-                #                 if hasattr(t, "value"):
-                #                     used_qubits.add(t.value)
-
-                #         data_qubits = set(qubits)
-                #         anc = sorted(list(used_qubits - data_qubits))
-
-                #         score = ft_score(circ_str, qubits, anc, distance, 1.0)
-
-                #         candidate = {
-                #             "circuit": circ_str,
-                #             "ft_score": score
-                #         }
-
-                #         generated_candidates.append(candidate)
-
-                #         if score > best_score:
-                #             best_score = score
-                #             best_candidate = candidate
-
-                #     except Exception as e:
-                #         print(f"Skipping invalid generated circuit: {e}")
-                
 
                 # If no final result but we have validated candidates, use the latest one
                 if circuit_results is None and all_candidates:
@@ -140,15 +106,10 @@ def generate_circuits_from_data(
 
                     score = ft_score(circuit_str, qubits, ancillas, distance)
                     print(f"   FT score: {score}")
-                    # generated_candidates.append({
-                    #     "circuit": circuit_str,
-                    #     "ft_score": score
-                    # })
 
                     all_true = all([all_stabilized, is_ft])
                 else:
                     circuit_str = None
-                    # ancilla = None
                     is_ft = None
                     ft_details = None
                     score = None
@@ -199,24 +160,6 @@ def generate_circuits_from_data(
                 runtime_seconds = (end_time - start_time).total_seconds()
                         
 
-            #output all of the circuits instead of the most valid one (just the score and the circuit, not the other stuff)
-            # best = {
-            #     "circuit": circuit_str,
-            #     "ft_score": score,
-            #     "ft_check": is_ft,
-            #     "all_stabilized": all_stabilized,
-            #     "stabilizer_details": stab_results,
-            #     "ALL TRUE": all_true
-            # }
-            # result = {
-            #     "code_name": entry["source_code"],
-            #     "original_score": orig_ft_score,
-            #     "start_time": start_time.isoformat() if start_time else None,
-            #     "end_time": end_time.isoformat() if end_time else None,
-            #     "runtime_seconds": runtime_seconds,
-            #     "best_output": best
-            #     # "generated_circuits": generated_candidates
-            # }
             # Best output
             best = {
                 "circuit": circuit_str,

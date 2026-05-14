@@ -1,7 +1,0 @@
-Loaded baseline. Qubits: 155
-Baseline metrics: CX=1324, Vol=1543
-Extracted tableau from baseline.
-New Best: CX=0, Vol=1838
-New Best: CX=0, Vol=1742
-New Best: CX=0, Vol=1677
-Done. Best saved to candidate.stim

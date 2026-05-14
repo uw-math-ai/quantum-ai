@@ -9,4 +9,5 @@ agent_files/
 agent_files_ft/
 **/agent_files_ft/
 B1/analysis_results/
+rq1/analysis_results/
 .DS_Store

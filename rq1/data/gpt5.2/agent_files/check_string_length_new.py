@@ -1,6 +1,0 @@
-def check_len_new():
-    s = "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIXIIIXIXXIIII"
-    print(f"Length: {len(s)}")
-
-if __name__ == "__main__":
-    check_len_new()

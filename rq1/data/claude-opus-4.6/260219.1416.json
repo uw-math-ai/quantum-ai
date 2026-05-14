@@ -21,7 +21,8 @@
       "preserved": 0,
       "total": 4,
       "success_rate": 0.0,
-      "elapsed_seconds": 64.52
+      "elapsed_seconds": 64.52,
+      "all_stabilized": false
     },
     {
       "code_name": "Steane",
@@ -37,7 +38,8 @@
       "preserved": 6,
       "total": 6,
       "success_rate": 1.0,
-      "elapsed_seconds": 54.3
+      "elapsed_seconds": 54.3,
+      "all_stabilized": true
     },
     {
       "code_name": "Shor",
@@ -55,7 +57,8 @@
       "preserved": 0,
       "total": 8,
       "success_rate": 0.0,
-      "elapsed_seconds": 54.21
+      "elapsed_seconds": 54.21,
+      "all_stabilized": false
     },
     {
       "code_name": "Tetrahedral",
@@ -79,7 +82,8 @@
       "preserved": 14,
       "total": 14,
       "success_rate": 1.0,
-      "elapsed_seconds": 44.44
+      "elapsed_seconds": 44.44,
+      "all_stabilized": true
     },
     {
       "code_name": "Hamming",
@@ -97,7 +101,8 @@
       "preserved": 8,
       "total": 8,
       "success_rate": 1.0,
-      "elapsed_seconds": 48.53
+      "elapsed_seconds": 48.53,
+      "all_stabilized": true
     },
     {
       "code_name": "Carbon",
@@ -117,7 +122,8 @@
       "preserved": 10,
       "total": 10,
       "success_rate": 1.0,
-      "elapsed_seconds": 29.0
+      "elapsed_seconds": 29.0,
+      "all_stabilized": true
     },
     {
       "code_name": "Golay",
@@ -149,7 +155,8 @@
       "preserved": 22,
       "total": 22,
       "success_rate": 1.0,
-      "elapsed_seconds": 42.86
+      "elapsed_seconds": 42.86,
+      "all_stabilized": true
     },
     {
       "code_name": "BB Code n=72",
@@ -231,7 +238,8 @@
       "preserved": 58,
       "total": 72,
       "success_rate": 0.8055555555555556,
-      "elapsed_seconds": 333.65
+      "elapsed_seconds": 333.65,
+      "all_stabilized": false
     },
     {
       "code_name": "BB Code n=90",
@@ -331,7 +339,8 @@
       "preserved": 90,
       "total": 90,
       "success_rate": 1.0,
-      "elapsed_seconds": 189.36
+      "elapsed_seconds": 189.36,
+      "all_stabilized": true
     },
     {
       "code_name": "Iceberg Code m=2",
@@ -343,7 +352,8 @@
       "preserved": 2,
       "total": 2,
       "success_rate": 1.0,
-      "elapsed_seconds": 23.13
+      "elapsed_seconds": 23.13,
+      "all_stabilized": true
     },
     {
       "code_name": "Iceberg Code m=3",
@@ -355,7 +365,8 @@
       "preserved": 2,
       "total": 2,
       "success_rate": 1.0,
-      "elapsed_seconds": 28.99
+      "elapsed_seconds": 28.99,
+      "all_stabilized": true
     },
     {
       "code_name": "Iceberg Code m=4",
@@ -367,7 +378,8 @@
       "preserved": 2,
       "total": 2,
       "success_rate": 1.0,
-      "elapsed_seconds": 36.54
+      "elapsed_seconds": 36.54,
+      "all_stabilized": true
     },
     {
       "code_name": "Hypercube Code l=1",
@@ -379,7 +391,8 @@
       "preserved": 2,
       "total": 2,
       "success_rate": 1.0,
-      "elapsed_seconds": 26.93
+      "elapsed_seconds": 26.93,
+      "all_stabilized": true
     },
     {
       "code_name": "Hypercube Code l=2",
@@ -409,7 +422,8 @@
       "preserved": 20,
       "total": 20,
       "success_rate": 1.0,
-      "elapsed_seconds": 99.83
+      "elapsed_seconds": 99.83,
+      "all_stabilized": true
     },
     {
       "code_name": "Hex Color Code d=3",
@@ -425,7 +439,8 @@
       "preserved": 2,
       "total": 6,
       "success_rate": 0.3333333333333333,
-      "elapsed_seconds": 70.26
+      "elapsed_seconds": 70.26,
+      "all_stabilized": false
     },
     {
       "code_name": "Hex Color Code d=5",
@@ -453,7 +468,8 @@
       "preserved": 18,
       "total": 18,
       "success_rate": 1.0,
-      "elapsed_seconds": 41.89
+      "elapsed_seconds": 41.89,
+      "all_stabilized": true
     },
     {
       "code_name": "Hex Color Code d=7",
@@ -499,7 +515,8 @@
       "preserved": 36,
       "total": 36,
       "success_rate": 1.0,
-      "elapsed_seconds": 270.1
+      "elapsed_seconds": 270.1,
+      "all_stabilized": true
     },
     {
       "code_name": "Square Octagon Color Code d=3",
@@ -515,7 +532,8 @@
       "preserved": 6,
       "total": 6,
       "success_rate": 1.0,
-      "elapsed_seconds": 26.15
+      "elapsed_seconds": 26.15,
+      "all_stabilized": true
     },
     {
       "code_name": "Square Octagon Color Code d=5",
@@ -541,7 +559,8 @@
       "preserved": 16,
       "total": 16,
       "success_rate": 1.0,
-      "elapsed_seconds": 43.22
+      "elapsed_seconds": 43.22,
+      "all_stabilized": true
     },
     {
       "code_name": "Square Octagon Color Code d=7",
@@ -581,7 +600,8 @@
       "preserved": 30,
       "total": 30,
       "success_rate": 1.0,
-      "elapsed_seconds": 45.15
+      "elapsed_seconds": 45.15,
+      "all_stabilized": true
     },
     {
       "code_name": "Rotated Surface Code d=3",
@@ -599,7 +619,8 @@
       "preserved": 8,
       "total": 8,
       "success_rate": 1.0,
-      "elapsed_seconds": 63.33
+      "elapsed_seconds": 63.33,
+      "all_stabilized": true
     },
     {
       "code_name": "Rotated Surface Code d=5",
@@ -633,7 +654,8 @@
       "preserved": 24,
       "total": 24,
       "success_rate": 1.0,
-      "elapsed_seconds": 36.39
+      "elapsed_seconds": 36.39,
+      "all_stabilized": true
     },
     {
       "code_name": "Rotated Surface Code d=7",
@@ -691,7 +713,8 @@
       "preserved": 48,
       "total": 48,
       "success_rate": 1.0,
-      "elapsed_seconds": 143.78
+      "elapsed_seconds": 143.78,
+      "all_stabilized": true
     },
     {
       "code_name": "4-Qubit Detector Code",
@@ -703,7 +726,8 @@
       "preserved": 2,
       "total": 2,
       "success_rate": 1.0,
-      "elapsed_seconds": 24.64
+      "elapsed_seconds": 24.64,
+      "all_stabilized": true
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Perfect 5-Qubit Code)",
@@ -737,7 +761,8 @@
       "preserved": 24,
       "total": 24,
       "success_rate": 1.0,
-      "elapsed_seconds": 46.18
+      "elapsed_seconds": 46.18,
+      "all_stabilized": true
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Steane)",
@@ -781,7 +806,8 @@
       "preserved": 34,
       "total": 34,
       "success_rate": 1.0,
-      "elapsed_seconds": 48.64
+      "elapsed_seconds": 48.64,
+      "all_stabilized": true
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Shor)",
@@ -835,7 +861,8 @@
       "preserved": 44,
       "total": 44,
       "success_rate": 1.0,
-      "elapsed_seconds": 55.71
+      "elapsed_seconds": 55.71,
+      "all_stabilized": true
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Tetrahedral)",
@@ -919,7 +946,8 @@
       "preserved": 74,
       "total": 74,
       "success_rate": 1.0,
-      "elapsed_seconds": 397.55
+      "elapsed_seconds": 397.55,
+      "all_stabilized": true
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Golay)",
@@ -1043,7 +1071,8 @@
       "preserved": 114,
       "total": 114,
       "success_rate": 1.0,
-      "elapsed_seconds": 335.27
+      "elapsed_seconds": 335.27,
+      "all_stabilized": true
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Hex Color Code d=3)",
@@ -1087,7 +1116,8 @@
       "preserved": 34,
       "total": 34,
       "success_rate": 1.0,
-      "elapsed_seconds": 52.38
+      "elapsed_seconds": 52.38,
+      "all_stabilized": true
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Hex Color Code d=5)",
@@ -1191,7 +1221,8 @@
       "preserved": 94,
       "total": 94,
       "success_rate": 1.0,
-      "elapsed_seconds": 249.38
+      "elapsed_seconds": 249.38,
+      "all_stabilized": true
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Hex Color Code d=7)",
@@ -1200,7 +1231,8 @@
       "preserved": 0,
       "total": 184,
       "success_rate": 0.0,
-      "elapsed_seconds": 901.42
+      "elapsed_seconds": 901.42,
+      "all_stabilized": false
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Square Octagon Color Code d=3)",
@@ -1244,7 +1276,8 @@
       "preserved": 34,
       "total": 34,
       "success_rate": 1.0,
-      "elapsed_seconds": 50.8
+      "elapsed_seconds": 50.8,
+      "all_stabilized": true
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Square Octagon Color Code d=5)",
@@ -1338,7 +1371,8 @@
       "preserved": 84,
       "total": 84,
       "success_rate": 1.0,
-      "elapsed_seconds": 310.52
+      "elapsed_seconds": 310.52,
+      "all_stabilized": true
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Square Octagon Color Code d=7)",
@@ -1502,7 +1536,8 @@
       "preserved": 153,
       "total": 154,
       "success_rate": 0.9935064935064936,
-      "elapsed_seconds": 457.96
+      "elapsed_seconds": 457.96,
+      "all_stabilized": false
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Rotated Surface Code d=3)",
@@ -1556,7 +1591,8 @@
       "preserved": 44,
       "total": 44,
       "success_rate": 1.0,
-      "elapsed_seconds": 82.24
+      "elapsed_seconds": 82.24,
+      "all_stabilized": true
     },
     {
       "code_name": "(Perfect 5-Qubit Code) * (Rotated Surface Code d=5)",
@@ -1565,7 +1601,8 @@
       "preserved": 0,
       "total": 124,
       "success_rate": 0.0,
-      "elapsed_seconds": 901.92
+      "elapsed_seconds": 901.92,
+      "all_stabilized": false
     },
     {
       "code_name": "(Steane) * (Perfect 5-Qubit Code)",
@@ -1609,7 +1646,8 @@
       "preserved": 34,
       "total": 34,
       "success_rate": 1.0,
-      "elapsed_seconds": 60.12
+      "elapsed_seconds": 60.12,
+      "all_stabilized": true
     },
     {
       "code_name": "(Steane) * (Steane)",
@@ -1667,7 +1705,8 @@
       "preserved": 48,
       "total": 48,
       "success_rate": 1.0,
-      "elapsed_seconds": 87.97
+      "elapsed_seconds": 87.97,
+      "all_stabilized": true
     },
     {
       "code_name": "(Steane) * (Shor)",
@@ -1739,7 +1778,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 89.03
+      "elapsed_seconds": 89.03,
+      "all_stabilized": true
     },
     {
       "code_name": "(Steane) * (Tetrahedral)",
@@ -1853,7 +1893,8 @@
       "preserved": 104,
       "total": 104,
       "success_rate": 1.0,
-      "elapsed_seconds": 441.27
+      "elapsed_seconds": 441.27,
+      "all_stabilized": true
     },
     {
       "code_name": "(Steane) * (Golay)",
@@ -2023,7 +2064,8 @@
       "preserved": 153,
       "total": 160,
       "success_rate": 0.95625,
-      "elapsed_seconds": 387.79
+      "elapsed_seconds": 387.79,
+      "all_stabilized": false
     },
     {
       "code_name": "(Steane) * (Hex Color Code d=3)",
@@ -2081,7 +2123,8 @@
       "preserved": 48,
       "total": 48,
       "success_rate": 1.0,
-      "elapsed_seconds": 65.15
+      "elapsed_seconds": 65.15,
+      "all_stabilized": true
     },
     {
       "code_name": "(Steane) * (Hex Color Code d=5)",
@@ -2223,7 +2266,8 @@
       "preserved": 132,
       "total": 132,
       "success_rate": 1.0,
-      "elapsed_seconds": 266.71
+      "elapsed_seconds": 266.71,
+      "all_stabilized": true
     },
     {
       "code_name": "(Steane) * (Square Octagon Color Code d=3)",
@@ -2281,7 +2325,8 @@
       "preserved": 48,
       "total": 48,
       "success_rate": 1.0,
-      "elapsed_seconds": 79.01
+      "elapsed_seconds": 79.01,
+      "all_stabilized": true
     },
     {
       "code_name": "(Steane) * (Square Octagon Color Code d=5)",
@@ -2409,7 +2454,8 @@
       "preserved": 118,
       "total": 118,
       "success_rate": 1.0,
-      "elapsed_seconds": 741.46
+      "elapsed_seconds": 741.46,
+      "all_stabilized": true
     },
     {
       "code_name": "(Steane) * (Rotated Surface Code d=3)",
@@ -2481,7 +2527,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 97.06
+      "elapsed_seconds": 97.06,
+      "all_stabilized": true
     },
     {
       "code_name": "(Steane) * (Rotated Surface Code d=5)",
@@ -2490,7 +2537,8 @@
       "preserved": 0,
       "total": 174,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.56
+      "elapsed_seconds": 902.56,
+      "all_stabilized": false
     },
     {
       "code_name": "(Shor) * (Perfect 5-Qubit Code)",
@@ -2544,7 +2592,8 @@
       "preserved": 44,
       "total": 44,
       "success_rate": 1.0,
-      "elapsed_seconds": 82.49
+      "elapsed_seconds": 82.49,
+      "all_stabilized": true
     },
     {
       "code_name": "(Shor) * (Steane)",
@@ -2616,7 +2665,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 127.47
+      "elapsed_seconds": 127.47,
+      "all_stabilized": true
     },
     {
       "code_name": "(Shor) * (Shor)",
@@ -2706,7 +2756,8 @@
       "preserved": 80,
       "total": 80,
       "success_rate": 1.0,
-      "elapsed_seconds": 115.79
+      "elapsed_seconds": 115.79,
+      "all_stabilized": true
     },
     {
       "code_name": "(Shor) * (Tetrahedral)",
@@ -2850,7 +2901,8 @@
       "preserved": 134,
       "total": 134,
       "success_rate": 1.0,
-      "elapsed_seconds": 137.3
+      "elapsed_seconds": 137.3,
+      "all_stabilized": true
     },
     {
       "code_name": "(Shor) * (Hex Color Code d=3)",
@@ -2922,7 +2974,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 121.32
+      "elapsed_seconds": 121.32,
+      "all_stabilized": true
     },
     {
       "code_name": "(Shor) * (Hex Color Code d=5)",
@@ -2931,7 +2984,8 @@
       "preserved": 0,
       "total": 170,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.38
+      "elapsed_seconds": 902.38,
+      "all_stabilized": false
     },
     {
       "code_name": "(Shor) * (Square Octagon Color Code d=3)",
@@ -3003,7 +3057,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 345.89
+      "elapsed_seconds": 345.89,
+      "all_stabilized": true
     },
     {
       "code_name": "(Shor) * (Square Octagon Color Code d=5)",
@@ -3012,7 +3067,8 @@
       "preserved": 0,
       "total": 152,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.38
+      "elapsed_seconds": 902.38,
+      "all_stabilized": false
     },
     {
       "code_name": "(Shor) * (Rotated Surface Code d=3)",
@@ -3102,7 +3158,8 @@
       "preserved": 80,
       "total": 80,
       "success_rate": 1.0,
-      "elapsed_seconds": 160.6
+      "elapsed_seconds": 160.6,
+      "all_stabilized": true
     },
     {
       "code_name": "(Tetrahedral) * (Perfect 5-Qubit Code)",
@@ -3186,7 +3243,8 @@
       "preserved": 74,
       "total": 74,
       "success_rate": 1.0,
-      "elapsed_seconds": 190.95
+      "elapsed_seconds": 190.95,
+      "all_stabilized": true
     },
     {
       "code_name": "(Tetrahedral) * (Steane)",
@@ -3300,7 +3358,8 @@
       "preserved": 104,
       "total": 104,
       "success_rate": 1.0,
-      "elapsed_seconds": 247.87
+      "elapsed_seconds": 247.87,
+      "all_stabilized": true
     },
     {
       "code_name": "(Tetrahedral) * (Shor)",
@@ -3444,7 +3503,8 @@
       "preserved": 134,
       "total": 134,
       "success_rate": 1.0,
-      "elapsed_seconds": 642.6
+      "elapsed_seconds": 642.6,
+      "all_stabilized": true
     },
     {
       "code_name": "(Tetrahedral) * (Hex Color Code d=3)",
@@ -3558,7 +3618,8 @@
       "preserved": 104,
       "total": 104,
       "success_rate": 1.0,
-      "elapsed_seconds": 164.2
+      "elapsed_seconds": 164.2,
+      "all_stabilized": true
     },
     {
       "code_name": "(Tetrahedral) * (Square Octagon Color Code d=3)",
@@ -3672,7 +3733,8 @@
       "preserved": 104,
       "total": 104,
       "success_rate": 1.0,
-      "elapsed_seconds": 337.5
+      "elapsed_seconds": 337.5,
+      "all_stabilized": true
     },
     {
       "code_name": "(Tetrahedral) * (Rotated Surface Code d=3)",
@@ -3816,7 +3878,8 @@
       "preserved": 134,
       "total": 134,
       "success_rate": 1.0,
-      "elapsed_seconds": 125.06
+      "elapsed_seconds": 125.06,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hamming) * (Perfect 5-Qubit Code)",
@@ -3894,7 +3957,8 @@
       "preserved": 68,
       "total": 68,
       "success_rate": 1.0,
-      "elapsed_seconds": 262.03
+      "elapsed_seconds": 262.03,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hamming) * (Steane)",
@@ -4002,7 +4066,8 @@
       "preserved": 98,
       "total": 98,
       "success_rate": 1.0,
-      "elapsed_seconds": 233.46
+      "elapsed_seconds": 233.46,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hamming) * (Shor)",
@@ -4140,7 +4205,8 @@
       "preserved": 128,
       "total": 128,
       "success_rate": 1.0,
-      "elapsed_seconds": 184.64
+      "elapsed_seconds": 184.64,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hamming) * (Hex Color Code d=3)",
@@ -4248,7 +4314,8 @@
       "preserved": 98,
       "total": 98,
       "success_rate": 1.0,
-      "elapsed_seconds": 460.62
+      "elapsed_seconds": 460.62,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hamming) * (Square Octagon Color Code d=3)",
@@ -4356,7 +4423,8 @@
       "preserved": 98,
       "total": 98,
       "success_rate": 1.0,
-      "elapsed_seconds": 238.17
+      "elapsed_seconds": 238.17,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hamming) * (Rotated Surface Code d=3)",
@@ -4494,7 +4562,8 @@
       "preserved": 128,
       "total": 128,
       "success_rate": 1.0,
-      "elapsed_seconds": 663.66
+      "elapsed_seconds": 663.66,
+      "all_stabilized": true
     },
     {
       "code_name": "(Carbon) * (Perfect 5-Qubit Code)",
@@ -4562,7 +4631,8 @@
       "preserved": 58,
       "total": 58,
       "success_rate": 1.0,
-      "elapsed_seconds": 134.77
+      "elapsed_seconds": 134.77,
+      "all_stabilized": true
     },
     {
       "code_name": "(Carbon) * (Steane)",
@@ -4654,7 +4724,8 @@
       "preserved": 82,
       "total": 82,
       "success_rate": 1.0,
-      "elapsed_seconds": 129.57
+      "elapsed_seconds": 129.57,
+      "all_stabilized": true
     },
     {
       "code_name": "(Carbon) * (Shor)",
@@ -4770,7 +4841,8 @@
       "preserved": 104,
       "total": 106,
       "success_rate": 0.9811320754716981,
-      "elapsed_seconds": 505.73
+      "elapsed_seconds": 505.73,
+      "all_stabilized": false
     },
     {
       "code_name": "(Carbon) * (Tetrahedral)",
@@ -4779,7 +4851,8 @@
       "preserved": 0,
       "total": 178,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.39
+      "elapsed_seconds": 902.39,
+      "all_stabilized": false
     },
     {
       "code_name": "(Carbon) * (Hex Color Code d=3)",
@@ -4871,7 +4944,8 @@
       "preserved": 82,
       "total": 82,
       "success_rate": 1.0,
-      "elapsed_seconds": 138.82
+      "elapsed_seconds": 138.82,
+      "all_stabilized": true
     },
     {
       "code_name": "(Carbon) * (Square Octagon Color Code d=3)",
@@ -4963,7 +5037,8 @@
       "preserved": 82,
       "total": 82,
       "success_rate": 1.0,
-      "elapsed_seconds": 74.2
+      "elapsed_seconds": 74.2,
+      "all_stabilized": true
     },
     {
       "code_name": "(Carbon) * (Rotated Surface Code d=3)",
@@ -4972,7 +5047,8 @@
       "preserved": 0,
       "total": 106,
       "success_rate": 0.0,
-      "elapsed_seconds": 16658.16
+      "elapsed_seconds": 16658.16,
+      "all_stabilized": false
     },
     {
       "code_name": "(Golay) * (Perfect 5-Qubit Code)",
@@ -5096,7 +5172,8 @@
       "preserved": 114,
       "total": 114,
       "success_rate": 1.0,
-      "elapsed_seconds": 222.98
+      "elapsed_seconds": 222.98,
+      "all_stabilized": true
     },
     {
       "code_name": "(Golay) * (Steane)",
@@ -5266,7 +5343,8 @@
       "preserved": 160,
       "total": 160,
       "success_rate": 1.0,
-      "elapsed_seconds": 492.8
+      "elapsed_seconds": 492.8,
+      "all_stabilized": true
     },
     {
       "code_name": "(Golay) * (Hex Color Code d=3)",
@@ -5436,7 +5514,8 @@
       "preserved": 160,
       "total": 160,
       "success_rate": 1.0,
-      "elapsed_seconds": 443.36
+      "elapsed_seconds": 443.36,
+      "all_stabilized": true
     },
     {
       "code_name": "(Golay) * (Square Octagon Color Code d=3)",
@@ -5445,7 +5524,8 @@
       "preserved": 0,
       "total": 160,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.48
+      "elapsed_seconds": 902.48,
+      "all_stabilized": false
     },
     {
       "code_name": "(Iceberg Code m=2) * (Perfect 5-Qubit Code)",
@@ -5473,7 +5553,8 @@
       "preserved": 18,
       "total": 18,
       "success_rate": 1.0,
-      "elapsed_seconds": 39.12
+      "elapsed_seconds": 39.12,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=2) * (Steane)",
@@ -5509,7 +5590,8 @@
       "preserved": 26,
       "total": 26,
       "success_rate": 1.0,
-      "elapsed_seconds": 46.85
+      "elapsed_seconds": 46.85,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=2) * (Shor)",
@@ -5553,7 +5635,8 @@
       "preserved": 34,
       "total": 34,
       "success_rate": 1.0,
-      "elapsed_seconds": 46.9
+      "elapsed_seconds": 46.9,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=2) * (Tetrahedral)",
@@ -5621,7 +5704,8 @@
       "preserved": 58,
       "total": 58,
       "success_rate": 1.0,
-      "elapsed_seconds": 122.97
+      "elapsed_seconds": 122.97,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=2) * (Golay)",
@@ -5721,7 +5805,8 @@
       "preserved": 90,
       "total": 90,
       "success_rate": 1.0,
-      "elapsed_seconds": 96.23
+      "elapsed_seconds": 96.23,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=2) * (Hex Color Code d=3)",
@@ -5757,7 +5842,8 @@
       "preserved": 26,
       "total": 26,
       "success_rate": 1.0,
-      "elapsed_seconds": 40.78
+      "elapsed_seconds": 40.78,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=2) * (Hex Color Code d=5)",
@@ -5841,7 +5927,8 @@
       "preserved": 74,
       "total": 74,
       "success_rate": 1.0,
-      "elapsed_seconds": 127.4
+      "elapsed_seconds": 127.4,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=2) * (Hex Color Code d=7)",
@@ -5850,7 +5937,8 @@
       "preserved": 0,
       "total": 146,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.5
+      "elapsed_seconds": 902.5,
+      "all_stabilized": false
     },
     {
       "code_name": "(Iceberg Code m=2) * (Square Octagon Color Code d=3)",
@@ -5886,7 +5974,8 @@
       "preserved": 26,
       "total": 26,
       "success_rate": 1.0,
-      "elapsed_seconds": 35.58
+      "elapsed_seconds": 35.58,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=2) * (Square Octagon Color Code d=5)",
@@ -5962,7 +6051,8 @@
       "preserved": 66,
       "total": 66,
       "success_rate": 1.0,
-      "elapsed_seconds": 101.95
+      "elapsed_seconds": 101.95,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=2) * (Square Octagon Color Code d=7)",
@@ -6094,7 +6184,8 @@
       "preserved": 122,
       "total": 122,
       "success_rate": 1.0,
-      "elapsed_seconds": 150.7
+      "elapsed_seconds": 150.7,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=2) * (Rotated Surface Code d=3)",
@@ -6138,7 +6229,8 @@
       "preserved": 34,
       "total": 34,
       "success_rate": 1.0,
-      "elapsed_seconds": 50.89
+      "elapsed_seconds": 50.89,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=2) * (Rotated Surface Code d=5)",
@@ -6147,7 +6239,8 @@
       "preserved": 0,
       "total": 98,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.72
+      "elapsed_seconds": 902.72,
+      "all_stabilized": false
     },
     {
       "code_name": "(Iceberg Code m=2) * (Rotated Surface Code d=7)",
@@ -6156,7 +6249,8 @@
       "preserved": 0,
       "total": 194,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.56
+      "elapsed_seconds": 902.56,
+      "all_stabilized": false
     },
     {
       "code_name": "(Iceberg Code m=3) * (Perfect 5-Qubit Code)",
@@ -6192,7 +6286,8 @@
       "preserved": 26,
       "total": 26,
       "success_rate": 1.0,
-      "elapsed_seconds": 49.29
+      "elapsed_seconds": 49.29,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=3) * (Steane)",
@@ -6240,7 +6335,8 @@
       "preserved": 38,
       "total": 38,
       "success_rate": 1.0,
-      "elapsed_seconds": 54.97
+      "elapsed_seconds": 54.97,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=3) * (Shor)",
@@ -6300,7 +6396,8 @@
       "preserved": 50,
       "total": 50,
       "success_rate": 1.0,
-      "elapsed_seconds": 67.54
+      "elapsed_seconds": 67.54,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=3) * (Tetrahedral)",
@@ -6396,7 +6493,8 @@
       "preserved": 86,
       "total": 86,
       "success_rate": 1.0,
-      "elapsed_seconds": 137.66
+      "elapsed_seconds": 137.66,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=3) * (Golay)",
@@ -6540,7 +6638,8 @@
       "preserved": 134,
       "total": 134,
       "success_rate": 1.0,
-      "elapsed_seconds": 539.19
+      "elapsed_seconds": 539.19,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=3) * (Hex Color Code d=3)",
@@ -6588,7 +6687,8 @@
       "preserved": 38,
       "total": 38,
       "success_rate": 1.0,
-      "elapsed_seconds": 52.97
+      "elapsed_seconds": 52.97,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=3) * (Hex Color Code d=5)",
@@ -6708,7 +6808,8 @@
       "preserved": 110,
       "total": 110,
       "success_rate": 1.0,
-      "elapsed_seconds": 358.03
+      "elapsed_seconds": 358.03,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=3) * (Square Octagon Color Code d=3)",
@@ -6756,7 +6857,8 @@
       "preserved": 38,
       "total": 38,
       "success_rate": 1.0,
-      "elapsed_seconds": 132.88
+      "elapsed_seconds": 132.88,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=3) * (Square Octagon Color Code d=5)",
@@ -6864,7 +6966,8 @@
       "preserved": 98,
       "total": 98,
       "success_rate": 1.0,
-      "elapsed_seconds": 343.93
+      "elapsed_seconds": 343.93,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=3) * (Square Octagon Color Code d=7)",
@@ -6873,7 +6976,8 @@
       "preserved": 0,
       "total": 182,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.5
+      "elapsed_seconds": 902.5,
+      "all_stabilized": false
     },
     {
       "code_name": "(Iceberg Code m=3) * (Rotated Surface Code d=3)",
@@ -6933,7 +7037,8 @@
       "preserved": 50,
       "total": 50,
       "success_rate": 1.0,
-      "elapsed_seconds": 107.96
+      "elapsed_seconds": 107.96,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=3) * (Rotated Surface Code d=5)",
@@ -7089,7 +7194,8 @@
       "preserved": 146,
       "total": 146,
       "success_rate": 1.0,
-      "elapsed_seconds": 420.09
+      "elapsed_seconds": 420.09,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=4) * (Perfect 5-Qubit Code)",
@@ -7133,7 +7239,8 @@
       "preserved": 34,
       "total": 34,
       "success_rate": 1.0,
-      "elapsed_seconds": 61.75
+      "elapsed_seconds": 61.75,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=4) * (Steane)",
@@ -7193,7 +7300,8 @@
       "preserved": 50,
       "total": 50,
       "success_rate": 1.0,
-      "elapsed_seconds": 81.06
+      "elapsed_seconds": 81.06,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=4) * (Shor)",
@@ -7269,7 +7377,8 @@
       "preserved": 66,
       "total": 66,
       "success_rate": 1.0,
-      "elapsed_seconds": 96.01
+      "elapsed_seconds": 96.01,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=4) * (Tetrahedral)",
@@ -7393,7 +7502,8 @@
       "preserved": 114,
       "total": 114,
       "success_rate": 1.0,
-      "elapsed_seconds": 130.55
+      "elapsed_seconds": 130.55,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=4) * (Golay)",
@@ -7402,7 +7512,8 @@
       "preserved": 0,
       "total": 178,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.72
+      "elapsed_seconds": 902.72,
+      "all_stabilized": false
     },
     {
       "code_name": "(Iceberg Code m=4) * (Hex Color Code d=3)",
@@ -7462,7 +7573,8 @@
       "preserved": 50,
       "total": 50,
       "success_rate": 1.0,
-      "elapsed_seconds": 80.73
+      "elapsed_seconds": 80.73,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=4) * (Hex Color Code d=5)",
@@ -7618,7 +7730,8 @@
       "preserved": 146,
       "total": 146,
       "success_rate": 1.0,
-      "elapsed_seconds": 175.95
+      "elapsed_seconds": 175.95,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=4) * (Square Octagon Color Code d=3)",
@@ -7678,7 +7791,8 @@
       "preserved": 50,
       "total": 50,
       "success_rate": 1.0,
-      "elapsed_seconds": 80.2
+      "elapsed_seconds": 80.2,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=4) * (Square Octagon Color Code d=5)",
@@ -7818,7 +7932,8 @@
       "preserved": 130,
       "total": 130,
       "success_rate": 1.0,
-      "elapsed_seconds": 478.89
+      "elapsed_seconds": 478.89,
+      "all_stabilized": true
     },
     {
       "code_name": "(Iceberg Code m=4) * (Rotated Surface Code d=3)",
@@ -7894,7 +8009,8 @@
       "preserved": 66,
       "total": 66,
       "success_rate": 1.0,
-      "elapsed_seconds": 104.34
+      "elapsed_seconds": 104.34,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=1) * (Perfect 5-Qubit Code)",
@@ -7930,7 +8046,8 @@
       "preserved": 26,
       "total": 26,
       "success_rate": 1.0,
-      "elapsed_seconds": 50.1
+      "elapsed_seconds": 50.1,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=1) * (Steane)",
@@ -7978,7 +8095,8 @@
       "preserved": 38,
       "total": 38,
       "success_rate": 1.0,
-      "elapsed_seconds": 54.22
+      "elapsed_seconds": 54.22,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=1) * (Shor)",
@@ -8038,7 +8156,8 @@
       "preserved": 50,
       "total": 50,
       "success_rate": 1.0,
-      "elapsed_seconds": 70.41
+      "elapsed_seconds": 70.41,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=1) * (Tetrahedral)",
@@ -8134,7 +8253,8 @@
       "preserved": 86,
       "total": 86,
       "success_rate": 1.0,
-      "elapsed_seconds": 158.75
+      "elapsed_seconds": 158.75,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=1) * (Golay)",
@@ -8278,7 +8398,8 @@
       "preserved": 134,
       "total": 134,
       "success_rate": 1.0,
-      "elapsed_seconds": 322.41
+      "elapsed_seconds": 322.41,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=1) * (Hex Color Code d=3)",
@@ -8326,7 +8447,8 @@
       "preserved": 38,
       "total": 38,
       "success_rate": 1.0,
-      "elapsed_seconds": 34.38
+      "elapsed_seconds": 34.38,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=1) * (Hex Color Code d=5)",
@@ -8446,7 +8568,8 @@
       "preserved": 110,
       "total": 110,
       "success_rate": 1.0,
-      "elapsed_seconds": 284.74
+      "elapsed_seconds": 284.74,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=1) * (Square Octagon Color Code d=3)",
@@ -8494,7 +8617,8 @@
       "preserved": 38,
       "total": 38,
       "success_rate": 1.0,
-      "elapsed_seconds": 51.64
+      "elapsed_seconds": 51.64,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=1) * (Square Octagon Color Code d=5)",
@@ -8602,7 +8726,8 @@
       "preserved": 98,
       "total": 98,
       "success_rate": 1.0,
-      "elapsed_seconds": 188.82
+      "elapsed_seconds": 188.82,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=1) * (Square Octagon Color Code d=7)",
@@ -8611,7 +8736,8 @@
       "preserved": 0,
       "total": 182,
       "success_rate": 0.0,
-      "elapsed_seconds": 901.79
+      "elapsed_seconds": 901.79,
+      "all_stabilized": false
     },
     {
       "code_name": "(Hypercube Code l=1) * (Rotated Surface Code d=3)",
@@ -8671,7 +8797,8 @@
       "preserved": 50,
       "total": 50,
       "success_rate": 1.0,
-      "elapsed_seconds": 95.53
+      "elapsed_seconds": 95.53,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=1) * (Rotated Surface Code d=5)",
@@ -8827,7 +8954,8 @@
       "preserved": 146,
       "total": 146,
       "success_rate": 1.0,
-      "elapsed_seconds": 153.85
+      "elapsed_seconds": 153.85,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hypercube Code l=2) * (Perfect 5-Qubit Code)",
@@ -8836,7 +8964,8 @@
       "preserved": 0,
       "total": 164,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.51
+      "elapsed_seconds": 902.51,
+      "all_stabilized": false
     },
     {
       "code_name": "(Hex Color Code d=3) * (Perfect 5-Qubit Code)",
@@ -8880,7 +9009,8 @@
       "preserved": 34,
       "total": 34,
       "success_rate": 1.0,
-      "elapsed_seconds": 58.56
+      "elapsed_seconds": 58.56,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=3) * (Steane)",
@@ -8938,7 +9068,8 @@
       "preserved": 48,
       "total": 48,
       "success_rate": 1.0,
-      "elapsed_seconds": 66.23
+      "elapsed_seconds": 66.23,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=3) * (Shor)",
@@ -9010,7 +9141,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 87.34
+      "elapsed_seconds": 87.34,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=3) * (Tetrahedral)",
@@ -9124,7 +9256,8 @@
       "preserved": 104,
       "total": 104,
       "success_rate": 1.0,
-      "elapsed_seconds": 198.29
+      "elapsed_seconds": 198.29,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=3) * (Golay)",
@@ -9294,7 +9427,8 @@
       "preserved": 160,
       "total": 160,
       "success_rate": 1.0,
-      "elapsed_seconds": 803.32
+      "elapsed_seconds": 803.32,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=3) * (Hex Color Code d=3)",
@@ -9352,7 +9486,8 @@
       "preserved": 48,
       "total": 48,
       "success_rate": 1.0,
-      "elapsed_seconds": 86.26
+      "elapsed_seconds": 86.26,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=3) * (Hex Color Code d=5)",
@@ -9494,7 +9629,8 @@
       "preserved": 132,
       "total": 132,
       "success_rate": 1.0,
-      "elapsed_seconds": 287.66
+      "elapsed_seconds": 287.66,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=3) * (Square Octagon Color Code d=3)",
@@ -9552,7 +9688,8 @@
       "preserved": 48,
       "total": 48,
       "success_rate": 1.0,
-      "elapsed_seconds": 73.44
+      "elapsed_seconds": 73.44,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=3) * (Square Octagon Color Code d=5)",
@@ -9680,7 +9817,8 @@
       "preserved": 118,
       "total": 118,
       "success_rate": 1.0,
-      "elapsed_seconds": 523.96
+      "elapsed_seconds": 523.96,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=3) * (Rotated Surface Code d=3)",
@@ -9752,7 +9890,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 97.03
+      "elapsed_seconds": 97.03,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=3) * (Rotated Surface Code d=5)",
@@ -9761,7 +9900,8 @@
       "preserved": 0,
       "total": 174,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.63
+      "elapsed_seconds": 902.63,
+      "all_stabilized": false
     },
     {
       "code_name": "(Hex Color Code d=5) * (Perfect 5-Qubit Code)",
@@ -9865,7 +10005,8 @@
       "preserved": 94,
       "total": 94,
       "success_rate": 1.0,
-      "elapsed_seconds": 130.11
+      "elapsed_seconds": 130.11,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=5) * (Steane)",
@@ -10007,7 +10148,8 @@
       "preserved": 132,
       "total": 132,
       "success_rate": 1.0,
-      "elapsed_seconds": 235.93
+      "elapsed_seconds": 235.93,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=5) * (Shor)",
@@ -10016,7 +10158,8 @@
       "preserved": 0,
       "total": 170,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.58
+      "elapsed_seconds": 902.58,
+      "all_stabilized": false
     },
     {
       "code_name": "(Hex Color Code d=5) * (Hex Color Code d=3)",
@@ -10158,7 +10301,8 @@
       "preserved": 132,
       "total": 132,
       "success_rate": 1.0,
-      "elapsed_seconds": 239.61
+      "elapsed_seconds": 239.61,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=5) * (Square Octagon Color Code d=3)",
@@ -10300,7 +10444,8 @@
       "preserved": 132,
       "total": 132,
       "success_rate": 1.0,
-      "elapsed_seconds": 150.99
+      "elapsed_seconds": 150.99,
+      "all_stabilized": true
     },
     {
       "code_name": "(Hex Color Code d=5) * (Rotated Surface Code d=3)",
@@ -10309,7 +10454,8 @@
       "preserved": 0,
       "total": 170,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.66
+      "elapsed_seconds": 902.66,
+      "all_stabilized": false
     },
     {
       "code_name": "(Hex Color Code d=7) * (Perfect 5-Qubit Code)",
@@ -10318,7 +10464,8 @@
       "preserved": 0,
       "total": 184,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.5
+      "elapsed_seconds": 902.5,
+      "all_stabilized": false
     },
     {
       "code_name": "(Square Octagon Color Code d=3) * (Perfect 5-Qubit Code)",
@@ -10362,7 +10509,8 @@
       "preserved": 34,
       "total": 34,
       "success_rate": 1.0,
-      "elapsed_seconds": 70.03
+      "elapsed_seconds": 70.03,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=3) * (Steane)",
@@ -10420,7 +10568,8 @@
       "preserved": 48,
       "total": 48,
       "success_rate": 1.0,
-      "elapsed_seconds": 69.09
+      "elapsed_seconds": 69.09,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=3) * (Shor)",
@@ -10492,7 +10641,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 106.58
+      "elapsed_seconds": 106.58,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=3) * (Tetrahedral)",
@@ -10501,7 +10651,8 @@
       "preserved": 0,
       "total": 104,
       "success_rate": 0.0,
-      "elapsed_seconds": 903.01
+      "elapsed_seconds": 903.01,
+      "all_stabilized": false
     },
     {
       "code_name": "(Square Octagon Color Code d=3) * (Golay)",
@@ -10510,7 +10661,8 @@
       "preserved": 0,
       "total": 160,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.56
+      "elapsed_seconds": 902.56,
+      "all_stabilized": false
     },
     {
       "code_name": "(Square Octagon Color Code d=3) * (Hex Color Code d=3)",
@@ -10568,7 +10720,8 @@
       "preserved": 48,
       "total": 48,
       "success_rate": 1.0,
-      "elapsed_seconds": 107.34
+      "elapsed_seconds": 107.34,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=3) * (Hex Color Code d=5)",
@@ -10710,7 +10863,8 @@
       "preserved": 132,
       "total": 132,
       "success_rate": 1.0,
-      "elapsed_seconds": 396.34
+      "elapsed_seconds": 396.34,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=3) * (Square Octagon Color Code d=3)",
@@ -10768,7 +10922,8 @@
       "preserved": 48,
       "total": 48,
       "success_rate": 1.0,
-      "elapsed_seconds": 70.39
+      "elapsed_seconds": 70.39,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=3) * (Square Octagon Color Code d=5)",
@@ -10896,7 +11051,8 @@
       "preserved": 118,
       "total": 118,
       "success_rate": 1.0,
-      "elapsed_seconds": 123.35
+      "elapsed_seconds": 123.35,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=3) * (Rotated Surface Code d=3)",
@@ -10968,7 +11124,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 120.99
+      "elapsed_seconds": 120.99,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=3) * (Rotated Surface Code d=5)",
@@ -10977,7 +11134,8 @@
       "preserved": 0,
       "total": 174,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.66
+      "elapsed_seconds": 902.66,
+      "all_stabilized": false
     },
     {
       "code_name": "(Square Octagon Color Code d=5) * (Perfect 5-Qubit Code)",
@@ -11071,7 +11229,8 @@
       "preserved": 84,
       "total": 84,
       "success_rate": 1.0,
-      "elapsed_seconds": 161.67
+      "elapsed_seconds": 161.67,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=5) * (Steane)",
@@ -11199,7 +11358,8 @@
       "preserved": 118,
       "total": 118,
       "success_rate": 1.0,
-      "elapsed_seconds": 379.18
+      "elapsed_seconds": 379.18,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=5) * (Shor)",
@@ -11361,7 +11521,8 @@
       "preserved": 152,
       "total": 152,
       "success_rate": 1.0,
-      "elapsed_seconds": 594.66
+      "elapsed_seconds": 594.66,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=5) * (Hex Color Code d=3)",
@@ -11489,7 +11650,8 @@
       "preserved": 118,
       "total": 118,
       "success_rate": 1.0,
-      "elapsed_seconds": 273.79
+      "elapsed_seconds": 273.79,
+      "all_stabilized": true
     },
     {
       "code_name": "(Square Octagon Color Code d=5) * (Square Octagon Color Code d=3)",
@@ -11617,7 +11779,8 @@
       "preserved": 114,
       "total": 118,
       "success_rate": 0.9661016949152542,
-      "elapsed_seconds": 292.33
+      "elapsed_seconds": 292.33,
+      "all_stabilized": false
     },
     {
       "code_name": "(Square Octagon Color Code d=5) * (Rotated Surface Code d=3)",
@@ -11626,7 +11789,8 @@
       "preserved": 0,
       "total": 152,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.73
+      "elapsed_seconds": 902.73,
+      "all_stabilized": false
     },
     {
       "code_name": "(Square Octagon Color Code d=7) * (Perfect 5-Qubit Code)",
@@ -11790,7 +11954,8 @@
       "preserved": 133,
       "total": 154,
       "success_rate": 0.8636363636363636,
-      "elapsed_seconds": 496.9
+      "elapsed_seconds": 496.9,
+      "all_stabilized": false
     },
     {
       "code_name": "(Rotated Surface Code d=3) * (Perfect 5-Qubit Code)",
@@ -11844,7 +12009,8 @@
       "preserved": 44,
       "total": 44,
       "success_rate": 1.0,
-      "elapsed_seconds": 78.26
+      "elapsed_seconds": 78.26,
+      "all_stabilized": true
     },
     {
       "code_name": "(Rotated Surface Code d=3) * (Steane)",
@@ -11916,7 +12082,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 89.7
+      "elapsed_seconds": 89.7,
+      "all_stabilized": true
     },
     {
       "code_name": "(Rotated Surface Code d=3) * (Shor)",
@@ -12006,7 +12173,8 @@
       "preserved": 80,
       "total": 80,
       "success_rate": 1.0,
-      "elapsed_seconds": 115.55
+      "elapsed_seconds": 115.55,
+      "all_stabilized": true
     },
     {
       "code_name": "(Rotated Surface Code d=3) * (Tetrahedral)",
@@ -12150,7 +12318,8 @@
       "preserved": 134,
       "total": 134,
       "success_rate": 1.0,
-      "elapsed_seconds": 349.89
+      "elapsed_seconds": 349.89,
+      "all_stabilized": true
     },
     {
       "code_name": "(Rotated Surface Code d=3) * (Hex Color Code d=3)",
@@ -12222,7 +12391,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 94.89
+      "elapsed_seconds": 94.89,
+      "all_stabilized": true
     },
     {
       "code_name": "(Rotated Surface Code d=3) * (Hex Color Code d=5)",
@@ -12231,7 +12401,8 @@
       "preserved": 0,
       "total": 170,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.63
+      "elapsed_seconds": 902.63,
+      "all_stabilized": false
     },
     {
       "code_name": "(Rotated Surface Code d=3) * (Square Octagon Color Code d=3)",
@@ -12303,7 +12474,8 @@
       "preserved": 62,
       "total": 62,
       "success_rate": 1.0,
-      "elapsed_seconds": 98.35
+      "elapsed_seconds": 98.35,
+      "all_stabilized": true
     },
     {
       "code_name": "(Rotated Surface Code d=3) * (Square Octagon Color Code d=5)",
@@ -12465,7 +12637,8 @@
       "preserved": 152,
       "total": 152,
       "success_rate": 1.0,
-      "elapsed_seconds": 454.24
+      "elapsed_seconds": 454.24,
+      "all_stabilized": true
     },
     {
       "code_name": "(Rotated Surface Code d=3) * (Rotated Surface Code d=3)",
@@ -12555,7 +12728,8 @@
       "preserved": 80,
       "total": 80,
       "success_rate": 1.0,
-      "elapsed_seconds": 288.25
+      "elapsed_seconds": 288.25,
+      "all_stabilized": true
     },
     {
       "code_name": "(Rotated Surface Code d=5) * (Perfect 5-Qubit Code)",
@@ -12689,7 +12863,8 @@
       "preserved": 124,
       "total": 124,
       "success_rate": 1.0,
-      "elapsed_seconds": 427.73
+      "elapsed_seconds": 427.73,
+      "all_stabilized": true
     },
     {
       "code_name": "(Rotated Surface Code d=5) * (Steane)",
@@ -12698,7 +12873,8 @@
       "preserved": 0,
       "total": 174,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.65
+      "elapsed_seconds": 902.65,
+      "all_stabilized": false
     },
     {
       "code_name": "(Rotated Surface Code d=5) * (Hex Color Code d=3)",
@@ -12707,7 +12883,8 @@
       "preserved": 0,
       "total": 174,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.57
+      "elapsed_seconds": 902.57,
+      "all_stabilized": false
     },
     {
       "code_name": "(Rotated Surface Code d=5) * (Square Octagon Color Code d=3)",
@@ -12716,7 +12893,8 @@
       "preserved": 0,
       "total": 174,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.53
+      "elapsed_seconds": 902.53,
+      "all_stabilized": false
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Perfect 5-Qubit Code)",
@@ -12744,7 +12922,8 @@
       "preserved": 18,
       "total": 18,
       "success_rate": 1.0,
-      "elapsed_seconds": 39.04
+      "elapsed_seconds": 39.04,
+      "all_stabilized": true
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Steane)",
@@ -12780,7 +12959,8 @@
       "preserved": 26,
       "total": 26,
       "success_rate": 1.0,
-      "elapsed_seconds": 38.52
+      "elapsed_seconds": 38.52,
+      "all_stabilized": true
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Shor)",
@@ -12824,7 +13004,8 @@
       "preserved": 34,
       "total": 34,
       "success_rate": 1.0,
-      "elapsed_seconds": 55.27
+      "elapsed_seconds": 55.27,
+      "all_stabilized": true
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Tetrahedral)",
@@ -12892,7 +13073,8 @@
       "preserved": 58,
       "total": 58,
       "success_rate": 1.0,
-      "elapsed_seconds": 148.6
+      "elapsed_seconds": 148.6,
+      "all_stabilized": true
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Golay)",
@@ -12992,7 +13174,8 @@
       "preserved": 90,
       "total": 90,
       "success_rate": 1.0,
-      "elapsed_seconds": 233.91
+      "elapsed_seconds": 233.91,
+      "all_stabilized": true
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Hex Color Code d=3)",
@@ -13028,7 +13211,8 @@
       "preserved": 26,
       "total": 26,
       "success_rate": 1.0,
-      "elapsed_seconds": 42.48
+      "elapsed_seconds": 42.48,
+      "all_stabilized": true
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Hex Color Code d=5)",
@@ -13112,7 +13296,8 @@
       "preserved": 74,
       "total": 74,
       "success_rate": 1.0,
-      "elapsed_seconds": 204.34
+      "elapsed_seconds": 204.34,
+      "all_stabilized": true
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Hex Color Code d=7)",
@@ -13268,7 +13453,8 @@
       "preserved": 146,
       "total": 146,
       "success_rate": 1.0,
-      "elapsed_seconds": 651.33
+      "elapsed_seconds": 651.33,
+      "all_stabilized": true
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Square Octagon Color Code d=3)",
@@ -13304,7 +13490,8 @@
       "preserved": 26,
       "total": 26,
       "success_rate": 1.0,
-      "elapsed_seconds": 86.89
+      "elapsed_seconds": 86.89,
+      "all_stabilized": true
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Square Octagon Color Code d=5)",
@@ -13380,7 +13567,8 @@
       "preserved": 66,
       "total": 66,
       "success_rate": 1.0,
-      "elapsed_seconds": 112.66
+      "elapsed_seconds": 112.66,
+      "all_stabilized": true
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Square Octagon Color Code d=7)",
@@ -13389,7 +13577,8 @@
       "preserved": 0,
       "total": 122,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.56
+      "elapsed_seconds": 902.56,
+      "all_stabilized": false
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Rotated Surface Code d=3)",
@@ -13433,7 +13622,8 @@
       "preserved": 34,
       "total": 34,
       "success_rate": 1.0,
-      "elapsed_seconds": 96.29
+      "elapsed_seconds": 96.29,
+      "all_stabilized": true
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Rotated Surface Code d=5)",
@@ -13541,7 +13731,8 @@
       "preserved": 97,
       "total": 98,
       "success_rate": 0.9897959183673469,
-      "elapsed_seconds": 166.28
+      "elapsed_seconds": 166.28,
+      "all_stabilized": false
     },
     {
       "code_name": "(4-Qubit Detector Code) * (Rotated Surface Code d=7)",
@@ -13550,7 +13741,8 @@
       "preserved": 0,
       "total": 194,
       "success_rate": 0.0,
-      "elapsed_seconds": 902.54
+      "elapsed_seconds": 902.54,
+      "all_stabilized": false
     }
   ]
 }

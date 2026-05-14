@@ -4,4 +4,9 @@ __pycache__/
 claude-sonnet-4.5/
 Cordelia's prompt scratchwork
 **/.env
+agent_files/
+**/agent_files/
+agent_files_ft/
+**/agent_files_ft/
+B1/analysis_results/
 .DS_Store

@@ -1,0 +1,130 @@
+{
+  "260314": {
+    "claude": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/claude-opus-4.6/cleaned/cleaned2_260314.2351.json",
+      "benchmark_score": 0.015476583065504493,
+      "benchmark_score_fraction": "252.887367 out of 16340",
+      "weighted_score_sum": 252.8873672903434,
+      "total_weight": 16340,
+      "num_codes": 192,
+      "num_positive_scores": 29,
+      "missing_benchmark_entries": []
+    },
+    "gemini": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/gemini-3-pro-preview/cleaned/cleaned2_260314.2353.json",
+      "benchmark_score": 0.011106928488096371,
+      "benchmark_score_fraction": "181.487211 out of 16340",
+      "weighted_score_sum": 181.4872114954947,
+      "total_weight": 16340,
+      "num_codes": 192,
+      "num_positive_scores": 19,
+      "missing_benchmark_entries": []
+    },
+    "gpt": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/gpt5.2/cleaned/cleaned2_260314.2352.json",
+      "benchmark_score": 0.012933463294404464,
+      "benchmark_score_fraction": "211.332790 out of 16340",
+      "weighted_score_sum": 211.33279023056895,
+      "total_weight": 16340,
+      "num_codes": 192,
+      "num_positive_scores": 22,
+      "missing_benchmark_entries": []
+    }
+  },
+  "260319": {
+    "claude": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/claude-opus-4.6/cleaned/cleaned2_260319.0920.json",
+      "benchmark_score": 0.005104035462849143,
+      "benchmark_score_fraction": "83.399939 out of 16340",
+      "weighted_score_sum": 83.399939462955,
+      "total_weight": 16340,
+      "num_codes": 95,
+      "num_positive_scores": 16,
+      "missing_benchmark_entries": []
+    },
+    "gemini": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/gemini-3-pro-preview/cleaned/cleaned2_260319.1021.json",
+      "benchmark_score": 0.004753381778668656,
+      "benchmark_score_fraction": "77.670258 out of 16340",
+      "weighted_score_sum": 77.67025826344583,
+      "total_weight": 16340,
+      "num_codes": 107,
+      "num_positive_scores": 12,
+      "missing_benchmark_entries": []
+    },
+    "gpt": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/gpt5.2/cleaned/cleaned2_260319.1021.json",
+      "benchmark_score": 0.0030899275574557423,
+      "benchmark_score_fraction": "50.489416 out of 16340",
+      "weighted_score_sum": 50.48941628882683,
+      "total_weight": 16340,
+      "num_codes": 90,
+      "num_positive_scores": 14,
+      "missing_benchmark_entries": []
+    }
+  },
+  "260320": {
+    "claude": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/claude-opus-4.6/cleaned/cleaned2_260320.0954.json",
+      "benchmark_score": 0.003343163709790289,
+      "benchmark_score_fraction": "54.627295 out of 16340",
+      "weighted_score_sum": 54.627295017973324,
+      "total_weight": 16340,
+      "num_codes": 75,
+      "num_positive_scores": 16,
+      "missing_benchmark_entries": []
+    },
+    "gemini": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/gemini-3-pro-preview/cleaned/cleaned2_260320.0954.json",
+      "benchmark_score": 0.0401361383488534,
+      "benchmark_score_fraction": "655.824501 out of 16340",
+      "weighted_score_sum": 655.8245006202645,
+      "total_weight": 16340,
+      "num_codes": 65,
+      "num_positive_scores": 31,
+      "missing_benchmark_entries": []
+    },
+    "gpt": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/gpt5.2/cleaned/cleaned2_260320.0954.json",
+      "benchmark_score": 0.00790282021629657,
+      "benchmark_score_fraction": "129.132082 out of 16340",
+      "weighted_score_sum": 129.13208233428597,
+      "total_weight": 16340,
+      "num_codes": 70,
+      "num_positive_scores": 16,
+      "missing_benchmark_entries": []
+    }
+  },
+  "260321": {
+    "claude": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/claude-opus-4.6/cleaned/cleaned2_260321.1013.json",
+      "benchmark_score": 0.006230884420893445,
+      "benchmark_score_fraction": "101.812651 out of 16340",
+      "weighted_score_sum": 101.8126514373989,
+      "total_weight": 16340,
+      "num_codes": 83,
+      "num_positive_scores": 7,
+      "missing_benchmark_entries": []
+    },
+    "gemini": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/gemini-3-pro-preview/cleaned/cleaned2_260321.1013.json",
+      "benchmark_score": 0.025428769253132193,
+      "benchmark_score_fraction": "415.506090 out of 16340",
+      "weighted_score_sum": 415.50608959618,
+      "total_weight": 16340,
+      "num_codes": 64,
+      "num_positive_scores": 22,
+      "missing_benchmark_entries": []
+    },
+    "gpt": {
+      "cleaned2_file": "/Users/cordelia/Documents/Github/math-ai-quantum-ai/B3/data/gpt5.2/cleaned/cleaned2_260321.1013.json",
+      "benchmark_score": 0.005463630270152215,
+      "benchmark_score_fraction": "89.275719 out of 16340",
+      "weighted_score_sum": 89.2757186142872,
+      "total_weight": 16340,
+      "num_codes": 84,
+      "num_positive_scores": 5,
+      "missing_benchmark_entries": []
+    }
+  }
+}

@@ -10,4 +10,11 @@ agent_files_ft/
 **/agent_files_ft/
 B1/analysis_results/
 rq1/analysis_results/
+analysis/B1/diagrams/
+analysis/B1/scores/
+analysis/B2/diagrams/
+analysis/B2/scores/
+analysis/B3/diagrams/
+analysis/B3/scores/
+analysis/combined_difficulty_curves.png
 .DS_Store

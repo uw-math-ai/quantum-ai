@@ -13,10 +13,11 @@ from pathlib import Path
 # ==============================================================================
 # CONFIG
 # ==============================================================================
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).resolve().parents[2] / "B1"
 DATA_DIR = BASE_DIR / "data"
 BENCHMARKS_PATH = BASE_DIR.parent / "data" / "benchmarks.json"
-OUTPUT_DIR = BASE_DIR / "analysis_results"
+SCRIPT_DIR = Path(__file__).resolve().parent
+OUTPUT_DIR = SCRIPT_DIR / "scores"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 AGENTS = {
@@ -1160,7 +1161,7 @@ def generate_key_findings(data):
     md.append("5. **Invest in specialized algorithmic tools** — for codes beyond the current frontier (>24 stabilizers), providing the agent with access to specialized stabilizer tableau manipulation or graph state synthesis algorithms would likely be more effective than better prompting.\n")
     md.append("6. **Focus fine-tuning on medium-difficulty codes** — these codes are \"in reach\" and represent the best ROI for training data curation.\n")
     
-    findings_path = BASE_DIR / "key_findings.md"
+    findings_path = OUTPUT_DIR / "key_findings.md"
     with open(findings_path, "w", encoding="utf-8") as f:
         f.write("\n".join(md))
     print(f"  Wrote: {findings_path}")
@@ -1173,4 +1174,4 @@ if __name__ == "__main__":
     generate_key_findings(data)
     print("\nDone! All outputs written to:")
     print(f"  - {OUTPUT_DIR}")
-    print(f"  - {BASE_DIR / 'key_findings.md'}")
+    print(f"  - {OUTPUT_DIR / 'key_findings.md'}")

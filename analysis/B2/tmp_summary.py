@@ -403,7 +403,9 @@ def main():
     print_score_summary(all_data)
     print_bucket_analysis(all_rows)
 
-    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model_comparison.png")
+    diagrams_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "diagrams")
+    os.makedirs(diagrams_dir, exist_ok=True)
+    output_path = os.path.join(diagrams_dir, "model_comparison.png")
     plot_all(all_data, output_path)
 
 

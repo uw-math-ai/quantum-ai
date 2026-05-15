@@ -6,15 +6,17 @@ from pathlib import Path
 
 # We calculate the benchmark score here for each LLM.
 # Total score = a normalized weighted avgerage
-# sum_{codes} (true or false) * (number of stabilizers)
+# = sum_{codes} (weight for this code) * (score for codes)
 
 # Score for each codes: we assign score 0 if the edited circuit is invalid, fails verification, or does not preserve all stabilizers. Otherwise, we assign it the FT score of the edited circuit.
 # Weight for codes: adjustable. Currently, let the weight be the number of stabilizers of that code.
 # We then normalize the total score across all codes (so it'll be a sum of the number of all stabilizers in benchmark file) to get the final benchmark score for each LLM.
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2] / "B3"
 BENCHMARKS_PATH = ROOT.parent / "data" / "benchmarks.json"
-OUTPUT_PATH = Path(__file__).resolve().with_name("B3_capability_benchmark_scores_cleaned2.json")
+SCORES_DIR = Path(__file__).resolve().parent / "scores"
+SCORES_DIR.mkdir(exist_ok=True)
+OUTPUT_PATH = SCORES_DIR / "B3_benchmark_scores_cleaned2.json"
 
 RUNS = {
     "260314": {
@@ -78,7 +80,7 @@ def is_valid_scored_output(entry: dict, new_best_output: dict) -> bool:
     return True
 
 
-def compute_cap_benchmark_score(cleaned2_path: Path, benchmark_weights: dict[str, int], total_benchmark_weight: int) -> dict:
+def compute_benchmark_score(cleaned2_path: Path, benchmark_weights: dict[str, int], total_benchmark_weight: int) -> dict:
     weighted_score_sum = 0.0
     num_codes = 0
     num_scored_positive = 0
@@ -97,7 +99,7 @@ def compute_cap_benchmark_score(cleaned2_path: Path, benchmark_weights: dict[str
         num_codes += 1
 
         new_best_output = entry.get("new_best_output", {})
-        score = 1.0 if (is_valid_scored_output(entry, new_best_output) and float(new_best_output["ft_score"]) > 0.0) else 0.0
+        score = float(new_best_output["ft_score"]) if is_valid_scored_output(entry, new_best_output) else 0.0
         if score > 0:
             num_scored_positive += 1
         weighted_score_sum += weight * score
@@ -121,7 +123,7 @@ def main() -> None:
     for date_code, model_paths in RUNS.items():
         output[date_code] = {}
         for model_name, cleaned2_path in model_paths.items():
-            score_data = compute_cap_benchmark_score(cleaned2_path, benchmark_weights, total_benchmark_weight)
+            score_data = compute_benchmark_score(cleaned2_path, benchmark_weights, total_benchmark_weight)
             output[date_code][model_name] = {
                 "cleaned2_file": str(cleaned2_path),
                 **score_data,

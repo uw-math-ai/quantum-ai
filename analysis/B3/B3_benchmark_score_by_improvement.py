@@ -4,9 +4,11 @@ import json
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2] / "B3"
 BENCHMARKS_PATH = ROOT.parent / "data" / "benchmarks.json"
-OUTPUT_PATH = Path(__file__).resolve().with_name("B3_capability_scores_cleaned2.json")
+SCORES_DIR = Path(__file__).resolve().parent / "scores"
+SCORES_DIR.mkdir(exist_ok=True)
+OUTPUT_PATH = SCORES_DIR / "B3_capability_scores_cleaned2.json"
 
 RUNS = {
     "260314": {

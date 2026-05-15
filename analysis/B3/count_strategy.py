@@ -10,7 +10,7 @@ os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
 import matplotlib.pyplot as plt
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2] / "B3"
 BENCHMARKS_PATH = ROOT.parent / "data" / "benchmarks.json"
 OUTPUT_DIR = Path(__file__).resolve().parent / "diagrams"
 

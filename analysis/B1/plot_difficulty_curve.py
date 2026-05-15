@@ -15,7 +15,7 @@ import numpy as np
 # ==============================================================================
 # Configuration
 # ==============================================================================
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).resolve().parents[2] / "B1"
 DATA_DIR = BASE_DIR / "data"
 BENCHMARKS_PATH = BASE_DIR.parent / "data" / "benchmarks.json"
 
@@ -134,7 +134,9 @@ ax.set_ylim(0, 200)
 ax.grid(axis="y", alpha=0.3)
 
 plt.tight_layout()
-plt.savefig("difficulty_curve.png", dpi=200, bbox_inches="tight")
-plt.savefig("difficulty_curve.pdf", bbox_inches="tight")
-print("Saved difficulty_curve.png and .pdf")
+OUT_DIR = Path(__file__).resolve().parent / "diagrams"
+OUT_DIR.mkdir(exist_ok=True)
+plt.savefig(OUT_DIR / "difficulty_curve.png", dpi=200, bbox_inches="tight")
+plt.savefig(OUT_DIR / "difficulty_curve.pdf", bbox_inches="tight")
+print(f"Saved {OUT_DIR}/difficulty_curve.png and .pdf")
 plt.show()

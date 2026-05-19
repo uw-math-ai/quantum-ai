@@ -7,8 +7,12 @@ import stim
 from pathlib import Path
 from datetime import datetime
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_PROMPT = os.path.join(SCRIPT_DIR, "prompts", "default_prompt.txt")
+DEFAULT_BENCHMARKS = os.path.join(SCRIPT_DIR, "..", "data", "circuit_dataset.jsonl")
+
 # Add tools directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
+sys.path.insert(0, os.path.join(SCRIPT_DIR, '..', 'tools'))
 
 from agent import generate_optimized_circuit
 from circuit_metric import compute_metrics
@@ -71,7 +75,7 @@ def optimize_circuits_from_dataset(
 
     if output_path is None:
         timestamp = datetime.now().strftime("%y%m%d.%H%M")
-        out_dir = Path("data") / model
+        out_dir = Path(SCRIPT_DIR) / "data" / model
         out_dir.mkdir(parents=True, exist_ok=True)
         output_path = str(out_dir / f"{timestamp}.json")
 
@@ -224,9 +228,9 @@ def main():
         description="Optimize circuits from a JSONL dataset using an LLM agent"
     )
     parser.add_argument(
-        "--dataset",
-        default="../data/circuit_dataset.jsonl",
-        help="Path to the input circuit_dataset.jsonl file (default: ../data/circuit_dataset.jsonl)",
+        "--benchmarks",
+        default=DEFAULT_BENCHMARKS,
+        help="Path to the input circuit_dataset.jsonl file (default: <script dir>/../data/circuit_dataset.jsonl)",
     )
     parser.add_argument(
         "--output",
@@ -251,9 +255,9 @@ def main():
         help="Timeout in seconds for each optimization (default: 6000)",
     )
     parser.add_argument(
-        "--prompt",
-        default="prompts/default_prompt.txt",
-        help="Path to the prompt template file (default: prompts/default_prompt.txt)",
+        "--prompt-file",
+        default=DEFAULT_PROMPT,
+        help="Path to the prompt template file (default: <script dir>/prompts/default_prompt.txt)",
     )
     parser.add_argument(
         "--limit",
@@ -265,12 +269,12 @@ def main():
     args = parser.parse_args()
 
     optimize_circuits_from_dataset(
-        dataset_path=args.dataset,
+        dataset_path=args.benchmarks,
         output_path=args.output,
         model=args.model,
         attempts=args.attempts,
         timeout=args.timeout,
-        prompt_path=args.prompt,
+        prompt_path=args.prompt_file,
         limit=args.limit,
     )
 

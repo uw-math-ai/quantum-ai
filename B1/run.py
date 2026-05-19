@@ -5,8 +5,12 @@ import argparse
 import time
 from datetime import datetime
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_PROMPT = os.path.join(SCRIPT_DIR, "prompts", "default_prompt.txt")
+DEFAULT_BENCHMARKS = os.path.join(SCRIPT_DIR, "..", "data", "benchmarks.json")
+
 # Add tools directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
+sys.path.insert(0, os.path.join(SCRIPT_DIR, '..', 'tools'))
 
 from agent import generate_state_prep
 from check_stabilizers import check_stabilizers
@@ -36,7 +40,7 @@ def generate_circuits_from_benchmarks(
     """
     if output_path is None:
         timestamp = datetime.now().strftime("%y%m%d.%H%M")
-        output_dir = os.path.join(".", "data", model)
+        output_dir = os.path.join(SCRIPT_DIR, "data", model)
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, f"{timestamp}.json")
 
@@ -132,9 +136,9 @@ def main():
         description="Generate fault-tolerant circuits for all stabilizer groups in benchmarks"
     )
     parser.add_argument(
-        "--benchmarks", 
-        default="../data/benchmarks.json",
-        help="Path to benchmarks JSON file"
+        "--benchmarks",
+        default=DEFAULT_BENCHMARKS,
+        help="Path to benchmarks JSON file (default: <script dir>/../data/benchmarks.json)"
     )
     parser.add_argument(
         "--output", 
@@ -160,8 +164,8 @@ def main():
     )
     parser.add_argument(
         "--prompt-file",
-        default="B1/prompts/default_prompt.txt",
-        help="Path to the prompt template file (default: B1/prompts/default_prompt.txt)"
+        default=DEFAULT_PROMPT,
+        help="Path to the prompt template file (default: <script dir>/prompts/default_prompt.txt)"
     )
     
     args = parser.parse_args()

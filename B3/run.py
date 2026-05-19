@@ -6,8 +6,12 @@ import stim
 from copy import deepcopy
 from pathlib import Path
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_PROMPT = os.path.join(SCRIPT_DIR, "prompts", "default_prompt.txt")
+DEFAULT_BENCHMARKS = os.path.join(SCRIPT_DIR, "..", "data", "circuit_dataset.jsonl")
+
 # Add tools directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
+sys.path.insert(0, os.path.join(SCRIPT_DIR, '..', 'tools'))
 
 
 from datetime import datetime
@@ -39,7 +43,7 @@ def generate_circuits_from_data(
     """
     if output_path is None:
         timestamp = datetime.now().strftime("%y%m%d.%H%M")
-        output_dir = os.path.join(".", "data", model)
+        output_dir = os.path.join(SCRIPT_DIR, "data", model)
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, f"{timestamp}.json")
 
@@ -402,9 +406,9 @@ def main():
         description="Generate fault-tolerant circuits for all circuits"
     )
     parser.add_argument(
-        "--benchmarks", 
-        default="../data/circuit_dataset.jsonl",
-        help="Path to benchmarks JSONL file"
+        "--benchmarks",
+        default=DEFAULT_BENCHMARKS,
+        help="Path to benchmarks JSONL file (default: <script dir>/../data/circuit_dataset.jsonl)"
     )
     parser.add_argument(
         "--output", 
@@ -430,8 +434,8 @@ def main():
     )
     parser.add_argument(
         "--prompt-file",
-        default="prompts/default_prompt.txt",
-        help="Path to the prompt template file (default: prompts/default_prompt.txt)"
+        default=DEFAULT_PROMPT,
+        help="Path to the prompt template file (default: <script dir>/prompts/default_prompt.txt)"
     )
     parser.add_argument(
         "--analyze",
@@ -448,7 +452,7 @@ def main():
     output_path = args.output
     if args.analyze and output_path is None:
         timestamp = datetime.now().strftime("%y%m%d.%H%M")
-        output_dir = os.path.join(".", "data", args.model)
+        output_dir = os.path.join(SCRIPT_DIR, "data", args.model)
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, f"{timestamp}.json")
 

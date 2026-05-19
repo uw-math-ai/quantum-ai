@@ -41,7 +41,7 @@ def optimize_circuits_from_dataset(
     model: str = "claude-opus-4.6",
     attempts: int = 10,
     timeout: int = 6000,
-    prompt_path: str = "optimizer_prompt2.txt",
+    prompt_path: str = "prompts/default_prompt.txt",
     limit: int | None = None,
 ) -> None:
     """
@@ -252,8 +252,8 @@ def main():
     )
     parser.add_argument(
         "--prompt",
-        default="optimizer_prompt2.txt",
-        help="Path to the prompt template file (default: optimizer_prompt2.txt)",
+        default="prompts/default_prompt.txt",
+        help="Path to the prompt template file (default: prompts/default_prompt.txt)",
     )
     parser.add_argument(
         "--limit",

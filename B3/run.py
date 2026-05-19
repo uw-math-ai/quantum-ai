@@ -3,6 +3,8 @@ import os
 import sys
 import argparse
 import stim
+from copy import deepcopy
+from pathlib import Path
 
 # Add tools directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
@@ -21,7 +23,7 @@ def generate_circuits_from_data(
     model: str =  "claude-sonnet-4.5",
     attempts: int = 3,
     timeout: int = 60,
-    prompt_file: str = "B3/prompts/ft_state_prep_prompt.txt"
+    prompt_file: str = "prompts/default_prompt.txt"
 ) -> list[dict]:
     """
     Generate fault-tolerant state preparation circuits for all circuits in circuit_dataset.
@@ -158,7 +160,21 @@ def generate_circuits_from_data(
             runtime_seconds = None
             if start_time and end_time:
                 runtime_seconds = (end_time - start_time).total_seconds()
-                        
+
+            # Annotate every candidate with whether it preserves all stabilizers.
+            # (Folded in from the former 1.add_stabilized_check.py post-processing
+            # script so a single run produces fully-annotated output.)
+            for cand in all_candidates:
+                cand_circuit = cand.get("circuit")
+                if cand_circuit is None:
+                    cand["all_stabilized"] = None
+                    continue
+                try:
+                    cand_stab = check_stabilizers(cand_circuit, input_stabilizers)
+                    cand["all_stabilized"] = all(cand_stab.values())
+                except Exception as e:
+                    print(f"  ⚠ Error checking stabilizers for candidate in '{source_code}': {e}")
+                    cand["all_stabilized"] = None
 
             # Best output
             best = {
@@ -203,6 +219,182 @@ def generate_circuits_from_data(
     print(f"\nGeneration complete. {len(results)} circuits saved to {output_path}")
     return results
 
+
+# ---------------------------------------------------------------------------
+# Optional analysis (folded in from the former data_cleaning.py and
+# data/analysis/build_cleaned2.py scripts). Enabled with --analyze; logic is
+# unchanged, just parameterized by the run's output file instead of hardcoded
+# file lists.
+# ---------------------------------------------------------------------------
+
+def clean_ft_results(file_path: str, output_path: str) -> None:
+    """Determine how often the model selected the truly-best circuit
+    (highest ft_score among all-stabilized candidates) as its best_output."""
+    with open(file_path, 'r') as f:
+        data = json.load(f)
+
+    cleaned_results = []
+    temp_results = []
+
+    num_correct = 0
+    num_null = 0
+    for result in data.get("results", []):
+        code_name = result.get("code_name", "Unknown")
+        results = {}
+        best = result.get("best_output")
+        if best.get("circuit") is not None:
+            best_output_og = best.get("circuit")
+            best_ft_score_og = best.get("ft_score")
+            best_all_stabilized_og = best.get("all_stabilized")
+            best_output = best.get("circuit")
+            best_ft_score = best.get("ft_score")
+            best_all_stabilized = best.get("all_stabilized")
+
+            generated_circuits = result.get("generated_circuits", [])
+            for circuit in generated_circuits:
+                if (circuit.get("all_stabilized") == True and circuit.get("ft_score") > best_ft_score) or (circuit.get("all_stabilized") == True and best_all_stabilized == False):
+                    best_output = circuit
+                    best_ft_score = circuit.get("ft_score")
+                    best_all_stabilized = circuit.get("all_stabilized")
+            if best_output_og == best_output:
+                num_correct += 1
+                results = {
+                    "code_name": code_name,
+                    "correct": True
+                }
+            else:
+                results = {
+                    "code_name": code_name,
+                    "correct": False,
+                    "best_output_og": best_output_og,
+                    "best_ft_score_og": best_ft_score_og,
+                    "best_all_stabilized_og": best_all_stabilized_og,
+                    "new_best_output": best_output
+                }
+
+            temp_results.append(results)
+        else:
+            num_null += 1
+            results = {
+                "code_name": code_name,
+                "correct": False,
+                "reason": "No circuit found"
+            }
+            temp_results.append(results)
+
+    overall_accuracy = {
+        "num_correct": num_correct,
+        "num_null": num_null,
+        "total (including null circuits)": len(data.get("results")),
+        "incorrect": len(data.get("results")) - num_correct - num_null,
+        "accuracy": num_correct / len(data.get("results")) if data.get("results") else 0.0,
+        "accuracy (excluding null circuits)": num_correct / (len(data.get("results")) - num_null) if (len(data.get("results")) - num_null) > 0 else 0.0
+    }
+
+    cleaned_results.append(overall_accuracy)
+    cleaned_results.append(temp_results)
+    with open(output_path, 'w') as f:
+        json.dump({"cleaned_results": cleaned_results}, f, indent=4)
+
+    print(f"Cleaned results saved to {output_path}")
+
+
+def build_raw_best_lookup(raw_path: Path) -> dict[str, dict]:
+    with raw_path.open() as f:
+        payload = json.load(f)
+
+    best_lookup: dict[str, dict] = {}
+    for result in payload.get("results", []):
+        if not isinstance(result, dict):
+            continue
+
+        code_name = result.get("code_name")
+        if not code_name:
+            continue
+
+        candidates: list[dict] = []
+        best_output = result.get("best_output")
+        if isinstance(best_output, dict):
+            candidates.append(best_output)
+
+        for candidate in result.get("generated_circuits", []):
+            if isinstance(candidate, dict):
+                candidates.append(candidate)
+
+        valid_candidates = [
+            candidate
+            for candidate in candidates
+            if candidate.get("all_stabilized") is True and candidate.get("ft_score") is not None
+        ]
+        if not valid_candidates:
+            continue
+
+        best_lookup[code_name] = max(valid_candidates, key=lambda candidate: candidate["ft_score"])
+
+    return best_lookup
+
+
+def build_cleaned2_payload(cleaned_path: Path, raw_path: Path) -> dict:
+    with cleaned_path.open() as f:
+        cleaned_payload = json.load(f)
+    raw_best_lookup = build_raw_best_lookup(raw_path)
+
+    cleaned2_payload = deepcopy(cleaned_payload)
+    rebuilt_results: list = []
+
+    for item in cleaned_payload.get("cleaned_results", []):
+        if not isinstance(item, list):
+            rebuilt_results.append(item)
+            continue
+
+        rebuilt_entries: list[dict] = []
+        for entry in item:
+            if not isinstance(entry, dict):
+                rebuilt_entries.append(entry)
+                continue
+
+            if entry.get("correct") is False:
+                rebuilt_entries.append(entry)
+                continue
+
+            code_name = entry.get("code_name")
+            best_candidate = raw_best_lookup.get(code_name)
+            if best_candidate is None:
+                rebuilt_entries.append(entry)
+                continue
+
+            rebuilt_entry = deepcopy(entry)
+            rebuilt_entry["new_best_output"] = {
+                key: value
+                for key, value in best_candidate.items()
+                if key in {"circuit", "ft_score", "all_stabilized", "preserved_stabilizers", "ft_check", "stabilizer_details", "ALL TRUE"}
+            }
+            rebuilt_entries.append(rebuilt_entry)
+
+        rebuilt_results.append(rebuilt_entries)
+
+    cleaned2_payload["cleaned_results"] = rebuilt_results
+    return cleaned2_payload
+
+
+def run_analysis(output_path: str) -> None:
+    """Run the cleaned/cleaned2 selection-accuracy analysis on a generation
+    output file, writing results next to it under a cleaned/ subfolder."""
+    out = Path(output_path)
+    cleaned_dir = out.parent / "cleaned"
+    cleaned_dir.mkdir(parents=True, exist_ok=True)
+
+    cleaned_path = cleaned_dir / f"cleaned_{out.name}"
+    clean_ft_results(str(out), str(cleaned_path))
+
+    cleaned2_payload = build_cleaned2_payload(cleaned_path, out)
+    cleaned2_path = cleaned_dir / f"cleaned2_{out.name}"
+    with cleaned2_path.open("w") as f:
+        json.dump(cleaned2_payload, f, indent=2)
+        f.write("\n")
+    print(f"Created {cleaned2_path}")
+
+
 # To run this script, use the following command line format:
 # python generate_state_prep_circuits.py --benchmarks data/benchmarks.json --output data/generated_circuits.json --attempts 3 --timeout 60
 def main():
@@ -238,20 +430,39 @@ def main():
     )
     parser.add_argument(
         "--prompt-file",
-        default="prompts/ft_state_prep_prompt_3.txt",
-        help="Path to the prompt template file (default: prompts/ft_state_prep_prompt_3.txt)"
+        default="prompts/default_prompt.txt",
+        help="Path to the prompt template file (default: prompts/default_prompt.txt)"
     )
-    
+    parser.add_argument(
+        "--analyze",
+        action="store_true",
+        help="After generation, run the selection-accuracy analysis "
+             "(writes cleaned_/cleaned2_ files next to the output)"
+    )
+
     args = parser.parse_args()
-    
+
+    # Resolve the output path up front when analysis is requested so we know
+    # which file to analyze. Mirrors generate_circuits_from_data's own
+    # auto-naming exactly, so behaviour is unchanged.
+    output_path = args.output
+    if args.analyze and output_path is None:
+        timestamp = datetime.now().strftime("%y%m%d.%H%M")
+        output_dir = os.path.join(".", "data", args.model)
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, f"{timestamp}.json")
+
     generate_circuits_from_data(
         benchmarks_path=args.benchmarks,
-        output_path=args.output,
+        output_path=output_path,
         model=args.model,
         attempts=args.attempts,
         timeout=args.timeout,
         prompt_file=args.prompt_file
     )
+
+    if args.analyze:
+        run_analysis(output_path)
 
 
 if __name__ == "__main__":

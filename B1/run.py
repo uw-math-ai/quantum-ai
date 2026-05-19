@@ -18,7 +18,7 @@ def generate_circuits_from_benchmarks(
     model: str = "claude-sonnet-4.5",
     attempts: int = 3,
     timeout: int = 60,
-    prompt_file: str = "B1/prompts/state_prep_prompt4.txt"
+    prompt_file: str = "B1/prompts/default_prompt.txt"
 ) -> list[dict]:
     """
     Generate state preparation circuits for all stabilizer groups in benchmarks.
@@ -160,8 +160,8 @@ def main():
     )
     parser.add_argument(
         "--prompt-file",
-        default="B1/prompts/state_prep_prompt4.txt",
-        help="Path to the prompt template file (default: B1/prompts/state_prep_prompt4.txt)"
+        default="B1/prompts/default_prompt.txt",
+        help="Path to the prompt template file (default: B1/prompts/default_prompt.txt)"
     )
     
     args = parser.parse_args()

@@ -1,10 +1,10 @@
-# AI-Driven Quantum Error Correction Circuit Synthesis
+# StabilizerBench: Benchmarking AI-Assisted QEC Circuit Synthesis
 
-Can AI agents generate fault-tolerant quantum error correction circuits? This repo benchmarks LLMs and reinforcement learning on synthesizing, verifying, and optimizing stabilizer-code circuits for state preparation and syndrome extraction. All circuits use [Stim](https://github.com/quantumlib/Stim) format and are validated via stabilizer-based oracles.
+**StabilizerBench** is a benchmark for evaluating AI agents on quantum error correction (QEC) circuit synthesis. The benchmark focuses on stabilizer circuits, which are central to QEC and can be efficiently verified using stabilizer-based oracles.
 
-See the [research poster](docs/AI-Driven%20Quantum%20Error%20Correction%20Circuit%20Synthesis.pdf) for details.
+The benchmark suite contains **192 stabilizer codes** across **14 code families**, ranging from **4 to 196 qubits** and code distances **2 to 21**. It evaluates whether (1) AI agents can generate correct stabilizer state-preparation circuits, (2) optimize circuits while preserving their semantics, and (3) improve fault tolerance through flag-based circuit modifications.
 
-![Research Poster](ml-poster-winter-2026.png)
+All circuits use [Stim](https://github.com/quantumlib/Stim) format and are validated through automated verification tools.
 
 ## Research Questions
 

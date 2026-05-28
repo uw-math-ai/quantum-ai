@@ -51,7 +51,7 @@ BENCHMARKS: dict[str, dict] = {
     },
     "B2": {  # circuit optimization
         "script": "B2/run.py",
-        "model": "claude-opus-4.6",
+        "model": "claude-sonnet-4.5",
         "attempts": 10,
         "timeout": 300,
         "benchmarks": None,    # None -> B2/run.py default (data/circuit_dataset.jsonl)

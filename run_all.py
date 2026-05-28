@@ -53,7 +53,7 @@ BENCHMARKS: dict[str, dict] = {
         "script": "B2/run.py",
         "model": "claude-opus-4.6",
         "attempts": 10,
-        "timeout": 6000,
+        "timeout": 300,
         "benchmarks": None,    # None -> B2/run.py default (data/circuit_dataset.jsonl)
         "prompt_file": None,
         "output": None,
@@ -62,7 +62,7 @@ BENCHMARKS: dict[str, dict] = {
     "B3": {  # fault-tolerant state-prep generation
         "script": "B3/run.py",
         "model": "claude-sonnet-4.5",
-        "attempts": 1,
+        "attempts": 10,
         "timeout": 300,
         "benchmarks": None,    # None -> B3/run.py default (data/circuit_dataset.jsonl)
         "prompt_file": None,

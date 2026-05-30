@@ -12,24 +12,24 @@ OUTPUT_PATH = SCORES_DIR / "B3_capability_scores_cleaned2.json"
 
 RUNS = {
     "260314": {
-        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260314.2351.json",
-        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260314.2353.json",
-        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260314.2352.json",
+        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260314.2351.json",
+        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260314.2353.json",
+        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260314.2352.json",
     },
     "260319": {
-        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260319.0920.json",
-        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260319.1021.json",
-        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260319.1021.json",
+        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260319.0920.json",
+        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260319.1021.json",
+        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260319.1021.json",
     },
     "260320": {
-        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260320.0954.json",
-        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260320.0954.json",
-        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260320.0954.json",
+        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260320.0954.json",
+        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260320.0954.json",
+        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260320.0954.json",
     },
     "260321": {
-        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260321.1013.json",
-        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260321.1013.json",
-        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260321.1013.json",
+        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260321.1013.json",
+        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260321.1013.json",
+        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260321.1013.json",
     },
 }
 

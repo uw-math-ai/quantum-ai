@@ -12,36 +12,36 @@ RUNS = [
         "date_code": "260314",
         "display_date": "0314",
         "model_files": {
-            "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260314.2351.json",
-            "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260314.2353.json",
-            "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260314.2352.json",
+            "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260314.2351.json",
+            "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260314.2353.json",
+            "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260314.2352.json",
         },
     },
     {
         "date_code": "260319",
         "display_date": "0319",
         "model_files": {
-            "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260319.0920.json",
-            "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260319.1021.json",
-            "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260319.1021.json",
+            "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260319.0920.json",
+            "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260319.1021.json",
+            "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260319.1021.json",
         },
     },
     {
         "date_code": "260320",
         "display_date": "0320",
         "model_files": {
-            "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260320.0954.json",
-            "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260320.0954.json",
-            "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260320.0954.json",
+            "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260320.0954.json",
+            "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260320.0954.json",
+            "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260320.0954.json",
         },
     },
     {
         "date_code": "260321",
         "display_date": "0321",
         "model_files": {
-            "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260321.1013.json",
-            "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260321.1013.json",
-            "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260321.1013.json",
+            "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260321.1013.json",
+            "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260321.1013.json",
+            "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260321.1013.json",
         },
     },
 ]

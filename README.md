@@ -8,12 +8,24 @@ All circuits use [Stim](https://github.com/quantumlib/Stim) format and are valid
 
 ## Research Questions
 
+The benchmark is designed to quantify the following 4 research questions about AI-assisted QEC circuit synthesis. These 4 questions guide the evaluation tasks and metrics used throughout StabilizerBench.
+
 | # | Question | Metric |
 |---|----------|--------|
 | **RQ1** | Can an agent generate stabilizer circuits reliably? | % stabilizer preservation |
 | **RQ2** | Can an agent make a circuit fault-tolerant? | Median FT score |
 | **RQ3** | Can an agent optimize without breaking FT? | Circuit volume |
 | **RQ4** | Does training/fine-tuning an LLM improve results? | Same as above |
+
+## Benchmarks
+
+StabilizerBench is organized into three benchmark tasks of increasing difficulty. Each task provides an agent with a circuit-synthesis or circuit-editing problem, validates the submitted Stim circuit using automated stabilizer-based oracles, and reports task-specific capability and quality metrics.
+
+| Benchmark | Task | Description | Main metric |
+|-----------|------|-------------|-------------|
+| `B1` | State-preparation circuit generation | B1 tests whether an agent can synthesize a quantum circuit that prepares a specified stabilizer state. | Stabilizer preservation |
+| `B2` | Circuit optimization | B2 tests whether an agent can reason about circuit equivalence to produce a more efficient implementation of the same stabilizer state. | Reduction in two-qubit gate count and depth |
+| `B3` | Fault-tolerant circuit generation | B3 tests whether an agent can improve the fault tolerance of a given circuit by inserting flag gadgets that detect uncorrectable error propagation. | Fault-tolerance score |
 
 ## Structure
 

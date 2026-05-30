@@ -117,7 +117,7 @@ def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None
 
 def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str, 
     distance: int, attempts: int | None = 3, timeout: int | None = 60, *, model: str,
-    prompt_file: str = "rq2/prompts/ft_state_prep_prompt.txt") -> tuple[stim.Circuit, list[dict]] | None:
+    prompt_file: str = "B3/prompts/ft_state_prep_prompt0.txt") -> tuple[stim.Circuit, list[dict]] | None:
     """
     Generate a fault-tolerant state preparation circuit for given stabilizers.
     

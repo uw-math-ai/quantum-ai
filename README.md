@@ -8,7 +8,7 @@ All circuits use [Stim](https://github.com/quantumlib/Stim) format and are valid
 
 ## Research Questions
 
-The benchmark is designed to quantify the following kinds of research questions about AI-assisted QEC circuit synthesis. These 4 questions guide the evaluation tasks and metrics used throughout StabilizerBench.
+The benchmark is designed to quantify the following 4 research questions about AI-assisted QEC circuit synthesis. These 4 questions guide the evaluation tasks and metrics used throughout StabilizerBench.
 
 | # | Question | Metric |
 |---|----------|--------|

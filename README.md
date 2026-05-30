@@ -23,9 +23,9 @@ StabilizerBench is organized into three benchmark tasks of increasing difficulty
 
 | Benchmark | Task | Description | Main metric |
 |-----------|------|-------------|-------------|
-| `B1` | State-preparation circuit generation | Given a set of Pauli stabilizer generators, the agent must synthesize a Stim circuit that prepares a state stabilized by every generator. This measures whether an agent can generate correct stabilizer circuits from a symbolic code description. | Stabilizer preservation |
-| `B2` | Circuit optimization | Given a valid baseline Stim circuit and its stabilizers, the agent must produce a semantically equivalent circuit with lower cost. This measures whether an agent can optimize circuit structure without changing the prepared stabilizer state. | Reduction in two-qubit gate count and depth |
-| `B3` | Fault-tolerant circuit generation | Given a non-fault-tolerant circuit, its stabilizers, and the code distance, the agent must modify the circuit, possibly adding flag qubits, to improve detection of dangerous fault propagation while preserving the target stabilizers. | Fault-tolerance score |
+| `B1` | State-preparation circuit generation | B1 tests whether an agent can synthesize a quantum circuit that prepares a specified stabilizer state. | Stabilizer preservation |
+| `B2` | Circuit optimization | B2 tests whether an agent can reason about circuit equivalence to produce a more efficient implementation of the same stabilizer state. | Reduction in two-qubit gate count and depth |
+| `B3` | Fault-tolerant circuit generation | B3 tests whether an agent can improve the fault tolerance of a given circuit by inserting flag gadgets that detect uncorrectable error propagation. | Fault-tolerance score |
 
 ## Structure
 

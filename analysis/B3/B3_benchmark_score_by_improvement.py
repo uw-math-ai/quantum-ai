@@ -10,26 +10,40 @@ SCORES_DIR = Path(__file__).resolve().parent / "scores"
 SCORES_DIR.mkdir(exist_ok=True)
 OUTPUT_PATH = SCORES_DIR / "B3_capability_scores_cleaned2.json"
 
+
+def cleaned_result_path(model_name: str, filename: str) -> Path:
+    """Return the checked-in cleaned result path, accepting old cleaned2 names."""
+    cleaned_dir = ROOT / "data" / model_name / "cleaned"
+    candidates = [
+        cleaned_dir / filename,
+        cleaned_dir / filename.replace("cleaned2_", ""),
+    ]
+    for path in candidates:
+        if path.exists():
+            return path
+    return candidates[0]
+
+
 RUNS = {
     "260314": {
-        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260314.2351.json",
-        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260314.2353.json",
-        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260314.2352.json",
+        "claude": cleaned_result_path("claude-opus-4.6", "260314.2351.json"),
+        "gemini": cleaned_result_path("gemini-3-pro-preview", "260314.2353.json"),
+        "gpt": cleaned_result_path("gpt5.2", "260314.2352.json"),
     },
     "260319": {
-        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260319.0920.json",
-        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260319.1021.json",
-        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260319.1021.json",
+        "claude": cleaned_result_path("claude-opus-4.6", "260319.0920.json"),
+        "gemini": cleaned_result_path("gemini-3-pro-preview", "260319.1021.json"),
+        "gpt": cleaned_result_path("gpt5.2", "260319.1021.json"),
     },
     "260320": {
-        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260320.0954.json",
-        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260320.0954.json",
-        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260320.0954.json",
+        "claude": cleaned_result_path("claude-opus-4.6", "260320.0954.json"),
+        "gemini": cleaned_result_path("gemini-3-pro-preview", "260320.0954.json"),
+        "gpt": cleaned_result_path("gpt5.2", "260320.0954.json"),
     },
     "260321": {
-        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "cleaned2_260321.1013.json",
-        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "cleaned2_260321.1013.json",
-        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "cleaned2_260321.1013.json",
+        "claude": cleaned_result_path("claude-opus-4.6", "260321.1013.json"),
+        "gemini": cleaned_result_path("gemini-3-pro-preview", "260321.1013.json"),
+        "gpt": cleaned_result_path("gpt5.2", "260321.1013.json"),
     },
 }
 
@@ -79,6 +93,36 @@ def compute_capability_score(cleaned2_path: Path, stabilizer_counts: dict[str, i
         "counted_codes": counted_codes,
         "missing_benchmark_entries": sorted(set(missing_benchmark_entries)),
     }
+
+
+def solved_stabilizer_counts(cleaned2_path: Path, stabilizer_counts: dict[str, int]) -> list[int]:
+    counts: list[int] = []
+    for entry in iter_cleaned2_entries(cleaned2_path):
+        code_name = entry.get("code_name")
+        ft_score = entry.get("new_best_output", {}).get("ft_score")
+        if not code_name or not ft_score or ft_score == 0:
+            continue
+
+        stabilizer_count = stabilizer_counts.get(code_name)
+        if stabilizer_count is not None:
+            counts.append(stabilizer_count)
+    return counts
+
+
+def compute_cumulative_capability_curve(
+    cleaned2_path: Path,
+    stabilizer_counts: dict[str, int],
+    x_values: list[int] | None = None,
+) -> list[tuple[int, int]]:
+    """Build cumulative S_cap points from a B3 cleaned result file."""
+    solved_counts = solved_stabilizer_counts(cleaned2_path, stabilizer_counts)
+    if x_values is None:
+        x_values = sorted(set(stabilizer_counts.values()))
+
+    return [
+        (int(x), sum(stabilizers for stabilizers in solved_counts if stabilizers <= x))
+        for x in x_values
+    ]
 
 
 def main() -> None:

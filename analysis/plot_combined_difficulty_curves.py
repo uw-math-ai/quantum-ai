@@ -4,8 +4,10 @@ Combined Difficulty Curves — B1 | B2 | B3
 3-panel figure of cumulative S_cap vs. number of stabilizers,
 one panel per benchmark.
 
-B1 and B3 use hardcoded S_cap data from prior runs.
+B1 uses hardcoded S_cap data from prior runs.
 B2 is recomputed from raw result files via analysis/B2/analyze_models.discover().
+B3 is recomputed from cleaned result files via
+analysis/B3/B3_benchmark_score_by_improvement.py.
 
 Usage:
     python analysis/plot_combined_difficulty_curves.py <B2_data_directory>
@@ -26,6 +28,14 @@ import matplotlib.ticker as mticker
 # Reuse B2's discovery to compute all_rows for the B2 panel.
 sys.path.insert(0, str(Path(__file__).resolve().parent / "B2"))
 from analyze_models import discover  # noqa: E402
+
+# Reuse B3's scoring helpers to compute the B3 panel.
+sys.path.insert(0, str(Path(__file__).resolve().parent / "B3"))
+from B3_benchmark_score_by_improvement import (  # noqa: E402
+    compute_cumulative_capability_curve,
+    cleaned_result_path,
+    load_stabilizer_counts as load_b3_stabilizer_counts,
+)
 
 
 # ── Shared style constants ───────────────────────────────────────────
@@ -111,37 +121,10 @@ B1_AGENT = {
     ],
 }
 
-# ── B3 S_cap data ────────────────────────────────────────────────────
-B3_AGENT = {
-    "Claude Opus 4.6": [
-        (2,10),(4,14),(6,32),(8,56),(10,66),(14,80),(16,96),(18,132),(20,152),
-        (22,152),(24,176),(26,306),(30,306),(34,544),(36,580),(38,618),(44,618),
-        (48,762),(50,912),(58,912),(62,1284),(66,1350),(68,1350),(72,1350),
-        (74,1424),(80,1584),(82,1748),(84,1748),(86,1748),(90,1838),(94,1838),
-        (98,1838),(104,2046),(106,2152),(110,2152),(114,2266),(118,2384),(122,2384),
-        (124,2384),(128,2384),(130,2384),(132,2384),(134,2652),(146,2652),
-        (152,2652),(154,2652),(160,2652),(164,2652),(170,2652),(174,2652),
-        (178,2830),(182,2830),(184,2830),(194,2830),
-    ],
-    "GPT-5.2": [
-        (2,10),(4,14),(6,26),(8,42),(10,42),(14,56),(16,56),(18,92),(20,112),
-        (22,112),(24,112),(26,216),(30,216),(34,454),(36,454),(38,492),(44,624),
-        (48,768),(50,868),(58,868),(62,1178),(66,1310),(68,1310),(72,1310),
-        (74,1384),(80,1544),(82,1708),(84,1708),(86,1794),(90,1794),(94,1794),
-        (98,1794),(104,2106),(106,2106),(110,2106),(114,2220),(118,2220),(122,2220),
-        (124,2220),(128,2220),(130,2220),(132,2220),(134,2220),(146,2220),
-        (152,2220),(154,2220),(160,2220),(164,2220),(170,2220),(174,2220),
-        (178,2220),(182,2220),(184,2220),(194,2220),
-    ],
-    "Gemini 3 Pro Preview": [
-        (2,10),(4,14),(6,26),(8,50),(10,60),(14,74),(16,90),(18,126),(20,126),
-        (22,126),(24,126),(26,204),(30,204),(34,238),(36,238),(38,276),(44,276),
-        (48,276),(50,276),(58,276),(62,276),(66,276),(68,276),(72,276),(74,276),
-        (80,276),(82,276),(84,276),(86,276),(90,276),(94,276),(98,276),(104,276),
-        (106,276),(110,276),(114,276),(118,276),(122,276),(124,276),(128,276),
-        (130,276),(132,276),(134,276),(146,276),(152,276),(154,276),(160,276),
-        (164,276),(170,276),(174,276),(178,276),(182,276),(184,276),(194,276),
-    ],
+B3_BEST_RUNS = {
+    "Claude Opus 4.6": cleaned_result_path("claude-opus-4.6", "260314.2351.json"),
+    "GPT-5.2": cleaned_result_path("gpt5.2", "260314.2352.json"),
+    "Gemini 3 Pro Preview": cleaned_result_path("gemini-3-pro-preview", "260314.2353.json"),
 }
 
 
@@ -174,12 +157,25 @@ def compute_b2_panel(all_rows: list[dict]):
     return b2_agent, b2_x, b2_total
 
 
+def compute_b3_panel():
+    """Build B3 cumulative S_cap series from cleaned result files."""
+    stabilizer_counts, _ = load_b3_stabilizer_counts()
+    b3_x = np.array([x for x, _ in TOTAL_SCAP])
+    b3_agent = {
+        label: compute_cumulative_capability_curve(
+            result_path,
+            stabilizer_counts,
+            x_values=[int(x) for x in b3_x],
+        )
+        for label, result_path in B3_BEST_RUNS.items()
+    }
+    b3_total = [y for _, y in TOTAL_SCAP]
+    return b3_agent, b3_x, b3_total
+
+
 def plot_combined_difficulty_curves(all_rows: list[dict], output: str):
     b2_agent, b2_x, b2_total = compute_b2_panel(all_rows)
-
-    total_scap_dict = dict(TOTAL_SCAP)
-    b3_x = np.array(sorted(set(x for pts in B3_AGENT.values() for x, _ in pts)))
-    b3_total = [total_scap_dict.get(int(x), 0) for x in b3_x]
+    b3_agent, b3_x, b3_total = compute_b3_panel()
 
     fig, axes = plt.subplots(1, 3, figsize=(18, 5.5))
     scap_x = np.array([x for x, _ in TOTAL_SCAP])
@@ -187,7 +183,7 @@ def plot_combined_difficulty_curves(all_rows: list[dict], output: str):
     panels = [
         ("B1: Stabilizer Synthesis",  r"Cumulative $S_{\mathrm{cap}}$", B1_AGENT, scap_x, scap_y),
         ("B2: Circuit Optimization",  r"Cumulative $S_{\mathrm{cap}}$", b2_agent, b2_x,   b2_total),
-        ("B3: Fault-Tolerance",       r"Cumulative $S_{\mathrm{cap}}$", B3_AGENT, b3_x,   b3_total),
+        ("B3: Fault-Tolerance",       r"Cumulative $S_{\mathrm{cap}}$", b3_agent, b3_x,   b3_total),
     ]
 
     handles, labels_legend = None, None

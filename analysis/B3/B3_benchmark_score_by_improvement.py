@@ -26,24 +26,24 @@ def cleaned_result_path(model_name: str, filename: str) -> Path:
 
 RUNS = {
     "260314": {
-        "claude": cleaned_result_path("claude-opus-4.6", "260314.2351.json"),
-        "gemini": cleaned_result_path("gemini-3-pro-preview", "260314.2353.json"),
-        "gpt": cleaned_result_path("gpt5.2", "260314.2352.json"),
+        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260314.2351.json",
+        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260314.2353.json",
+        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260314.2352.json",
     },
     "260319": {
-        "claude": cleaned_result_path("claude-opus-4.6", "260319.0920.json"),
-        "gemini": cleaned_result_path("gemini-3-pro-preview", "260319.1021.json"),
-        "gpt": cleaned_result_path("gpt5.2", "260319.1021.json"),
+        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260319.0920.json",
+        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260319.1021.json",
+        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260319.1021.json",
     },
     "260320": {
-        "claude": cleaned_result_path("claude-opus-4.6", "260320.0954.json"),
-        "gemini": cleaned_result_path("gemini-3-pro-preview", "260320.0954.json"),
-        "gpt": cleaned_result_path("gpt5.2", "260320.0954.json"),
+        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260320.0954.json",
+        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260320.0954.json",
+        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260320.0954.json",
     },
     "260321": {
-        "claude": cleaned_result_path("claude-opus-4.6", "260321.1013.json"),
-        "gemini": cleaned_result_path("gemini-3-pro-preview", "260321.1013.json"),
-        "gpt": cleaned_result_path("gpt5.2", "260321.1013.json"),
+        "claude": ROOT / "data" / "claude-opus-4.6" / "cleaned" / "260321.1013.json",
+        "gemini": ROOT / "data" / "gemini-3-pro-preview" / "cleaned" / "260321.1013.json",
+        "gpt": ROOT / "data" / "gpt5.2" / "cleaned" / "260321.1013.json",
     },
 }
 

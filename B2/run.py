@@ -42,7 +42,8 @@ def normalize_stim_text(stim_text: str) -> str:
 def optimize_circuits_from_dataset(
     dataset_path: str,
     output_path: str | None = None,
-    model: str = "claude-opus-4.6",
+    model: str = "gpt-5.2-codex",
+    harness: str = "openai",
     attempts: int = 10,
     timeout: int = 6000,
     prompt_path: str = "prompts/default_prompt.txt",
@@ -86,6 +87,7 @@ def optimize_circuits_from_dataset(
         "dataset_path": dataset_path,
         "prompt_path": prompt_path,
         "model": model,
+        "harness": harness,
         "max_attempts": attempts,
         "timeout": timeout,
         "started_at": datetime.now().isoformat(),
@@ -151,6 +153,7 @@ def optimize_circuits_from_dataset(
                     initial_circuit=baseline_text,
                     prompt_template=prompt_template,
                     model=model,
+                    harness=harness,
                     attempts=attempts,
                     timeout=timeout,
                 )
@@ -239,8 +242,14 @@ def main():
     )
     parser.add_argument(
         "--model",
-        default="claude-opus-4.6",
-        help="Model to use for optimization (default: claude-opus-4.6)",
+        default="gpt-5.2-codex",
+        help="Model to use for optimization (default: gpt-5.2-codex)",
+    )
+    parser.add_argument(
+        "--harness",
+        choices=("openai", "anthropic", "copilot"),
+        default="openai",
+        help="Provider harness to use (default: openai)",
     )
     parser.add_argument(
         "--attempts",
@@ -272,6 +281,7 @@ def main():
         dataset_path=args.benchmarks,
         output_path=args.output,
         model=args.model,
+        harness=args.harness,
         attempts=args.attempts,
         timeout=args.timeout,
         prompt_path=args.prompt_file,

@@ -2,12 +2,13 @@
 import os
 import stim
 import asyncio
+import inspect
+import json
+import urllib.error
+import urllib.request
+from dataclasses import dataclass
 from datetime import datetime
 from dotenv import load_dotenv
-from copilot.types import Tool, Attachment, PermissionHandler
-from copilot.tools import define_tool
-from copilot import CopilotClient
-from copilot.generated.session_events import SessionEventType, SessionEvent
 from pydantic import BaseModel, Field
 from pathlib import Path
 
@@ -16,6 +17,32 @@ from check_error_propagation import check_fault_tolerance, ft_score
 from circuit_metric import is_strictly_more_optimal
 
 load_dotenv(Path(__file__).parent / ".env")
+
+HARNESS_CHOICES = ("openai", "anthropic", "copilot")
+
+
+@dataclass
+class Tool:
+    name: str
+    description: str
+    parameter_model: type[BaseModel]
+    callback: object
+
+
+def define_tool(description: str):
+    """Adapt a Pydantic-backed Python callback to a provider-neutral tool."""
+    def decorator(callback):
+        parameter = next(iter(inspect.signature(callback).parameters.values()))
+        parameter_model = parameter.annotation
+        if not isinstance(parameter_model, type) or not issubclass(parameter_model, BaseModel):
+            raise TypeError(f"Tool '{callback.__name__}' must accept a Pydantic model")
+        return Tool(
+            name=callback.__name__,
+            description=description,
+            parameter_model=parameter_model,
+            callback=callback,
+        )
+    return decorator
 
 # Load system prompt template once at module startup
 with open("tools/system_prompt.txt", "r") as f:
@@ -51,73 +78,256 @@ class FTResultParam(BaseModel):
 
 
 
-def _resolve_model_and_provider(model: str) -> tuple[str, dict | None]:
-    if model.startswith("ollama"):
-        base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
-        if model in {"ollama", "ollama:", "ollama/"}:
-            resolved_model = os.getenv("OLLAMA_MODEL", "ministral-3:8b")
-        elif model.startswith("ollama:"):
-            resolved_model = model.split(":", 1)[1].strip()
-        else:
-            resolved_model = model.split("/", 1)[1].strip()
+def _prompt_openai(
+    prompt: str,
+    system_message: str = "",
+    tools: list[Tool] | None = None,
+    model: str = "gpt-5.2-codex",
+    timeout: int | None = 60,
+) -> str:
+    """Prompt an OpenAI model through Responses API and execute local tools."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is required to run Codex directly")
 
-        provider = {
-            "type": "openai",
-            "base_url": f"{base_url}/v1",
+    timeout_seconds = timeout if timeout is not None else 600
+    response_tools = [
+        {
+            "type": "function",
+            "name": tool.name,
+            "description": tool.description,
+            "parameters": tool.parameter_model.model_json_schema(),
         }
-        return resolved_model, provider
+        for tool in tools or []
+    ]
 
-    return model, None
+    def request_response(payload: dict, request_number: int) -> dict:
+        input_items = payload["input"]
+        input_kind = "prompt" if isinstance(input_items, str) else "tool output"
+        started_at = datetime.now()
+        print(f"[openai] request {request_number}: sending {input_kind}", flush=True)
+        request = urllib.request.Request(
+            "https://api.openai.com/v1/responses",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+                result = json.load(response)
+            elapsed = (datetime.now() - started_at).total_seconds()
+            output_types = ", ".join(item.get("type", "unknown") for item in result.get("output", []))
+            print(f"[openai] request {request_number}: received {output_types or 'empty response'} in {elapsed:.1f}s", flush=True)
+            return result
+        except urllib.error.HTTPError as error:
+            details = error.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"OpenAI Responses API returned HTTP {error.code}: {details}") from error
+        except urllib.error.URLError as error:
+            raise RuntimeError(f"OpenAI Responses API request failed: {error.reason}") from error
 
-def prompt_agent(prompt: str, system_message: str = "", tools: list[Tool] | None = None, model: str = "gpt-4.1",
-                 attachments: list[Attachment | dict] | None = None, timeout: int | None = 60) -> str:
-    """Prompt the Copilot agent and return the response."""
-    if tools is None:
-        tools = []
-    if attachments is None:
-        attachments = []
+    response = request_response({
+        "model": model,
+        "instructions": system_message,
+        "input": prompt,
+        "tools": response_tools,
+        "tool_choice": "required" if response_tools else "auto",
+        "parallel_tool_calls": False,
+    }, request_number=1)
+    tool_map = {tool.name: tool for tool in tools or []}
 
-    async def run():
+    for _ in range(100):
+        calls = [item for item in response.get("output", []) if item.get("type") == "function_call"]
+        if not calls:
+            messages = []
+            for item in response.get("output", []):
+                if item.get("type") != "message":
+                    continue
+                messages.extend(
+                    content.get("text", "")
+                    for content in item.get("content", [])
+                    if content.get("type") == "output_text"
+                )
+            return "\n".join(messages)
+
+        tool_outputs = []
+        for call in calls:
+            tool = tool_map.get(call["name"])
+            print(f"[openai] tool call: {call['name']}", flush=True)
+            if tool is None:
+                tool_result = {"error": f"Unknown tool: {call['name']}"}
+            else:
+                try:
+                    arguments = tool.parameter_model.model_validate_json(call["arguments"])
+                    tool_result = tool.callback(arguments)
+                except Exception as error:
+                    tool_result = {"error": str(error)}
+            print(f"[openai] tool result: {call['name']}", flush=True)
+            tool_outputs.append({
+                "type": "function_call_output",
+                "call_id": call["call_id"],
+                "output": json.dumps(tool_result, default=str),
+            })
+
+        response = request_response({
+            "model": model,
+            "previous_response_id": response["id"],
+            "input": tool_outputs,
+            "tools": response_tools,
+            "tool_choice": "auto",
+            "parallel_tool_calls": False,
+        }, request_number=_ + 2)
+
+    raise RuntimeError("OpenAI exceeded the maximum number of tool-call rounds")
+
+
+def _prompt_anthropic(
+    prompt: str,
+    system_message: str,
+    tools: list[Tool] | None,
+    model: str,
+    timeout: int | None,
+) -> str:
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise RuntimeError("ANTHROPIC_API_KEY is required for the anthropic harness")
+
+    timeout_seconds = timeout if timeout is not None else 600
+    anthropic_tools = [
+        {
+            "name": tool.name,
+            "description": tool.description,
+            "input_schema": tool.parameter_model.model_json_schema(),
+        }
+        for tool in tools or []
+    ]
+    tool_map = {tool.name: tool for tool in tools or []}
+    messages = [{"role": "user", "content": prompt}]
+
+    def request_message(payload: dict) -> dict:
+        request = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as error:
+            details = error.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"Anthropic Messages API returned HTTP {error.code}: {details}") from error
+        except urllib.error.URLError as error:
+            raise RuntimeError(f"Anthropic Messages API request failed: {error.reason}") from error
+
+    for _ in range(100):
+        response = request_message({
+            "model": model,
+            "max_tokens": 8192,
+            "system": system_message,
+            "messages": messages,
+            "tools": anthropic_tools,
+        })
+        content = response.get("content", [])
+        calls = [item for item in content if item.get("type") == "tool_use"]
+        if not calls:
+            return "\n".join(item["text"] for item in content if item.get("type") == "text")
+
+        tool_results = []
+        for call in calls:
+            tool = tool_map.get(call["name"])
+            if tool is None:
+                tool_result = {"error": f"Unknown tool: {call['name']}"}
+            else:
+                try:
+                    arguments = tool.parameter_model.model_validate(call["input"])
+                    tool_result = tool.callback(arguments)
+                except Exception as error:
+                    tool_result = {"error": str(error)}
+            tool_results.append({
+                "type": "tool_result",
+                "tool_use_id": call["id"],
+                "content": json.dumps(tool_result, default=str),
+            })
+
+        messages.append({"role": "assistant", "content": content})
+        messages.append({"role": "user", "content": tool_results})
+
+    raise RuntimeError("Anthropic exceeded the maximum number of tool-call rounds")
+
+
+def _prompt_copilot(
+    prompt: str,
+    system_message: str,
+    tools: list[Tool] | None,
+    model: str,
+    timeout: int | None,
+) -> str:
+    try:
+        from copilot import CopilotClient
+        from copilot.generated.session_events import SessionEventType
+        from copilot.tools import define_tool as define_copilot_tool
+    except ImportError as error:
+        raise RuntimeError("Install github-copilot-sdk to use the copilot harness") from error
+
+    copilot_tools = [
+        define_copilot_tool(description=tool.description)(tool.callback)
+        for tool in tools or []
+    ]
+
+    async def run() -> str:
         client = CopilotClient(options={"auto_start": True})
         try:
-            resolved_model, provider = _resolve_model_and_provider(model)
-
-            def _approve_all_permission(_, __):
-                return {"kind": "approved", "rules": []}
-
-            create_kwargs: dict = {
-                "on_permission_request": _approve_all_permission,
-                "model": resolved_model,
-                "tools": tools,
-            }
-            if system_message:
-                create_kwargs["system_message"] = {"content": system_message}
-            if provider:
-                create_kwargs["provider"] = provider
-
-            session = await client.create_session(create_kwargs)
-
+            session = await client.create_session({
+                "on_permission_request": lambda _, __: {"kind": "approved", "rules": []},
+                "model": model,
+                "tools": copilot_tools,
+                "system_message": {"content": system_message},
+            })
             response = ""
 
-            def handle_event(event: SessionEvent):
+            def handle_event(event):
                 nonlocal response
-                if event.type == SessionEventType.ASSISTANT_MESSAGE:
-                    if event.data.content:
-                        print(event.data.content)
-                    response = event.data.content or ""
+                if event.type == SessionEventType.ASSISTANT_MESSAGE and event.data.content:
+                    print(event.data.content)
+                    response = event.data.content
 
             session.on(handle_event)
-
-            await session.send_and_wait(options={"prompt": prompt, "attachments": attachments or None}, timeout=timeout)
+            await session.send_and_wait(options={"prompt": prompt}, timeout=timeout)
             return response
         finally:
             await client.stop()
 
     return asyncio.run(run())
 
+
+def prompt_agent(
+    prompt: str,
+    system_message: str = "",
+    tools: list[Tool] | None = None,
+    model: str = "gpt-5.2-codex",
+    timeout: int | None = 60,
+    harness: str = "openai",
+) -> str:
+    """Run an agent via the selected provider harness and local verification tools."""
+    if harness == "openai":
+        return _prompt_openai(prompt, system_message, tools, model, timeout)
+    if harness == "anthropic":
+        return _prompt_anthropic(prompt, system_message, tools, model, timeout)
+    if harness == "copilot":
+        return _prompt_copilot(prompt, system_message, tools, model, timeout)
+    choices = ", ".join(HARNESS_CHOICES)
+    raise ValueError(f"Unknown harness '{harness}'. Choose one of: {choices}")
+
 def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str, 
     distance: int, attempts: int | None = 3, timeout: int | None = 60, *, model: str,
-    prompt_file: str = "B3/prompts/ft_state_prep_prompt0.txt") -> tuple[stim.Circuit, list[dict]] | None:
+    prompt_file: str = "B3/prompts/ft_state_prep_prompt0.txt", harness: str = "openai") -> tuple[stim.Circuit, list[dict]] | None:
     """
     Generate a fault-tolerant state preparation circuit for given stabilizers.
     
@@ -259,7 +469,7 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
 
     print(prompt)
 
-    prompt_agent(prompt, system_message=system_message, tools=[validate_circuit, return_result], model=model, timeout=timeout)
+    prompt_agent(prompt, system_message=system_message, tools=[validate_circuit, return_result], model=model, timeout=timeout, harness=harness)
 
     if result is None:
         return None, all_candidates
@@ -267,7 +477,7 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
     return result, all_candidates
 
 
-def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1, timeout: int | None = 600, prompt_file: str = "rq1/prompts/state_prep_prompt4.txt") -> stim.Circuit | None:
+def generate_state_prep(stabilizers: list[str], *, model: str, attempts: int = 1, timeout: int | None = 600, prompt_file: str = "rq1/prompts/state_prep_prompt4.txt", harness: str = "openai") -> stim.Circuit | None:
     """
     Generate a state preparation circuit for given stabilizers (without fault-tolerance requirement).
     
@@ -350,7 +560,7 @@ def generate_state_prep(stabilizers: list[str], *, model:str, attempts: int = 1,
 
     print(prompt)
 
-    prompt_agent(prompt, system_message=system_message, tools=[check_stabilizers_tool, final_circuit], model=model, timeout=timeout)
+    prompt_agent(prompt, system_message=system_message, tools=[check_stabilizers_tool, final_circuit], model=model, timeout=timeout, harness=harness)
 
     # Check if result was populated by the agent
     if not result:
@@ -373,6 +583,7 @@ def generate_optimized_circuit(
     model: str,
     attempts: int = 10,
     timeout: int | None = 6000,
+    harness: str = "openai",
 ) -> dict:
     """
     Optimize an existing Clifford circuit while preserving stabilizers.
@@ -573,7 +784,7 @@ def generate_optimized_circuit(
 
     print(prompt)
 
-    prompt_agent(prompt, system_message=system_message, tools=[evaluate_optimization, final_circuit], model=model, timeout=timeout)
+    prompt_agent(prompt, system_message=system_message, tools=[evaluate_optimization, final_circuit], model=model, timeout=timeout, harness=harness)
 
     # Return best found: prefer what agent explicitly submitted via final_circuit,
     # but fall back to the best internally tracked if the agent failed to submit.

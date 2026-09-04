@@ -14,7 +14,7 @@ Examples
     python run_all.py --only B1 B3
 
     # Override the model + attempts for whichever benchmarks are selected
-    python run_all.py --model claude-opus-4.6 --attempts 5
+    python run_all.py --model gpt-5.2-codex --attempts 5
 
     # Enable B3's post-run analysis and cap B2 at 20 circuits
     python run_all.py --analyze --limit 20
@@ -42,7 +42,8 @@ REPO_ROOT = Path(__file__).resolve().parent
 BENCHMARKS: dict[str, dict] = {
     "B1": {  # state-prep generation
         "script": "B1/run.py",
-        "model": "claude-sonnet-4.5",
+        "model": "gpt-5.2-codex",
+        "harness": "openai",
         "attempts": 10,
         "timeout": 300,
         "benchmarks": None,    # None -> B1/run.py default (data/benchmarks.json)
@@ -51,7 +52,8 @@ BENCHMARKS: dict[str, dict] = {
     },
     "B2": {  # circuit optimization
         "script": "B2/run.py",
-        "model": "claude-sonnet-4.5",
+        "model": "gpt-5.2-codex",
+        "harness": "openai",
         "attempts": 10,
         "timeout": 300,
         "benchmarks": None,    # None -> B2/run.py default (data/circuit_dataset.jsonl)
@@ -61,7 +63,8 @@ BENCHMARKS: dict[str, dict] = {
     },
     "B3": {  # fault-tolerant state-prep generation
         "script": "B3/run.py",
-        "model": "claude-sonnet-4.5",
+        "model": "gpt-5.2-codex",
+        "harness": "openai",
         "attempts": 10,
         "timeout": 300,
         "benchmarks": None,    # None -> B3/run.py default (data/circuit_dataset.jsonl)
@@ -79,6 +82,7 @@ def build_command(name: str, cfg: dict) -> list[str]:
     cmd = [sys.executable, str(REPO_ROOT / cfg["script"])]
 
     cmd += ["--model", str(cfg["model"])]
+    cmd += ["--harness", str(cfg["harness"])]
     cmd += ["--attempts", str(cfg["attempts"])]
     cmd += ["--timeout", str(cfg["timeout"])]
 
@@ -103,6 +107,8 @@ def apply_overrides(cfg: dict, args: argparse.Namespace) -> dict:
     merged = dict(cfg)
     if args.model is not None:
         merged["model"] = args.model
+    if args.harness is not None:
+        merged["harness"] = args.harness
     if args.attempts is not None:
         merged["attempts"] = args.attempts
     if args.timeout is not None:
@@ -130,6 +136,12 @@ def main() -> int:
         "--model",
         default=None,
         help="Override the model for every selected benchmark",
+    )
+    parser.add_argument(
+        "--harness",
+        choices=("openai", "anthropic", "copilot"),
+        default=None,
+        help="Override the provider harness for every selected benchmark",
     )
     parser.add_argument(
         "--attempts",

@@ -1,0 +1,2 @@
+-r requirements.txt
+github-copilot-sdk==0.1.23

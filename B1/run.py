@@ -19,7 +19,8 @@ from check_stabilizers import check_stabilizers
 def generate_circuits_from_benchmarks(
     benchmarks_path: str,
     output_path: str | None = None,
-    model: str = "claude-sonnet-4.5",
+    model: str = "gpt-5.2-codex",
+    harness: str = "openai",
     attempts: int = 3,
     timeout: int = 60,
     prompt_file: str = "B1/prompts/default_prompt.txt"
@@ -50,6 +51,7 @@ def generate_circuits_from_benchmarks(
     metadata = {
         "benchmarks_path": benchmarks_path,
         "model": model,
+        "harness": harness,
         "prompt_path": prompt_file,
         "attempts": attempts,
         "timeout": timeout,
@@ -76,6 +78,7 @@ def generate_circuits_from_benchmarks(
                 circuit = generate_state_prep(
                     stabilizers=generators,
                     model=model,
+                    harness=harness,
                     attempts=attempts,
                     timeout=timeout,
                     prompt_file=prompt_file,
@@ -100,6 +103,7 @@ def generate_circuits_from_benchmarks(
                 preserved = 0
                 total = len(generators)
                 print(f"  ✗ Error: {e}")
+                exit(1)
             
             elapsed_seconds = round(time.time() - start_time, 2)
             print(f"  ⏱ Elapsed: {elapsed_seconds}s")
@@ -147,8 +151,14 @@ def main():
     )
     parser.add_argument(
         "--model",
-        default="claude-sonnet-4.5",
-        help="Model to use for generation (default: claude-sonnet-4.5)"
+        default="gpt-5.2-codex",
+        help="Model to use for generation (default: gpt-5.2-codex)"
+    )
+    parser.add_argument(
+        "--harness",
+        choices=("openai", "anthropic", "copilot"),
+        default="openai",
+        help="Provider harness to use (default: openai)"
     )
     parser.add_argument(
         "--attempts", 
@@ -174,6 +184,7 @@ def main():
         benchmarks_path=args.benchmarks,
         output_path=args.output,
         model=args.model,
+        harness=args.harness,
         attempts=args.attempts,
         timeout=args.timeout,
         prompt_file=args.prompt_file

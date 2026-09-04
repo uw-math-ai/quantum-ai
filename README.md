@@ -41,61 +41,51 @@ StabilizerBench is organized into three benchmark tasks of increasing difficulty
 
 ## Setup/Installation
 
-### 1. Install Copilot CLI
+### 1. Install Python Dependencies
 
-Follow the official installation guide: https://docs.github.com/en/copilot/how-tos/copilot-cli/install-copilot-cli
-
-### 2. Authenticate with GitHub Copilot
-
-You need to authenticate using a Personal Access Token:
-
-1. Create a Personal Access Token on GitHub (with appropriate scopes according to installation guide in [step 1](#1-install-copilot-cli))
-2. Create a file called `.env` in the `tools/` directory
-3. Add the following line to `.env`:
-   ```
-   GH_TOKEN=<your_personal_access_token>
-   ```
-
-This environment variable will be automatically loaded by the agent when it starts.
-
-### 3. Install Python Dependencies
-
-Install the required Python packages using pip (recommended inside a virtual Python environment):
+Install the shared requirements in a virtual environment:
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
+
+The direct OpenAI and Anthropic harnesses use Python's standard library, so no provider-specific SDK is required. Install the Copilot dependency only when using that harness:
+
+```bash
+python -m pip install -r requirements-copilot.txt
+```
+
+### 2. Configure a Harness
+
+The shared agent supports these harnesses, all of which execute the benchmark's verification tools locally:
+
+| Harness | Credential in `tools/.env` | Example model |
+|---|---|---|
+| `openai` | `OPENAI_API_KEY=<your_openai_api_key>` | `gpt-5.2-codex` |
+| `anthropic` | `ANTHROPIC_API_KEY=<your_anthropic_api_key>` | `claude-sonnet-4-5` |
+| `copilot` | `GH_TOKEN=<your_github_token>` or Copilot CLI login | `gpt-5.2` |
+
+Setup pointers:
+
+- `openai`: Create an API key in the [OpenAI API keys page](https://platform.openai.com/api-keys), ensure the associated project has API billing and access to the selected model, then set `OPENAI_API_KEY`.
+- `anthropic`: Create an API key in the [Anthropic Console](https://console.anthropic.com/settings/keys), ensure the workspace has API credits and model access, then set `ANTHROPIC_API_KEY`.
+- `copilot`: Install `requirements-copilot.txt`, then either set `GH_TOKEN` for an account with an active GitHub Copilot entitlement or authenticate the bundled CLI with `.../site-packages/copilot/bin/copilot login`. See the [Copilot CLI installation guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/install-copilot-cli).
+
+`openai` is the default harness. Select a provider and compatible model explicitly, for example:
+
+```bash
+python B1/run.py --harness anthropic --model claude-sonnet-4-5
+```
+
+For the OpenAI harness, each request and local tool invocation is printed to the terminal.
 
 The dependencies include:
 - `stim` - Quantum circuit simulation
 - `python-dotenv` - Environment variable management
-- `github-copilot-sdk` - Copilot AI SDK for Python
 - `fastmcp` - Fast Model Context Protocol support
 
-### 4. (Optional) Set Up Ollama
-
-If you want to use local Ollama models, set up and verify your Ollama installation:
-
-```bash
-python tools/ollama_setup.py --model ministral-3:8b
-```
-
-**Important:** The Copilot SDK requires models that support tool calls. Recommended Ollama models:
-- `ministral-3:8b` (recommended - smaller, faster)
-- `ministral-3:14b` (larger, potentially more capable)
-
-Models like `llama3.1` or `deepseek-coder-v2` do **not** support tool calls and will not work with the Copilot SDK.
-
-This script will:
-- Check if Ollama is running
-- Pull the specified model if it's not already available
-- Verify the model works with a test query
-
-You can also set environment variables in your `.env` file:
-```
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=ministral-3:8b
-```
+Optional harness dependencies:
+- `requirements-copilot.txt` - `github-copilot-sdk` and bundled Copilot CLI
 
 ## Running the benchmarks (run_all.py)
 
@@ -113,7 +103,8 @@ python run_all.py --only B1 B3   # run only B1 and B3
 Common command-line options:
 
 - `--only B# ...`: Run only the listed benchmarks (choices: `B1`, `B2`, `B3`).
-- `--model <name>`: Override the model for every selected benchmark (e.g. `gpt-5.2`).
+- `--model <name>`: Override the model for every selected benchmark (e.g. `gpt-5.2-codex`).
+- `--harness <name>`: Select `openai`, `anthropic`, or `copilot` for every selected benchmark.
 - `--attempts <n>`: Override the number of attempts per circuit for every selected benchmark.
 - `--timeout <seconds>`: Override per-call timeout (seconds) for every selected benchmark.
 - `--limit <n>`: Limit B2 to the first `n` circuits (ignored by B1/B3).
@@ -128,12 +119,7 @@ Notes:
 
 ## Documentation References
 
-For detailed information on the Copilot SDK and API, refer to:
-
-- **Getting Started Guide**: https://github.com/github/copilot-sdk/blob/main/docs/getting-started.md
-- **Python SDK README**: https://github.com/github/copilot-sdk/blob/main/python/README.md
-- **GitHub Copilot CLI Docs**: https://docs.github.com/en/copilot/how-tos/copilot-cli/install-copilot-cli
-- **Ollama Quickstart**: https://docs.ollama.com/quickstart
+For provider API details, consult the OpenAI Responses API, Anthropic Messages API, or GitHub Copilot SDK documentation.
 
 
 For dataset format, see [`data/DATASET_FORMAT.md`](data/DATASET_FORMAT.md).

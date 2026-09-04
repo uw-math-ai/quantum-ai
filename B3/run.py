@@ -15,8 +15,7 @@ sys.path.insert(0, os.path.join(SCRIPT_DIR, '..', 'tools'))
 
 
 from datetime import datetime
-from agent import prompt_agent, CircuitParam, generate_ft_state_prep
-from copilot.tools import define_tool
+from agent import CircuitParam, define_tool, generate_ft_state_prep, prompt_agent
 from validate_ft_circuits import check_syndrome_extraction_ft
 from check_error_propagation import check_fault_tolerance, ft_score
 from check_stabilizers import check_stabilizers
@@ -24,7 +23,8 @@ from check_stabilizers import check_stabilizers
 def generate_circuits_from_data(
     benchmarks_path: str,
     output_path: str|None = None,
-    model: str =  "claude-sonnet-4.5",
+    model: str = "gpt-5.2-codex",
+    harness: str = "openai",
     attempts: int = 3,
     timeout: int = 60,
     prompt_file: str = "prompts/default_prompt.txt"
@@ -77,6 +77,7 @@ def generate_circuits_from_data(
                     attempts=attempts,
                     timeout=timeout,
                     model=model,
+                    harness=harness,
                     prompt_file=prompt_file
                 )
                 end_time = datetime.now()
@@ -429,8 +430,14 @@ def main():
     )
     parser.add_argument(
         "--model",
-        default="claude-sonnet-4.5",
-        help="Model to use for generation (default: claude-sonnet-4.5)"
+        default="gpt-5.2-codex",
+        help="Model to use for generation (default: gpt-5.2-codex)"
+    )
+    parser.add_argument(
+        "--harness",
+        choices=("openai", "anthropic", "copilot"),
+        default="openai",
+        help="Provider harness to use (default: openai)"
     )
     parser.add_argument(
         "--prompt-file",
@@ -460,6 +467,7 @@ def main():
         benchmarks_path=args.benchmarks,
         output_path=output_path,
         model=args.model,
+        harness=args.harness,
         attempts=args.attempts,
         timeout=args.timeout,
         prompt_file=args.prompt_file

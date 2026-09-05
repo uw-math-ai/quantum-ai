@@ -206,7 +206,10 @@ def _prompt_anthropic(
     tool_map = {tool.name: tool for tool in tools or []}
     messages = [{"role": "user", "content": prompt}]
 
-    def request_message(payload: dict) -> dict:
+    def request_message(payload: dict, request_number: int) -> dict:
+        input_kind = "prompt" if request_number == 1 else "tool output"
+        started_at = datetime.now()
+        print(f"[anthropic] request {request_number}: sending {input_kind}", flush=True)
         request = urllib.request.Request(
             "https://api.anthropic.com/v1/messages",
             data=json.dumps(payload).encode("utf-8"),
@@ -219,7 +222,11 @@ def _prompt_anthropic(
         )
         try:
             with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
-                return json.load(response)
+                result = json.load(response)
+            elapsed = (datetime.now() - started_at).total_seconds()
+            content_types = ", ".join(item.get("type", "unknown") for item in result.get("content", []))
+            print(f"[anthropic] request {request_number}: received {content_types or 'empty response'} in {elapsed:.1f}s", flush=True)
+            return result
         except urllib.error.HTTPError as error:
             details = error.read().decode("utf-8", errors="replace")
             raise RuntimeError(f"Anthropic Messages API returned HTTP {error.code}: {details}") from error
@@ -233,7 +240,7 @@ def _prompt_anthropic(
             "system": system_message,
             "messages": messages,
             "tools": anthropic_tools,
-        })
+        }, request_number=_ + 1)
         content = response.get("content", [])
         calls = [item for item in content if item.get("type") == "tool_use"]
         if not calls:
@@ -242,6 +249,7 @@ def _prompt_anthropic(
         tool_results = []
         for call in calls:
             tool = tool_map.get(call["name"])
+            print(f"[anthropic] tool call: {call['name']}", flush=True)
             if tool is None:
                 tool_result = {"error": f"Unknown tool: {call['name']}"}
             else:
@@ -250,6 +258,7 @@ def _prompt_anthropic(
                     tool_result = tool.callback(arguments)
                 except Exception as error:
                     tool_result = {"error": str(error)}
+            print(f"[anthropic] tool result: {call['name']}", flush=True)
             tool_results.append({
                 "type": "tool_result",
                 "tool_use_id": call["id"],
@@ -299,7 +308,11 @@ def _prompt_copilot(
                     response = event.data.content
 
             session.on(handle_event)
+            started_at = datetime.now()
+            print("[copilot] request 1: sending prompt", flush=True)
             await session.send_and_wait(options={"prompt": prompt}, timeout=timeout)
+            elapsed = (datetime.now() - started_at).total_seconds()
+            print(f"[copilot] request 1: completed in {elapsed:.1f}s", flush=True)
             return response
         finally:
             await client.stop()

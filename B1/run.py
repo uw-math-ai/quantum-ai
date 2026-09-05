@@ -23,7 +23,8 @@ def generate_circuits_from_benchmarks(
     harness: str = "openai",
     attempts: int = 3,
     timeout: int = 60,
-    prompt_file: str = "B1/prompts/default_prompt.txt"
+    prompt_file: str = "B1/prompts/default_prompt.txt",
+    initial_results: list[dict] | None = None,
 ) -> list[dict]:
     """
     Generate state preparation circuits for all stabilizer groups in benchmarks.
@@ -35,6 +36,7 @@ def generate_circuits_from_benchmarks(
         model: The model to use for generation (default: claude-sonnet-4.5)
         attempts: Number of attempts for each circuit generation
         timeout: Timeout in seconds for each generation
+        initial_results: Previously completed results to retain and skip.
     
     Returns:
         List of dictionaries with code_name, generators, and circuit
@@ -57,7 +59,12 @@ def generate_circuits_from_benchmarks(
         "timeout": timeout,
         "started_at": datetime.now().isoformat(),
     }
-    results = []
+    results = list(initial_results or [])
+    completed_names = {
+        result["code_name"]
+        for result in results
+        if result.get("code_name")
+    }
     
     try:
         count = 0
@@ -65,6 +72,9 @@ def generate_circuits_from_benchmarks(
             code_name = benchmark.get("name")
             generators = benchmark.get("generators")
             count += 1
+
+            if code_name in completed_names:
+                continue
             
             if not code_name or not generators:
                 print(f"[{i+1}/{len(benchmarks)}] Skipping entry with missing name or generators")
@@ -118,6 +128,7 @@ def generate_circuits_from_benchmarks(
                 "elapsed_seconds": elapsed_seconds
             }
             results.append(result)
+            completed_names.add(code_name)
             
             # Save intermediate results after each generation
             output = {"metadata": metadata, "results": results}

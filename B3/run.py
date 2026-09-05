@@ -27,7 +27,8 @@ def generate_circuits_from_data(
     harness: str = "openai",
     attempts: int = 3,
     timeout: int = 60,
-    prompt_file: str = "prompts/default_prompt.txt"
+    prompt_file: str = "prompts/default_prompt.txt",
+    initial_results: list[dict] | None = None,
 ) -> list[dict]:
     """
     Generate fault-tolerant state preparation circuits for all circuits in circuit_dataset.
@@ -48,11 +49,18 @@ def generate_circuits_from_data(
         output_path = os.path.join(output_dir, f"{timestamp}.json")
 
     started_at = datetime.now()
-    results = []
+    results = list(initial_results or [])
+    completed_names = {
+        result["code_name"]
+        for result in results
+        if result.get("code_name")
+    }
     with open(benchmarks_path, "r", encoding="utf-8") as f:
         for line in f:
             entry = json.loads(line)
             source_code = entry["source_code"]
+            if source_code in completed_names:
+                continue
             distance = entry["d"]
             qubits = entry["permutation"]
             input_stabilizers = entry["input_stabilizers"]
@@ -201,6 +209,7 @@ def generate_circuits_from_data(
                 "generated_circuits": all_candidates  # <--- all intermediate circuits with FT scores
             }
             results.append(result)
+            completed_names.add(source_code)
 
             # Save intermediate results after each generation
             output = {
@@ -208,6 +217,7 @@ def generate_circuits_from_data(
                     "benchmarks_path": benchmarks_path,
                     "prompt_path": prompt_file,
                     "model": model,
+                    "harness": harness,
                     "attempts": attempts,
                     "timeout": timeout,
                     "started_at": started_at.isoformat(),

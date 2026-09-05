@@ -79,6 +79,16 @@ python B1/run.py --harness anthropic --model claude-sonnet-4-5
 
 For the OpenAI harness, each request and local tool invocation is printed to the terminal.
 
+To resume an interrupted benchmark without repeating completed codes, pass its output file to the matching script:
+
+```bash
+python B1/resume.py B1/data/<model>/<timestamp>.json
+python B2/resume.py B2/data/<model>/<timestamp>.json
+python B3/resume.py B3/data/<model>/<timestamp>.json
+```
+
+Each resume script reuses the stored benchmark path, model, harness, attempts, timeout, and prompt path, then appends only missing codes to that output file. Add `--analyze` to `B3/resume.py` to run its post-run analysis after completion.
+
 The dependencies include:
 - `stim` - Quantum circuit simulation
 - `python-dotenv` - Environment variable management

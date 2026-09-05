@@ -48,6 +48,7 @@ def optimize_circuits_from_dataset(
     timeout: int = 6000,
     prompt_path: str = "prompts/default_prompt.txt",
     limit: int | None = None,
+    initial_results: list[dict] | None = None,
 ) -> None:
     """
     Optimize all circuits in a JSONL dataset and write results to a JSON file.
@@ -64,6 +65,7 @@ def optimize_circuits_from_dataset(
         attempts: Number of optimization attempts per circuit.
         timeout: Timeout in seconds for each optimization.
         prompt_path: Path to the prompt template file.
+        initial_results: Previously completed results to retain and skip.
     """
     dataset = Path(dataset_path)
     if not dataset.exists():
@@ -90,9 +92,15 @@ def optimize_circuits_from_dataset(
         "harness": harness,
         "max_attempts": attempts,
         "timeout": timeout,
+        "limit": limit,
         "started_at": datetime.now().isoformat(),
     }
-    results: list[dict] = []
+    results = list(initial_results or [])
+    completed_names = {
+        result["code_name"]
+        for result in results
+        if result.get("code_name")
+    }
 
     def _save(finished: bool = False) -> None:
         """Re-write the full JSON output (metadata + results so far)."""
@@ -110,6 +118,8 @@ def optimize_circuits_from_dataset(
 
             # --- extract fields safely ---
             code_name = rec.get("source_code", f"line_{line_num}")
+            if code_name in completed_names:
+                continue
             stabilizers = rec.get("input_stabilizers")
             raw_circuit = rec.get("output_circuit")
 
@@ -121,6 +131,7 @@ def optimize_circuits_from_dataset(
                     "started_at": started_at,
                     "finished_at": datetime.now().isoformat(),
                 })
+                completed_names.add(code_name)
                 _save()
                 print(f"\n[{len(results)}] {code_name} | SKIP – missing fields")
                 continue
@@ -138,6 +149,7 @@ def optimize_circuits_from_dataset(
                     "started_at": started_at,
                     "finished_at": datetime.now().isoformat(),
                 })
+                completed_names.add(code_name)
                 _save()
                 print(f"\n[{len(results)}] {code_name} | SKIP – baseline parse error")
                 continue
@@ -168,6 +180,7 @@ def optimize_circuits_from_dataset(
                     "started_at": started_at,
                     "finished_at": datetime.now().isoformat(),
                 })
+                completed_names.add(code_name)
                 _save()
                 print(f"    ✗ optimizer exception: {e}")
                 continue
@@ -189,6 +202,7 @@ def optimize_circuits_from_dataset(
                     "started_at": started_at,
                     "finished_at": datetime.now().isoformat(),
                 })
+                completed_names.add(code_name)
                 _save()
                 print(f"    ✗ no valid circuit returned  ({elapsed_seconds}s)")
                 continue
@@ -216,6 +230,7 @@ def optimize_circuits_from_dataset(
                 "started_at": started_at,
                 "finished_at": datetime.now().isoformat(),
             })
+            completed_names.add(code_name)
             _save()
 
     finally:

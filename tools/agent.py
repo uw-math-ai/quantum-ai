@@ -784,8 +784,8 @@ def generate_optimized_circuit(
     prompt = prompt_template.format(
         stabilizers_str=stabilizers_str,
         initial_circuit=initial_circuit,
-        # attempts=attempts,
-        # agent_files_dir=str(agent_files_dir),
+        attempts=attempts,
+        agent_files_dir=str(agent_files_dir),
     )
 
     system_message = SYSTEM_PROMPT_TEMPLATE.format(

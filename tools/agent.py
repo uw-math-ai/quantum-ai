@@ -660,8 +660,8 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
         non_ft_circuit=non_ft_circuit,
         distance=distance,
         stabilizers_str=stabilizers_str,
-        # attempts=attempts,
-        # agent_files_dir=agent_files_dir
+        attempts=attempts,
+        agent_files_dir=agent_files_dir
     )
 
     system_message = SYSTEM_PROMPT_TEMPLATE.format(

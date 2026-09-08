@@ -5,6 +5,7 @@ import asyncio
 import inspect
 import json
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime
@@ -18,7 +19,7 @@ from circuit_metric import is_strictly_more_optimal
 
 load_dotenv(Path(__file__).parent / ".env")
 
-HARNESS_CHOICES = ("openai", "anthropic", "copilot")
+HARNESS_CHOICES = ("openai", "anthropic", "copilot", "nvidia")
 
 
 @dataclass
@@ -271,6 +272,194 @@ def _prompt_anthropic(
     raise RuntimeError("Anthropic exceeded the maximum number of tool-call rounds")
 
 
+def _nvidia_api_key() -> str | None:
+    return (
+        os.getenv("NVIDIA_API_KEY")
+        or os.getenv("NVIDIA_NIM_API_KEY")
+        or os.getenv("NVCF_API_KEY")
+    )
+
+
+def _is_local_url(url: str) -> bool:
+    host = urllib.parse.urlparse(url).hostname
+    return host in {"localhost", "127.0.0.1", "0.0.0.0", "::1"}
+
+
+def _chat_completions_url(base_url: str) -> str:
+    base = base_url.rstrip("/")
+    if base.endswith("/chat/completions"):
+        return base
+    if base.endswith("/v1"):
+        return f"{base}/chat/completions"
+    return f"{base}/v1/chat/completions"
+
+
+def _env_optional_float(name: str) -> float | None:
+    value = os.getenv(name)
+    if value is None or value.strip().lower() in {"", "none", "null"}:
+        return None
+    try:
+        return float(value)
+    except ValueError as error:
+        raise RuntimeError(f"{name} must be a floating-point value") from error
+
+
+def _env_int(name: str, default: int) -> int:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except ValueError as error:
+        raise RuntimeError(f"{name} must be an integer value") from error
+
+
+def _message_content_text(content: object) -> str:
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        chunks = []
+        for item in content:
+            if isinstance(item, str):
+                chunks.append(item)
+            elif isinstance(item, dict):
+                chunks.append(str(item.get("text") or item.get("content") or ""))
+        return "".join(chunks)
+    return str(content)
+
+
+def _prompt_nvidia(
+    prompt: str,
+    system_message: str,
+    tools: list[Tool] | None,
+    model: str,
+    timeout: int | None,
+) -> str:
+    """Prompt NVIDIA NIM through its OpenAI-compatible Chat Completions API."""
+    base_url = (
+        os.getenv("NVIDIA_BASE_URL")
+        or os.getenv("NVIDIA_NIM_BASE_URL")
+        or "https://integrate.api.nvidia.com/v1"
+    )
+    api_key = _nvidia_api_key()
+    if not api_key and not _is_local_url(base_url):
+        raise RuntimeError(
+            "NVIDIA_API_KEY is required for the nvidia harness "
+            "(NVIDIA_NIM_API_KEY and NVCF_API_KEY are also accepted)"
+        )
+
+    timeout_seconds = timeout if timeout is not None else 600
+    endpoint = _chat_completions_url(base_url)
+    max_tokens = _env_int("NVIDIA_MAX_TOKENS", 8192)
+    tool_choice = os.getenv("NVIDIA_TOOL_CHOICE", "auto")
+    nvidia_tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": tool.parameter_model.model_json_schema(),
+            },
+        }
+        for tool in tools or []
+    ]
+    tool_map = {tool.name: tool for tool in tools or []}
+    messages = []
+    if system_message:
+        messages.append({"role": "system", "content": system_message})
+    messages.append({"role": "user", "content": prompt})
+
+    def request_message(payload: dict, request_number: int) -> dict:
+        input_kind = "prompt" if request_number == 1 else "tool output"
+        started_at = datetime.now()
+        print(f"[nvidia] request {request_number}: sending {input_kind}", flush=True)
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        request = urllib.request.Request(
+            endpoint,
+            data=json.dumps(payload).encode("utf-8"),
+            headers=headers,
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+                result = json.load(response)
+            elapsed = (datetime.now() - started_at).total_seconds()
+            choice = next(iter(result.get("choices", [])), {})
+            message = choice.get("message") or {}
+            call_count = len(message.get("tool_calls") or [])
+            output_kind = f"{call_count} tool call(s)" if call_count else "message"
+            print(f"[nvidia] request {request_number}: received {output_kind} in {elapsed:.1f}s", flush=True)
+            return result
+        except urllib.error.HTTPError as error:
+            details = error.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"NVIDIA Chat Completions API returned HTTP {error.code}: {details}") from error
+        except urllib.error.URLError as error:
+            raise RuntimeError(f"NVIDIA Chat Completions API request failed: {error.reason}") from error
+
+    for round_index in range(100):
+        payload = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+        }
+        temperature = _env_optional_float("NVIDIA_TEMPERATURE")
+        top_p = _env_optional_float("NVIDIA_TOP_P")
+        if temperature is not None:
+            payload["temperature"] = temperature
+        if top_p is not None:
+            payload["top_p"] = top_p
+        if nvidia_tools:
+            payload["tools"] = nvidia_tools
+            payload["tool_choice"] = tool_choice
+
+        response = request_message(payload, request_number=round_index + 1)
+        choice = next(iter(response.get("choices", [])), {})
+        message = choice.get("message") or {}
+        tool_calls = message.get("tool_calls") or []
+        if not tool_calls:
+            return _message_content_text(message.get("content"))
+
+        assistant_message = {
+            "role": "assistant",
+            "content": message.get("content"),
+            "tool_calls": tool_calls,
+        }
+        messages.append(assistant_message)
+
+        for call_index, call in enumerate(tool_calls):
+            if not call.get("id"):
+                call["id"] = f"call_{round_index}_{call_index}"
+            function = call.get("function") or {}
+            name = function.get("name")
+            arguments_payload = function.get("arguments") or "{}"
+            tool = tool_map.get(name)
+            print(f"[nvidia] tool call: {name}", flush=True)
+            if tool is None:
+                tool_result = {"error": f"Unknown tool: {name}"}
+            else:
+                try:
+                    if isinstance(arguments_payload, str):
+                        arguments = tool.parameter_model.model_validate_json(arguments_payload)
+                    else:
+                        arguments = tool.parameter_model.model_validate(arguments_payload)
+                    tool_result = tool.callback(arguments)
+                except Exception as error:
+                    tool_result = {"error": str(error)}
+            print(f"[nvidia] tool result: {name}", flush=True)
+            messages.append({
+                "role": "tool",
+                "tool_call_id": call.get("id"),
+                "name": name,
+                "content": json.dumps(tool_result, default=str),
+            })
+
+    raise RuntimeError("NVIDIA exceeded the maximum number of tool-call rounds")
+
+
 def _prompt_copilot(
     prompt: str,
     system_message: str,
@@ -335,6 +524,8 @@ def prompt_agent(
         return _prompt_anthropic(prompt, system_message, tools, model, timeout)
     if harness == "copilot":
         return _prompt_copilot(prompt, system_message, tools, model, timeout)
+    if harness == "nvidia":
+        return _prompt_nvidia(prompt, system_message, tools, model, timeout)
     choices = ", ".join(HARNESS_CHOICES)
     raise ValueError(f"Unknown harness '{harness}'. Choose one of: {choices}")
 

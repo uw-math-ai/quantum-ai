@@ -14,7 +14,7 @@ DEFAULT_BENCHMARKS = os.path.join(SCRIPT_DIR, "..", "data", "circuit_dataset.jso
 # Add tools directory to path for imports
 sys.path.insert(0, os.path.join(SCRIPT_DIR, '..', 'tools'))
 
-from agent import generate_optimized_circuit
+from agent import HARNESS_CHOICES, generate_optimized_circuit
 from circuit_metric import compute_metrics
 
 
@@ -262,7 +262,7 @@ def main():
     )
     parser.add_argument(
         "--harness",
-        choices=("openai", "anthropic", "copilot"),
+        choices=HARNESS_CHOICES,
         default="openai",
         help="Provider harness to use (default: openai)",
     )

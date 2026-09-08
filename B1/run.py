@@ -12,7 +12,7 @@ DEFAULT_BENCHMARKS = os.path.join(SCRIPT_DIR, "..", "data", "benchmarks.json")
 # Add tools directory to path for imports
 sys.path.insert(0, os.path.join(SCRIPT_DIR, '..', 'tools'))
 
-from agent import generate_state_prep
+from agent import HARNESS_CHOICES, generate_state_prep
 from check_stabilizers import check_stabilizers
 
 
@@ -167,7 +167,7 @@ def main():
     )
     parser.add_argument(
         "--harness",
-        choices=("openai", "anthropic", "copilot"),
+        choices=HARNESS_CHOICES,
         default="openai",
         help="Provider harness to use (default: openai)"
     )

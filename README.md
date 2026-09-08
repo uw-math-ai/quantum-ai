@@ -49,7 +49,7 @@ Install the shared requirements in a virtual environment:
 python -m pip install -r requirements.txt
 ```
 
-The direct OpenAI and Anthropic harnesses use Python's standard library, so no provider-specific SDK is required. Install the Copilot dependency only when using that harness:
+The direct OpenAI, Anthropic, and NVIDIA harnesses use Python's standard library, so no provider-specific SDK is required. Install the Copilot dependency only when using that harness:
 
 ```bash
 python -m pip install -r requirements-copilot.txt
@@ -64,17 +64,20 @@ The shared agent supports these harnesses, all of which execute the benchmark's 
 | `openai` | `OPENAI_API_KEY=<your_openai_api_key>` | `gpt-5.2-codex` |
 | `anthropic` | `ANTHROPIC_API_KEY=<your_anthropic_api_key>` | `claude-sonnet-4-5` |
 | `copilot` | `GH_TOKEN=<your_github_token>` or Copilot CLI login | `gpt-5.2` |
+| `nvidia` | `NVIDIA_API_KEY=<your_nvidia_api_key>` | `meta/llama-3.1-70b-instruct` |
 
 Setup pointers:
 
 - `openai`: Create an API key in the [OpenAI API keys page](https://platform.openai.com/api-keys), ensure the associated project has API billing and access to the selected model, then set `OPENAI_API_KEY`.
 - `anthropic`: Create an API key in the [Anthropic Console](https://console.anthropic.com/settings/keys), ensure the workspace has API credits and model access, then set `ANTHROPIC_API_KEY`.
 - `copilot`: Install `requirements-copilot.txt`, then either set `GH_TOKEN` for an account with an active GitHub Copilot entitlement or authenticate the bundled CLI with `.../site-packages/copilot/bin/copilot login`. See the [Copilot CLI installation guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/install-copilot-cli).
+- `nvidia`: Generate an NVIDIA API key from the NVIDIA API Catalog / Build portal, then set `NVIDIA_API_KEY`. The harness defaults to `https://integrate.api.nvidia.com/v1`; set `NVIDIA_BASE_URL` to target a self-hosted NIM or an older NVCF endpoint. `NVIDIA_NIM_API_KEY` and `NVCF_API_KEY` are accepted aliases. Self-hosted NIMs must have OpenAI-compatible tool calling enabled. Optional generation overrides: `NVIDIA_MAX_TOKENS`, `NVIDIA_TOOL_CHOICE`, `NVIDIA_TEMPERATURE`, and `NVIDIA_TOP_P`. Sampling parameters are only sent when explicitly set.
 
 `openai` is the default harness. Select a provider and compatible model explicitly, for example:
 
 ```bash
 python B1/run.py --harness anthropic --model claude-sonnet-4-5
+python B1/run.py --harness nvidia --model meta/llama-3.1-70b-instruct
 ```
 
 For the OpenAI harness, each request and local tool invocation is printed to the terminal.
@@ -114,7 +117,7 @@ Common command-line options:
 
 - `--only B# ...`: Run only the listed benchmarks (choices: `B1`, `B2`, `B3`).
 - `--model <name>`: Override the model for every selected benchmark (e.g. `gpt-5.2-codex`).
-- `--harness <name>`: Select `openai`, `anthropic`, or `copilot` for every selected benchmark.
+- `--harness <name>`: Select `openai`, `anthropic`, `copilot`, or `nvidia` for every selected benchmark.
 - `--attempts <n>`: Override the number of attempts per circuit for every selected benchmark.
 - `--timeout <seconds>`: Override per-call timeout (seconds) for every selected benchmark.
 - `--limit <n>`: Limit B2 to the first `n` circuits (ignored by B1/B3).
@@ -129,7 +132,7 @@ Notes:
 
 ## Documentation References
 
-For provider API details, consult the OpenAI Responses API, Anthropic Messages API, or GitHub Copilot SDK documentation.
+For provider API details, consult the OpenAI Responses API, Anthropic Messages API, GitHub Copilot SDK, or NVIDIA NIM Chat Completions documentation.
 
 
 For dataset format, see [`data/DATASET_FORMAT.md`](data/DATASET_FORMAT.md).

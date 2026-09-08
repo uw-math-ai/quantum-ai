@@ -139,7 +139,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--harness",
-        choices=("openai", "anthropic", "copilot"),
+        choices=("openai", "anthropic", "copilot", "nvidia"),
         default=None,
         help="Override the provider harness for every selected benchmark",
     )

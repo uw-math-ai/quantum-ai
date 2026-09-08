@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(SCRIPT_DIR, '..', 'tools'))
 
 
 from datetime import datetime
-from agent import CircuitParam, define_tool, generate_ft_state_prep, prompt_agent
+from agent import HARNESS_CHOICES, CircuitParam, define_tool, generate_ft_state_prep, prompt_agent
 from validate_ft_circuits import check_syndrome_extraction_ft
 from check_error_propagation import check_fault_tolerance, ft_score
 from check_stabilizers import check_stabilizers
@@ -445,7 +445,7 @@ def main():
     )
     parser.add_argument(
         "--harness",
-        choices=("openai", "anthropic", "copilot"),
+        choices=HARNESS_CHOICES,
         default="openai",
         help="Provider harness to use (default: openai)"
     )

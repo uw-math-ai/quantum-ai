@@ -10,12 +10,13 @@ B3 is recomputed from cleaned result files via
 analysis/B3/B3_benchmark_score_by_improvement.py.
 
 Usage:
-    python analysis/plot_combined_difficulty_curves.py <B2_data_directory>
+    python analysis/plot_combined_difficulty_curves.py
 
 Output:
     analysis/combined_difficulty_curves.png
 """
 
+import json
 import os
 import sys
 from collections import defaultdict
@@ -44,26 +45,41 @@ AGENT_COLORS = {
     "GPT-5.2":              "#4C72B0",
     "Gemini 3 Pro Preview": "#55A868",
     "GPT-4.1":              "#9467BD",
+    "Claude Fable 5.1":     "#C44E52",
+    "GPT-5.6 Sol":          "#2A9D8F",
 }
 AGENT_MARKERS = {
     "Claude Opus 4.6":      "o",
     "GPT-5.2":              "s",
     "Gemini 3 Pro Preview": "D",
     "GPT-4.1":              "^",
+    "Claude Fable 5.1":     "P",
+    "GPT-5.6 Sol":          "X",
 }
 AGENT_LINESTYLES = {
     "Claude Opus 4.6":      "-",
     "GPT-5.2":              "--",
     "Gemini 3 Pro Preview": "-.",
     "GPT-4.1":              ":",
+    "Claude Fable 5.1":     (0, (3, 1, 1, 1)),
+    "GPT-5.6 Sol":          (0, (5, 1)),
 }
 AGENT_MARKER_OFFSET = {
     "Claude Opus 4.6":      0,
     "GPT-5.2":              2,
     "Gemini 3 Pro Preview": 4,
     "GPT-4.1":              1,
+    "Claude Fable 5.1":     3,
+    "GPT-5.6 Sol":          5,
 }
-AGENT_ORDER = ["GPT-4.1", "Claude Opus 4.6", "GPT-5.2", "Gemini 3 Pro Preview"]
+AGENT_ORDER = [
+    "GPT-4.1",
+    "Claude Opus 4.6",
+    "Claude Fable 5.1",
+    "GPT-5.2",
+    "GPT-5.6 Sol",
+    "Gemini 3 Pro Preview",
+]
 
 # Shared ceiling (stabilizer-weighted, max = 16,340)
 TOTAL_SCAP = [
@@ -121,11 +137,40 @@ B1_AGENT = {
     ],
 }
 
+ROOT = Path(__file__).resolve().parents[1]
+B1_BEST_RUNS = {
+    "Claude Fable 5.1": ROOT / "B1" / "data" / "claude-fable-5-1" / "260905.1427.json",
+    "GPT-5.6 Sol": ROOT / "B1" / "data" / "gpt-5.6-sol" / "260904.1044.json",
+}
+
 B3_BEST_RUNS = {
     "Claude Opus 4.6": cleaned_result_path("claude-opus-4.6", "260314.2351.json"),
     "GPT-5.2": cleaned_result_path("gpt5.2", "260314.2352.json"),
     "Gemini 3 Pro Preview": cleaned_result_path("gemini-3-pro-preview", "260314.2353.json"),
+    "GPT-5.6 Sol": ROOT / "B3" / "data" / "openai" / "openai" / "gpt-5.6-sol" / "260907.2050.json",
 }
+
+
+def compute_b1_raw_curve(result_path: Path):
+    """Build a B1 cumulative S_cap series from a raw result file."""
+    with (ROOT / "data" / "benchmarks.json").open() as f:
+        stabilizer_counts = {
+            entry["name"]: len(entry.get("generators", []))
+            for entry in json.load(f)
+        }
+    with result_path.open() as f:
+        results = json.load(f).get("results", [])
+    solved_counts = [
+        stabilizer_counts[result["code_name"]]
+        for result in results
+        if result.get("total", 0) > 0
+        and result.get("preserved") == result.get("total")
+        and result.get("code_name") in stabilizer_counts
+    ]
+    return [
+        (x, sum(stabilizers for stabilizers in solved_counts if stabilizers <= x))
+        for x, _ in TOTAL_SCAP
+    ]
 
 
 def compute_b2_panel(all_rows: list[dict]):
@@ -134,6 +179,8 @@ def compute_b2_panel(all_rows: list[dict]):
         "claude-opus-4.6":      ("Claude Opus 4.6",      "15 att / 900s"),
         "gpt5.2":               ("GPT-5.2",              "15 att / 900s"),
         "gemini-3-pro-preview": ("Gemini 3 Pro Preview", "1 attempt"),
+        "claude-fable-5-1":      ("Claude Fable 5.1",     "15 att / 900s"),
+        "gpt-5.6-sol":           ("GPT-5.6 Sol",          "15 att / 900s"),
     }
     by_mc = defaultdict(list)
     for r in all_rows:
@@ -161,14 +208,27 @@ def compute_b3_panel():
     """Build B3 cumulative S_cap series from cleaned result files."""
     stabilizer_counts, _ = load_b3_stabilizer_counts()
     b3_x = np.array([x for x, _ in TOTAL_SCAP])
-    b3_agent = {
-        label: compute_cumulative_capability_curve(
-            result_path,
-            stabilizer_counts,
-            x_values=[int(x) for x in b3_x],
-        )
-        for label, result_path in B3_BEST_RUNS.items()
-    }
+    b3_agent = {}
+    for label, result_path in B3_BEST_RUNS.items():
+        if label == "GPT-5.6 Sol":
+            with result_path.open() as f:
+                results = json.load(f).get("results", [])
+            solved_counts = [
+                stabilizer_counts[result["code_name"]]
+                for result in results
+                if (result.get("best_output", {}).get("ft_score") or 0) > 0
+                and result.get("code_name") in stabilizer_counts
+            ]
+            b3_agent[label] = [
+                (int(x), sum(stabilizers for stabilizers in solved_counts if stabilizers <= x))
+                for x in b3_x
+            ]
+        else:
+            b3_agent[label] = compute_cumulative_capability_curve(
+                result_path,
+                stabilizer_counts,
+                x_values=[int(x) for x in b3_x],
+            )
     b3_total = [y for _, y in TOTAL_SCAP]
     return b3_agent, b3_x, b3_total
 
@@ -176,12 +236,19 @@ def compute_b3_panel():
 def plot_combined_difficulty_curves(all_rows: list[dict], output: str):
     b2_agent, b2_x, b2_total = compute_b2_panel(all_rows)
     b3_agent, b3_x, b3_total = compute_b3_panel()
+    b1_agent = {
+        **B1_AGENT,
+        **{
+            label: compute_b1_raw_curve(result_path)
+            for label, result_path in B1_BEST_RUNS.items()
+        },
+    }
 
     fig, axes = plt.subplots(1, 3, figsize=(18, 5.5))
     scap_x = np.array([x for x, _ in TOTAL_SCAP])
     scap_y = [y for _, y in TOTAL_SCAP]
     panels = [
-        ("B1: Stabilizer Synthesis",  r"Cumulative $S_{\mathrm{cap}}$", B1_AGENT, scap_x, scap_y),
+        ("B1: Stabilizer Synthesis",  r"Cumulative $S_{\mathrm{cap}}$", b1_agent, scap_x, scap_y),
         ("B2: Circuit Optimization",  r"Cumulative $S_{\mathrm{cap}}$", b2_agent, b2_x,   b2_total),
         ("B3: Fault-Tolerance",       r"Cumulative $S_{\mathrm{cap}}$", b3_agent, b3_x,   b3_total),
     ]
@@ -230,7 +297,7 @@ def plot_combined_difficulty_curves(all_rows: list[dict], output: str):
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.28)
 
-    fig.legend(handles, labels_legend, loc="lower center", ncol=4,
+    fig.legend(handles, labels_legend, loc="lower center", ncol=6,
                fontsize=10, frameon=False,
                bbox_to_anchor=(0.5, 0.08))
 
@@ -239,13 +306,9 @@ def plot_combined_difficulty_curves(all_rows: list[dict], output: str):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python plot_combined_difficulty_curves.py <B2_data_directory>")
-        sys.exit(1)
-
-    data_dir = sys.argv[1]
+    data_dir = ROOT / "B2" / "data"
     print(f"Scanning B2 data at {data_dir} ...\n")
-    _, all_rows, _ = discover(data_dir)
+    _, all_rows, _ = discover(str(data_dir))
 
     output = str(Path(__file__).resolve().parent / "combined_difficulty_curves.png")
     plot_combined_difficulty_curves(all_rows, output)

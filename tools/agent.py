@@ -237,7 +237,6 @@ def _prompt_anthropic(
     for _ in range(100):
         response = request_message({
             "model": model,
-            "max_tokens": 8192,
             "system": system_message,
             "messages": messages,
             "tools": anthropic_tools,
@@ -352,8 +351,7 @@ def _prompt_nvidia(
 
     timeout_seconds = timeout if timeout is not None else 600
     endpoint = _chat_completions_url(base_url)
-    max_tokens = _env_int("NVIDIA_MAX_TOKENS", 8192)
-    tool_choice = os.getenv("NVIDIA_TOOL_CHOICE", "auto")
+    initial_tool_choice = os.getenv("NVIDIA_TOOL_CHOICE", "required")
     nvidia_tools = [
         {
             "type": "function",
@@ -404,7 +402,6 @@ def _prompt_nvidia(
         payload = {
             "model": model,
             "messages": messages,
-            "max_tokens": max_tokens,
         }
         temperature = _env_optional_float("NVIDIA_TEMPERATURE")
         top_p = _env_optional_float("NVIDIA_TOP_P")
@@ -414,7 +411,9 @@ def _prompt_nvidia(
             payload["top_p"] = top_p
         if nvidia_tools:
             payload["tools"] = nvidia_tools
-            payload["tool_choice"] = tool_choice
+            payload["tool_choice"] = (
+                initial_tool_choice if round_index == 0 else "auto"
+            )
 
         response = request_message(payload, request_number=round_index + 1)
         choice = next(iter(response.get("choices", [])), {})
@@ -554,6 +553,11 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
 
     result = None
 
+    def parse_ft_circuit(circuit_text: str) -> stim.Circuit:
+        parsed = stim.Circuit(circuit_text)
+        stim.Tableau.from_circuit(parsed, ignore_measurement=True)
+        return parsed
+
     @define_tool(description=(
         "Submit the final fault-tolerant circuit and its ancilla qubits.\n"
         "Fields:\n"
@@ -564,9 +568,9 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
     def return_result(params: FTResultParam) -> str:
         nonlocal result
         try:
-            parsed = stim.Circuit(params.stim_circuit)
+            parsed = parse_ft_circuit(params.stim_circuit)
         except Exception as e:
-            return f"Failed to parse Stim circuit ({e}). Retry."
+            return f"Malformed circuit ({e}). Retry."
 
         result = {"circuit": parsed}
         return "Final circuit received. Stop generation."
@@ -599,9 +603,9 @@ def generate_ft_state_prep(stabilizers: list[str], non_ft_circuit: str,
         - The most severe error propagation events""") 
     def validate_circuit(circuit: CircuitParam) -> dict:
         try:
-            parsed = stim.Circuit(circuit.circuit)
+            parsed = parse_ft_circuit(circuit.circuit)
         except Exception as e:
-            return {"error": f"Failed to parse circuit: {e}"}
+            return {"error": f"Malformed circuit: {e}"}
 
         ancillas = compute_ancillas(parsed, circuit.data_qubits)
 

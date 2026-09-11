@@ -1,317 +1,255 @@
-"""
-Combined Difficulty Curves — B1 | B2 | B3
-------------------------------------------
-3-panel figure of cumulative S_cap vs. number of stabilizers,
-one panel per benchmark.
+"""Plot cumulative capability and quality curves for all benchmark results.
 
-B1 uses hardcoded S_cap data from prior runs.
-B2 is recomputed from raw result files via analysis/B2/analyze_models.discover().
-B3 is recomputed from cleaned result files via
-analysis/B3/B3_benchmark_score_by_improvement.py.
+Completed runs are discovered under B1/data, B2/data, and B3/data. For every
+model in each benchmark, the completed run with the highest S_cap is selected.
+Set an entry in RUN_OVERRIDES to choose a specific run instead.
 
 Usage:
     python analysis/plot_combined_difficulty_curves.py
 
-Output:
+Outputs:
     analysis/combined_difficulty_curves.png
+    analysis/combined_quality_difficulty_curves.png
 """
 
+from __future__ import annotations
+
 import json
-import os
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+import numpy as np
 
-# Reuse B2's discovery to compute all_rows for the B2 panel.
 sys.path.insert(0, str(Path(__file__).resolve().parent / "B2"))
-from analyze_models import discover  # noqa: E402
+from analyze_models import optimization_proportion  # noqa: E402
 
-# Reuse B3's scoring helpers to compute the B3 panel.
-sys.path.insert(0, str(Path(__file__).resolve().parent / "B3"))
-from B3_benchmark_score_by_improvement import (  # noqa: E402
-    compute_cumulative_capability_curve,
-    cleaned_result_path,
-    load_stabilizer_counts as load_b3_stabilizer_counts,
-)
-
-
-# ── Shared style constants ───────────────────────────────────────────
-AGENT_COLORS = {
-    "Claude Opus 4.6":      "#E07B39",
-    "GPT-5.2":              "#4C72B0",
-    "Gemini 3 Pro Preview": "#55A868",
-    "GPT-4.1":              "#9467BD",
-    "Claude Fable 5.1":     "#C44E52",
-    "GPT-5.6 Sol":          "#2A9D8F",
-}
-AGENT_MARKERS = {
-    "Claude Opus 4.6":      "o",
-    "GPT-5.2":              "s",
-    "Gemini 3 Pro Preview": "D",
-    "GPT-4.1":              "^",
-    "Claude Fable 5.1":     "P",
-    "GPT-5.6 Sol":          "X",
-}
-AGENT_LINESTYLES = {
-    "Claude Opus 4.6":      "-",
-    "GPT-5.2":              "--",
-    "Gemini 3 Pro Preview": "-.",
-    "GPT-4.1":              ":",
-    "Claude Fable 5.1":     (0, (3, 1, 1, 1)),
-    "GPT-5.6 Sol":          (0, (5, 1)),
-}
-AGENT_MARKER_OFFSET = {
-    "Claude Opus 4.6":      0,
-    "GPT-5.2":              2,
-    "Gemini 3 Pro Preview": 4,
-    "GPT-4.1":              1,
-    "Claude Fable 5.1":     3,
-    "GPT-5.6 Sol":          5,
-}
-AGENT_ORDER = [
-    "GPT-4.1",
-    "Claude Opus 4.6",
-    "Claude Fable 5.1",
-    "GPT-5.2",
-    "GPT-5.6 Sol",
-    "Gemini 3 Pro Preview",
-]
-
-# Shared ceiling (stabilizer-weighted, max = 16,340)
-TOTAL_SCAP = [
-    (2,10),(4,14),(6,32),(8,56),(10,66),(14,80),(16,96),(18,150),(20,170),
-    (22,192),(24,240),(26,448),(30,478),(34,852),(36,888),(38,1116),(44,1292),
-    (48,1772),(50,2122),(58,2296),(62,3040),(66,3304),(68,3372),(72,3444),
-    (74,3740),(80,4060),(82,4306),(84,4474),(86,4646),(90,4916),(94,5104),
-    (98,5790),(104,6414),(106,6626),(110,6846),(114,7188),(118,7896),(122,8140),
-    (124,8388),(128,8644),(130,8774),(132,9566),(134,10370),(146,11100),
-    (152,11708),(154,12016),(160,12976),(164,13140),(170,13820),(174,14864),
-    (178,15220),(182,15584),(184,15952),(194,16340),
-]
-SCAP_MAX = 16340
-
-# ── B1 S_cap data ────────────────────────────────────────────────────
-B1_AGENT = {
-    "Claude Opus 4.6": [
-        (2,10),(4,14),(6,26),(8,50),(10,60),(14,74),(16,90),(18,144),(20,164),
-        (22,186),(24,234),(26,442),(30,472),(34,846),(36,882),(38,1110),(44,1286),
-        (48,1766),(50,2116),(58,2290),(62,3034),(66,3298),(68,3366),(72,3438),
-        (74,3734),(80,4054),(82,4300),(84,4468),(86,4640),(90,4910),(94,5098),
-        (98,5686),(104,6310),(106,6416),(110,6636),(114,6978),(118,7686),(122,7930),
-        (124,8178),(128,8434),(130,8564),(132,9356),(134,10160),(146,10744),
-        (152,11048),(154,11048),(160,11528),(164,11528),(170,11528),(174,11528),
-        (178,11528),(182,11528),(184,11528),(194,11528),
-    ],
-    "GPT-5.2": [
-        (2,10),(4,14),(6,32),(8,56),(10,66),(14,80),(16,96),(18,150),(20,170),
-        (22,192),(24,240),(26,448),(30,478),(34,852),(36,888),(38,1116),(44,1292),
-        (48,1772),(50,2122),(58,2296),(62,3040),(66,3304),(68,3372),(72,3444),
-        (74,3740),(80,4060),(82,4306),(84,4474),(86,4646),(90,4916),(94,5104),
-        (98,5594),(104,6218),(106,6324),(110,6544),(114,6886),(118,7594),(122,7716),
-        (124,7840),(128,8096),(130,8226),(132,8886),(134,9690),(146,9836),
-        (152,10292),(154,10292),(160,10932),(164,10932),(170,10932),(174,11106),
-        (178,11106),(182,11106),(184,11106),(194,11106),
-    ],
-    "Gemini 3 Pro Preview": [
-        (2,10),(4,14),(6,32),(8,56),(10,66),(14,80),(16,96),(18,150),(20,170),
-        (22,192),(24,240),(26,448),(30,478),(34,852),(36,888),(38,1116),(44,1292),
-        (48,1772),(50,2122),(58,2296),(62,3040),(66,3304),(68,3372),(72,3444),
-        (74,3740),(80,3980),(82,4226),(84,4310),(86,4482),(90,4752),(94,4940),
-        (98,5626),(104,6042),(106,6254),(110,6474),(114,6702),(118,7292),(122,7536),
-        (124,7536),(128,7664),(130,7794),(132,8190),(134,8592),(146,9030),
-        (152,9638),(154,9792),(160,10112),(164,10112),(170,10452),(174,10800),
-        (178,11156),(182,11156),(184,11340),(194,11340),
-    ],
-    "GPT-4.1": [
-        (2,4),(4,4),(6,4),(8,4),(10,4),(14,4),(16,4),(18,4),(20,4),(22,4),
-        (24,4),(26,4),(30,4),(34,4),(36,4),(38,4),(44,4),(48,4),(50,4),
-        (58,4),(62,4),(66,4),(68,4),(72,4),(74,4),(80,4),(82,4),(84,4),
-        (86,4),(90,4),(94,4),(98,4),(104,4),(106,4),(110,4),(114,4),
-        (118,4),(122,4),(124,4),(128,4),(130,4),(132,4),(134,4),(146,4),
-        (152,4),(154,4),(160,4),(164,4),(170,4),(174,4),(178,4),(182,4),
-        (184,4),(194,4),
-    ],
-}
 
 ROOT = Path(__file__).resolve().parents[1]
-B1_BEST_RUNS = {
-    "Claude Fable 5.1": ROOT / "B1" / "data" / "claude-fable-5-1" / "260905.1427.json",
-    "GPT-5.6 Sol": ROOT / "B1" / "data" / "gpt-5.6-sol" / "260904.1044.json",
+DATA_DIRS = {name: ROOT / name / "data" for name in ("B1", "B2", "B3")}
+OUTPUT_DIR = Path(__file__).resolve().parent
+
+# Use paths relative to the matching B<n>/data directory. Empty by default:
+# the highest-S_cap completed run is selected automatically for every model.
+RUN_OVERRIDES: dict[str, dict[str, str]] = {"B1": {}, "B2": {}, "B3": {}}
+
+TOTAL_SCAP = [
+    (2, 10), (4, 14), (6, 32), (8, 56), (10, 66), (14, 80), (16, 96),
+    (18, 150), (20, 170), (22, 192), (24, 240), (26, 448), (30, 478),
+    (34, 852), (36, 888), (38, 1116), (44, 1292), (48, 1772), (50, 2122),
+    (58, 2296), (62, 3040), (66, 3304), (68, 3372), (72, 3444), (74, 3740),
+    (80, 4060), (82, 4306), (84, 4474), (86, 4646), (90, 4916), (94, 5104),
+    (98, 5790), (104, 6414), (106, 6626), (110, 6846), (114, 7188),
+    (118, 7896), (122, 8140), (124, 8388), (128, 8644), (130, 8774),
+    (132, 9566), (134, 10370), (146, 11100), (152, 11708), (154, 12016),
+    (160, 12976), (164, 13140), (170, 13820), (174, 14864), (178, 15220),
+    (182, 15584), (184, 15952), (194, 16340),
+]
+X_VALUES = [x for x, _ in TOTAL_SCAP]
+
+MODEL_LABELS = {
+    "claude-opus-4.6": "Claude Opus 4.6",
+    "azure/anthropic/claude-opus-5": "Claude Opus 5",
+    "claude-fable-5-1": "Claude Fable 5.1",
+    "gemini-3-pro-preview": "Gemini 3 Pro Preview",
+    "gpt-4.1": "GPT-4.1",
+    "gpt5.2": "GPT-5.2",
+    "gpt-5.6-sol": "GPT-5.6 Sol",
 }
-
-B3_BEST_RUNS = {
-    "Claude Opus 4.6": cleaned_result_path("claude-opus-4.6", "260314.2351.json"),
-    "GPT-5.2": cleaned_result_path("gpt5.2", "260314.2352.json"),
-    "Gemini 3 Pro Preview": cleaned_result_path("gemini-3-pro-preview", "260314.2353.json"),
-    "GPT-5.6 Sol": ROOT / "B3" / "data" / "openai" / "openai" / "gpt-5.6-sol" / "260907.2050.json",
+MODEL_ALIASES = {
+    "openai/openai/gpt-5.6-sol": "gpt-5.6-sol",
 }
+COLORS = ["#4C72B0", "#E07B39", "#55A868", "#C44E52", "#9467BD", "#2A9D8F", "#8C564B"]
+MARKERS = ["o", "s", "D", "P", "^", "X", "v"]
+LINESTYLES = ["-", "--", "-.", ":", (0, (3, 1, 1, 1)), (0, (5, 1)), (0, (1, 1))]
 
 
-def compute_b1_raw_curve(result_path: Path):
-    """Build a B1 cumulative S_cap series from a raw result file."""
-    with (ROOT / "data" / "benchmarks.json").open() as f:
-        stabilizer_counts = {
-            entry["name"]: len(entry.get("generators", []))
-            for entry in json.load(f)
-        }
-    with result_path.open() as f:
-        results = json.load(f).get("results", [])
-    solved_counts = [
-        stabilizer_counts[result["code_name"]]
-        for result in results
-        if result.get("total", 0) > 0
-        and result.get("preserved") == result.get("total")
-        and result.get("code_name") in stabilizer_counts
+def load_stabilizer_counts() -> dict[str, int]:
+    with (ROOT / "data" / "benchmarks.json").open() as data_file:
+        return {entry["name"]: len(entry.get("generators", [])) for entry in json.load(data_file)}
+
+
+def cumulative_curve(scores: list[tuple[int, float]]) -> list[tuple[int, float]]:
+    return [(x, sum(score for stabilizers, score in scores if stabilizers <= x)) for x in X_VALUES]
+
+
+def completed_payloads(benchmark: str):
+    for path in DATA_DIRS[benchmark].rglob("*.json"):
+        if benchmark != "B3" and "cleaned" in path.parts:
+            continue
+        try:
+            with path.open() as data_file:
+                payload = json.load(data_file)
+        except (OSError, json.JSONDecodeError):
+            continue
+        metadata = payload.get("metadata", {})
+        if benchmark == "B3" and "cleaned" in path.parts and isinstance(payload.get("cleaned_results"), list):
+            model = path.relative_to(DATA_DIRS[benchmark]).parts[0]
+            payload["metadata"] = {"model": model, "finished_at": "cleaned"}
+            yield path, payload
+        elif metadata.get("finished_at") and isinstance(payload.get("results"), list):
+            yield path, payload
+
+
+def b1_scores(payload: dict, counts: dict[str, int]) -> tuple[list[tuple[int, float]], list[tuple[int, float]]]:
+    scores = [
+        (counts[row["code_name"]], float(counts[row["code_name"]]))
+        for row in payload["results"]
+        if row.get("code_name") in counts and row.get("total", 0) > 0
+        and row.get("preserved") == row.get("total")
     ]
-    return [
-        (x, sum(stabilizers for stabilizers in solved_counts if stabilizers <= x))
-        for x, _ in TOTAL_SCAP
-    ]
+    return scores, scores
 
 
-def compute_b2_panel(all_rows: list[dict]):
-    """Build B2 cumulative S_cap series from analyze_models.discover() rows."""
-    B2_BEST_CONFIG = {
-        "claude-opus-4.6":      ("Claude Opus 4.6",      "15 att / 900s"),
-        "gpt5.2":               ("GPT-5.2",              "15 att / 900s"),
-        "gemini-3-pro-preview": ("Gemini 3 Pro Preview", "1 attempt"),
-        "claude-fable-5-1":      ("Claude Fable 5.1",     "15 att / 900s"),
-        "gpt-5.6-sol":           ("GPT-5.6 Sol",          "15 att / 900s"),
-    }
-    by_mc = defaultdict(list)
-    for r in all_rows:
-        if r["num_stabilizers"] is not None:
-            by_mc[(r["model"], r["cfg"])].append(
-                (r["num_stabilizers"], bool(r["success"]))
-            )
-    b2_all_stabs = set()
-    b2_raw = {}
-    for model_key, (label, cfg) in B2_BEST_CONFIG.items():
-        rows = by_mc[(model_key, cfg)]
-        b2_raw[label] = rows
-        b2_all_stabs.update(s for s, _ in rows)
-    b2_x = np.array(sorted(b2_all_stabs))
-    b2_agent = {}
-    for label, rows in b2_raw.items():
-        solved_stabs = [s for s, ok in rows if ok]
-        b2_agent[label] = [(int(x), sum(s for s in solved_stabs if s <= x)) for x in b2_x]
-    total_scap_dict = dict(TOTAL_SCAP)
-    b2_total = [total_scap_dict.get(int(x), 0) for x in b2_x]
-    return b2_agent, b2_x, b2_total
+def b2_scores(payload: dict, counts: dict[str, int]) -> tuple[list[tuple[int, float]], list[tuple[int, float]]]:
+    capability, quality = [], []
+    for row in payload["results"]:
+        count = counts.get(row.get("code_name"))
+        if count is None or not (row.get("valid") and row.get("better")):
+            continue
+        capability.append((count, float(count)))
+        quality.append((count, count * optimization_proportion(
+            row.get("baseline_metrics", {}), row.get("optimized_metrics", {})
+        )))
+    return capability, quality
 
 
-def compute_b3_panel():
-    """Build B3 cumulative S_cap series from cleaned result files."""
-    stabilizer_counts, _ = load_b3_stabilizer_counts()
-    b3_x = np.array([x for x, _ in TOTAL_SCAP])
-    b3_agent = {}
-    for label, result_path in B3_BEST_RUNS.items():
-        if label == "GPT-5.6 Sol":
-            with result_path.open() as f:
-                results = json.load(f).get("results", [])
-            solved_counts = [
-                stabilizer_counts[result["code_name"]]
-                for result in results
-                if (result.get("best_output", {}).get("ft_score") or 0) > 0
-                and result.get("code_name") in stabilizer_counts
-            ]
-            b3_agent[label] = [
-                (int(x), sum(stabilizers for stabilizers in solved_counts if stabilizers <= x))
-                for x in b3_x
-            ]
+def b3_scores(payload: dict, counts: dict[str, int]) -> tuple[list[tuple[int, float]], list[tuple[int, float]]]:
+    capability, quality = [], []
+    if "cleaned_results" in payload:
+        entries = [entry for item in payload["cleaned_results"] if isinstance(item, list) for entry in item]
+        for entry in entries:
+            count = counts.get(entry.get("code_name"))
+            score = entry.get("new_best_output", {}).get("ft_score")
+            if count is not None and score is not None and score > 0:
+                capability.append((count, float(count)))
+                quality.append((count, count * score))
+        return capability, quality
+    for row in payload["results"]:
+        count = counts.get(row.get("code_name"))
+        candidates = [row.get("best_output", {})] + row.get("generated_circuits", [])
+        valid_scores = [
+            candidate["ft_score"] for candidate in candidates if isinstance(candidate, dict)
+            and candidate.get("all_stabilized") is True and candidate.get("ft_score") is not None
+        ]
+        if count is None or not valid_scores:
+            continue
+        best_score = max(valid_scores)
+        if best_score > 0:
+            capability.append((count, float(count)))
+            quality.append((count, count * best_score))
+    return capability, quality
+
+
+def get_scores(benchmark: str, payload: dict, counts: dict[str, int]):
+    if benchmark == "B1":
+        return b1_scores(payload, counts)
+    if benchmark == "B2":
+        return b2_scores(payload, counts)
+    return b3_scores(payload, counts)
+
+
+def select_runs(benchmark: str, counts: dict[str, int]):
+    candidates: dict[str, list[tuple[int, Path, list, list]]] = defaultdict(list)
+    for path, payload in completed_payloads(benchmark):
+        raw_model = payload.get("metadata", {}).get("model")
+        if raw_model:
+            model = canonical_model(raw_model)
+            capability, quality = get_scores(benchmark, payload, counts)
+            candidates[model].append((int(sum(score for _, score in capability)), path, capability, quality))
+
+    selected = {}
+    for model, runs in candidates.items():
+        override = RUN_OVERRIDES[benchmark].get(model)
+        if override:
+            override_path = DATA_DIRS[benchmark] / override
+            matches = [run for run in runs if run[1] == override_path]
+            if not matches:
+                raise ValueError(f"{benchmark} override for {model} was not found: {override_path}")
+            selected[model] = matches[0]
         else:
-            b3_agent[label] = compute_cumulative_capability_curve(
-                result_path,
-                stabilizer_counts,
-                x_values=[int(x) for x in b3_x],
-            )
-    b3_total = [y for _, y in TOTAL_SCAP]
-    return b3_agent, b3_x, b3_total
+            selected[model] = max(runs, key=lambda run: (run[0], run[1].name))
+    return selected
 
 
-def plot_combined_difficulty_curves(all_rows: list[dict], output: str):
-    b2_agent, b2_x, b2_total = compute_b2_panel(all_rows)
-    b3_agent, b3_x, b3_total = compute_b3_panel()
-    b1_agent = {
-        **B1_AGENT,
-        **{
-            label: compute_b1_raw_curve(result_path)
-            for label, result_path in B1_BEST_RUNS.items()
-        },
-    }
+def display_label(model: str) -> str:
+    return MODEL_LABELS.get(model, model.rsplit("/", 1)[-1].replace("-", " ").title())
 
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5.5))
-    scap_x = np.array([x for x, _ in TOTAL_SCAP])
-    scap_y = [y for _, y in TOTAL_SCAP]
-    panels = [
-        ("B1: Stabilizer Synthesis",  r"Cumulative $S_{\mathrm{cap}}$", b1_agent, scap_x, scap_y),
-        ("B2: Circuit Optimization",  r"Cumulative $S_{\mathrm{cap}}$", b2_agent, b2_x,   b2_total),
-        ("B3: Fault-Tolerance",       r"Cumulative $S_{\mathrm{cap}}$", b3_agent, b3_x,   b3_total),
-    ]
 
-    handles, labels_legend = None, None
-    for ax, (title, ylabel, agent_data, x_vals, total_ceil) in zip(axes, panels):
-        ax.plot(x_vals, total_ceil, color="gray", linestyle="--", linewidth=1.5,
-                label="Total benchmarks", alpha=0.7, zorder=1)
-        ax.fill_between(x_vals, total_ceil, alpha=0.07, color="gray")
+def canonical_model(model: str) -> str:
+    return MODEL_ALIASES.get(model, model)
 
-        for agent_label in AGENT_ORDER:
-            pts = agent_data.get(agent_label)
-            if pts is None:
+
+def plot_curves(output: Path, panels: list[tuple[str, str, dict]], styles: dict, show_ceiling: bool):
+    fig, axes = plt.subplots(1, len(panels), figsize=(6 * len(panels), 5.5))
+    axes = np.atleast_1d(axes)
+    models = sorted({model for _, _, curves in panels for model in curves}, key=display_label)
+    handles = labels = None
+    for axis, (title, ylabel, curves) in zip(axes, panels):
+        if show_ceiling:
+            ceiling = [score for _, score in TOTAL_SCAP]
+            axis.plot(X_VALUES, ceiling, color="gray", linestyle="--", linewidth=1.5, label="Total benchmarks", alpha=0.7)
+            axis.fill_between(X_VALUES, ceiling, alpha=0.07, color="gray")
+        for index, model in enumerate(models):
+            points = curves.get(model)
+            if not points:
                 continue
-            xs = np.array([x for x, _ in pts])
-            ys = np.array([y for _, y in pts])
-
-            ax.plot(xs, ys,
-                    color=AGENT_COLORS[agent_label],
-                    marker=AGENT_MARKERS[agent_label],
-                    markersize=6,
-                    markevery=(AGENT_MARKER_OFFSET[agent_label], 6),
-                    markeredgecolor="white",
-                    markeredgewidth=0.6,
-                    linestyle=AGENT_LINESTYLES[agent_label],
-                    linewidth=2.2,
-                    label=agent_label,
-                    zorder=2)
-
-        ax.set_xlabel("Number of Stabilizers", fontsize=11)
-        if ax is axes[0]:
-            ax.set_ylabel(ylabel, fontsize=10)
-        else:
-            ax.tick_params(labelleft=False)
-        ax.set_title(title, fontsize=12, fontweight="bold")
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.set_xlim(0, max(x_vals) + 5)
-        ax.set_ylim(0, SCAP_MAX * 1.05)
-        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v, _: f"{int(v):,}"))
-        ax.grid(axis="y", alpha=0.3)
-
+            color, marker, linestyle = styles[model]
+            axis.plot([x for x, _ in points], [y for _, y in points], color=color, marker=marker,
+                      markersize=6, markevery=(index % 6, 6), markeredgecolor="white", markeredgewidth=0.6,
+                      linestyle=linestyle, linewidth=2.2, label=display_label(model))
+        axis.set_xlabel("Number of Stabilizers", fontsize=11)
+        axis.set_ylabel(ylabel, fontsize=10)
+        axis.set_title(title, fontsize=12, fontweight="bold")
+        axis.set_xlim(0, max(X_VALUES) + 5)
+        axis.yaxis.set_major_formatter(mticker.FuncFormatter(lambda value, _: f"{value:,.0f}"))
+        axis.spines["top"].set_visible(False)
+        axis.spines["right"].set_visible(False)
+        axis.grid(axis="y", alpha=0.3)
         if handles is None:
-            handles, labels_legend = ax.get_legend_handles_labels()
-
-    plt.tight_layout()
-    plt.subplots_adjust(bottom=0.28)
-
-    fig.legend(handles, labels_legend, loc="lower center", ncol=6,
-               fontsize=10, frameon=False,
-               bbox_to_anchor=(0.5, 0.08))
-
+            handles, labels = axis.get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", ncol=min(5, len(labels)), fontsize=9, frameon=False)
+    fig.tight_layout(rect=(0, 0.14, 1, 1))
     fig.savefig(output, dpi=200, bbox_inches="tight")
-    print(f"✓ Combined difficulty curves saved to {output}")
+    plt.close(fig)
+    print(f"Saved {output}")
 
 
 def main():
-    data_dir = ROOT / "B2" / "data"
-    print(f"Scanning B2 data at {data_dir} ...\n")
-    _, all_rows, _ = discover(str(data_dir))
-
-    output = str(Path(__file__).resolve().parent / "combined_difficulty_curves.png")
-    plot_combined_difficulty_curves(all_rows, output)
+    counts = load_stabilizer_counts()
+    selected = {benchmark: select_runs(benchmark, counts) for benchmark in DATA_DIRS}
+    all_models = sorted(
+        {model for runs in selected.values() for model in runs}, key=display_label
+    )
+    styles = {
+        model: (
+            COLORS[index % len(COLORS)],
+            MARKERS[index % len(MARKERS)],
+            LINESTYLES[index % len(LINESTYLES)],
+        )
+        for index, model in enumerate(all_models)
+    }
+    for benchmark, runs in selected.items():
+        print(f"{benchmark} selected runs:")
+        for model, (capability_score, path, _, quality) in sorted(runs.items()):
+            quality_score = sum(score for _, score in quality)
+            print(
+                f"  {display_label(model)}: S_cap={capability_score:,}, "
+                f"S_qual={quality_score:,.2f} "
+                f"[{path.relative_to(DATA_DIRS[benchmark])}]"
+            )
+    capability_panels = [
+        (benchmark, r"Cumulative $S_{\mathrm{cap}}$", {model: cumulative_curve(capability) for model, (_, _, capability, _) in selected[benchmark].items()})
+        for benchmark in ("B1", "B2", "B3")
+    ]
+    plot_curves(OUTPUT_DIR / "combined_difficulty_curves.png", capability_panels, styles, show_ceiling=True)
+    quality_panels = [
+        (f"{benchmark}: {title}", r"Cumulative $S_{\mathrm{qual}}$", {model: cumulative_curve(quality) for model, (_, _, _, quality) in selected[benchmark].items()})
+        for benchmark, title in (("B2", "Circuit Optimization"), ("B3", "Fault-Tolerance"))
+    ]
+    plot_curves(OUTPUT_DIR / "combined_quality_difficulty_curves.png", quality_panels, styles, show_ceiling=True)
 
 
 if __name__ == "__main__":

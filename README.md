@@ -27,6 +27,8 @@ StabilizerBench is organized into three benchmark tasks of increasing difficulty
 | `B2` | Circuit optimization | B2 tests whether an agent can reason about circuit equivalence to produce a more efficient implementation of the same stabilizer state. | Reduction in two-qubit gate count and depth |
 | `B3` | Fault-tolerant circuit generation | B3 tests whether an agent can improve the fault tolerance of a given circuit by inserting flag gadgets that detect uncorrectable error propagation. | Fault-tolerance score |
 
+B3 expands repeats and packed fixed-arity operations before injecting faults after individual gates. Coordinate annotations, detectors, observables, and `TICK` do not create fault locations. A reset (including measurement-resets such as `MR`) erases any pre-existing Pauli error on its target; errors on other qubits keep propagating.
+
 ## Structure
 
 | Directory | Purpose |

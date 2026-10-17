@@ -1,34 +1,23 @@
 import stim
 
 def parse_circuit_to_gate_list(circuit):
-    """Parse a Stim circuit into individual gates for fault injection."""
+    """Expand repeats and packed operations into physical fault locations."""
     gate_list = []
-    for instruction in circuit:
-        if instruction.name in ['CX', 'CY', 'CZ', 'CNOT']:
-            # Two-qubit gates: split into individual pairs
-            targets = instruction.targets_copy()
-            for i in range(0, len(targets), 2):
-                qubit_a = targets[i].value
-                qubit_b = targets[i+1].value
-                gate_list.append((instruction.name, [qubit_a, qubit_b]))
-        elif instruction.name in ['M', 'MX', 'MY', 'MZ', 'MR', 'MRX', 'MRY', 'MRZ']:
-            # Measurement: one entry per qubit
-            for tg in instruction.targets_copy():
-                if hasattr(tg, 'value'):
-                    gate_list.append((instruction.name, [tg.value]))
-        elif instruction.name in ['H', 'X', 'Y', 'Z', 'S', 'S_DAG', 'SQRT_X', 'SQRT_Y']:
-            # Single qubit gates
-            for tg in instruction.targets_copy():
-                if hasattr(tg, 'value'):
-                    gate_list.append((instruction.name, [tg.value]))
+    for instruction in circuit.flattened():
+        if instruction.name in {"QUBIT_COORDS", "SHIFT_COORDS", "DETECTOR", "OBSERVABLE_INCLUDE", "TICK"}:
+            continue
+        qubits = [target.value for target in instruction.targets_copy() if hasattr(target, "value")]
+        if not qubits:
+            continue
+        gate = stim.gate_data(instruction.name)
+        if gate.is_two_qubit_gate:
+            arity = 2
+        elif gate.is_single_qubit_gate:
+            arity = 1
         else:
-            # General case: extract all qubit targets
-            qubits = []
-            for tg in instruction.targets_copy():
-                if hasattr(tg, 'value'):
-                    qubits.append(tg.value)
-            if qubits:
-                gate_list.append((instruction.name, qubits))
+            arity = len(qubits)
+        for i in range(0, len(qubits), arity):
+            gate_list.append((instruction.name, qubits[i:i + arity]))
     return gate_list
 
 def inject_pauli(sim, pauli, qubit):
@@ -43,6 +32,35 @@ def inject_pauli(sim, pauli, qubit):
     else:
         raise ValueError(pauli)
 
+def _propagate_pauli_through_suffix(pauli, suffix_gates):
+    """Propagate Clifford segments and erase incoming errors at resets."""
+    num_qubits = len(pauli)
+    start = 0
+    while start < len(suffix_gates):
+        reset = next(
+            (
+                k
+                for k in range(start, len(suffix_gates))
+                if stim.gate_data(suffix_gates[k][0]).is_reset
+            ),
+            len(suffix_gates),
+        )
+        suffix_circ = stim.Circuit()
+        for gate_name, targets in suffix_gates[start:reset]:
+            suffix_circ.append(gate_name, targets)
+        if len(suffix_circ) > 0 and num_qubits > 0:
+            # Ensure the tableau width matches the full circuit width.
+            suffix_circ.append("I", [num_qubits - 1])
+            pauli = stim.Tableau.from_circuit(
+                suffix_circ, ignore_measurement=True
+            )(pauli)
+        if reset == len(suffix_gates):
+            break
+        for qubit in suffix_gates[reset][1]:
+            pauli[qubit] = "I"
+        start = reset + 1
+    return pauli
+
 def propagate_fault(gate_list, loc_index, pauli, qubit):
     """Inject a Pauli fault on `qubit` AFTER gate at loc_index, then propagate through rest of circuit."""
     
@@ -56,27 +74,13 @@ def propagate_fault(gate_list, loc_index, pauli, qubit):
     initial_pauli = stim.PauliString(num_qubits)
     initial_pauli[qubit] = pauli
     
-    # Build suffix circuit (from AFTER the fault location onward)
-    suffix_circ = stim.Circuit()
-    for i in range(loc_index + 1, len(gate_list)):
-        gate_name, targets = gate_list[i]
-        suffix_circ.append(gate_name, targets)
-    
-    # Propagate the Pauli through the suffix circuit
-    if len(suffix_circ) == 0:
-        final_pauli = initial_pauli
-    else:
-        if num_qubits > 0:
-            # Ensure the tableau width matches the full circuit width.
-            suffix_circ.append("I", [num_qubits - 1])
-        tableau = stim.Tableau.from_circuit(suffix_circ, ignore_measurement=True)
-        final_pauli = tableau(initial_pauli)
-    
+    final_pauli = _propagate_pauli_through_suffix(initial_pauli, gate_list[loc_index + 1:])
+
     # Extract X and Z masks from final Pauli string
     x_mask = set()
     z_mask = set()
     final_paulis = {}
-    
+
     for q in range(num_qubits):
         p = final_pauli[q]
         if p == 1:  # X
@@ -91,7 +95,7 @@ def propagate_fault(gate_list, loc_index, pauli, qubit):
             final_paulis[q] = 'Z'
         else:  # I
             final_paulis[q] = 'I'
-    
+
     return final_paulis, x_mask, z_mask
 
 def error_weight_on(qubits, x_mask, z_mask=None, x_only=False):

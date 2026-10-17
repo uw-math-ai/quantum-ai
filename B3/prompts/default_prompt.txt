@@ -19,8 +19,8 @@ Task: Task: Generate a fault tolerant version of the given quantum circuit, that
 
 Fault tolerance:
 - A fault is a location in the circuit where there is an unexpected disruption (X, Y, Z Pauli gate) that alters the circuit's intended state in an undesired way.
-- A circuit is fault tolerant if any fault propagates to less than floor(({distance} - 1)/ 2) data qubits
-- A circuit is also fault tolerant if a fault that propagates to greater than or equal to floor(({distance} - 1)/2) data qubits triggers a flag ancilla that indicates a failure of the circuit. 
+- A circuit is fault tolerant if any fault propagates to at most floor(({distance} - 1)/ 2) data qubits
+- A circuit is also fault tolerant if a fault that propagates to more than floor(({distance} - 1)/2) data qubits triggers a flag ancilla that indicates a failure of the circuit. 
 
 Flag gadget:
   A flag qubit f is an ancilla qubit added to a circuit to detect harmful error

@@ -2,7 +2,7 @@ import stim
 import re
 
 def check_stabilizers(circuit: str, stabilizers: list[str]) -> dict[str, bool]:
-    """Check if the given stabilizers are preserved by the circuit.
+    """Check noiseless preservation across all measurement outcomes.
 
     Args:
         circuit: A string in the stim circuit format.
@@ -15,12 +15,18 @@ def check_stabilizers(circuit: str, stabilizers: list[str]) -> dict[str, bool]:
     circ = stim.Circuit(circuit)
     sim = stim.TableauSimulator()
     sim.do(circ)
+    prepared = stim.Circuit()
+    prepared.append("R", range(max(circ.num_qubits, max(map(len, stabilizers), default=0))))
+    prepared += circ
 
     results = {}
     for stabilizer in stabilizers:
         pauli = stim.PauliString(stabilizer + 'I' * (circ.num_qubits - len(stabilizer)))
         expectation = sim.peek_observable_expectation(pauli)
-        results[stabilizer] = expectation > 0
+        # Unsigned flow proves branch independence; the simulation supplies the sign.
+        results[stabilizer] = expectation > 0 and prepared.has_flow(
+            stim.Flow(output=pauli), unsigned=True
+        )
     return results
 
 def preprocess_stim_text(raw: str) -> str:

@@ -27,6 +27,8 @@ StabilizerBench is organized into three benchmark tasks of increasing difficulty
 | `B2` | Circuit optimization | B2 tests whether an agent can reason about circuit equivalence to produce a more efficient implementation of the same stabilizer state. | Reduction in two-qubit gate count and depth |
 | `B3` | Fault-tolerant circuit generation | B3 tests whether an agent can improve the fault tolerance of a given circuit by inserting flag gadgets that detect uncorrectable error propagation. | Fault-tolerance score |
 
+For noiseless circuits, stabilizer preservation requires a +1 eigenvalue across every measurement and reset outcome, not just one sampled branch. Ancillary measurements and feed-forward are allowed when the requested stabilizers remain deterministic.
+
 ## Structure
 
 | Directory | Purpose |

@@ -43,35 +43,44 @@ def inject_pauli(sim, pauli, qubit):
     else:
         raise ValueError(pauli)
 
-def propagate_fault(gate_list, loc_index, pauli, qubit):
+def _suffix_tableaus(gate_list, data_qubits):
+    """Cache suffixes strictly after fault-bearing gates; omit the unused prefix."""
+    data = set(data_qubits)
+    locations = {i for i, (_, targets) in enumerate(gate_list) if any(q in data for q in targets)}
+    if not locations:
+        return {}
+    first = min(locations)
+    num_qubits = max(q for _, targets in gate_list for q in targets) + 1
+    suffix = stim.Tableau(num_qubits)
+    tableaus = {}
+    for i in range(len(gate_list) - 1, first - 1, -1):
+        if i in locations:
+            tableaus[i] = suffix.copy()
+        if i > first:
+            name, targets = gate_list[i]
+            qubits = sorted(set(targets))
+            indices = {q: j for j, q in enumerate(qubits)}
+            operation = stim.Circuit()
+            operation.append(name, [indices[q] for q in targets])
+            gate = stim.Tableau.from_circuit(operation, ignore_measurement=True)
+            suffix.prepend(gate, qubits)
+    return tableaus
+
+def propagate_fault(gate_list, loc_index, pauli, qubit, *, suffix_tableau=None):
     """Inject a Pauli fault on `qubit` AFTER gate at loc_index, then propagate through rest of circuit."""
-    
-    # Determine number of qubits
-    all_qubits_set = set()
-    for gate_name, targets in gate_list:
-        all_qubits_set.update(targets)
-    num_qubits = max(all_qubits_set) + 1 if all_qubits_set else 0
-    
-    # Create initial Pauli string (the fault we inject)
+    if suffix_tableau is None:
+        num_qubits = max((q for _, targets in gate_list for q in targets), default=-1) + 1
+        suffix_circ = stim.Circuit()
+        for gate_name, targets in gate_list[loc_index + 1:]:
+            suffix_circ.append(gate_name, targets)
+        if num_qubits:
+            suffix_circ.append("I", [num_qubits - 1])
+        suffix_tableau = stim.Tableau.from_circuit(suffix_circ, ignore_measurement=True)
+    num_qubits = len(suffix_tableau)
     initial_pauli = stim.PauliString(num_qubits)
     initial_pauli[qubit] = pauli
-    
-    # Build suffix circuit (from AFTER the fault location onward)
-    suffix_circ = stim.Circuit()
-    for i in range(loc_index + 1, len(gate_list)):
-        gate_name, targets = gate_list[i]
-        suffix_circ.append(gate_name, targets)
-    
-    # Propagate the Pauli through the suffix circuit
-    if len(suffix_circ) == 0:
-        final_pauli = initial_pauli
-    else:
-        if num_qubits > 0:
-            # Ensure the tableau width matches the full circuit width.
-            suffix_circ.append("I", [num_qubits - 1])
-        tableau = stim.Tableau.from_circuit(suffix_circ, ignore_measurement=True)
-        final_pauli = tableau(initial_pauli)
-    
+    final_pauli = suffix_tableau(initial_pauli)
+
     # Extract X and Z masks from final Pauli string
     x_mask = set()
     z_mask = set()
@@ -128,6 +137,7 @@ def check_error_propagation(circuit: str, data_qubits: list[int], flag_qubits: l
             - flag_weight: Number of flag qubits with an X error (error detected when >= 1).
     '''
     gate_list = parse_circuit_to_gate_list(stim.Circuit(circuit))
+    suffixes = _suffix_tableaus(gate_list, data_qubits)
     
     results = []
     # Iterate through each gate in the gate list
@@ -138,7 +148,9 @@ def check_error_propagation(circuit: str, data_qubits: list[int], flag_qubits: l
                 continue
             
             for pauli in ("X", "Z", "Y"):
-                final_paulis, x_mask, z_mask = propagate_fault(gate_list, gate_index, pauli, q)
+                final_paulis, x_mask, z_mask = propagate_fault(
+                    gate_list, gate_index, pauli, q, suffix_tableau=suffixes[gate_index]
+                )
                 data_w = error_weight_on(data_qubits, x_mask, z_mask)
                 flag_w = error_weight_on(flag_qubits, x_mask, x_only=True)
 

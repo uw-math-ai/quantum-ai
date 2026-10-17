@@ -105,6 +105,8 @@ Optional harness dependencies:
 The repository includes a convenience entry point to run all benchmarks from one place: `run_all.py`.
 This script orchestrates `B1/run.py`, `B2/run.py`, and `B3/run.py` using the defaults defined in the script's `BENCHMARKS` table.
 
+B3 fault sweeps trade memory for speed by caching one full-width suffix tableau per data-fault location. The cache is discarded after each sweep.
+
 Basic usage:
 
 ```bash

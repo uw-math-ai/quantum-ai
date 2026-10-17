@@ -80,23 +80,25 @@ def compute_metrics(
                 tick_floor = max(tick_floor, depth + 1)
             continue
 
-        qubits = _qubit_targets(inst)
-        if not qubits:
-            continue
-
         # Expand into per-gate operations (important for Stim "packed" instructions).
         ops: list[tuple[int, ...]] = []
-        if name in {"CX", "CZ", "SWAP"}:
-            if len(qubits) % 2 != 0:
+        if stim.gate_data(name).is_two_qubit_gate:
+            # Split pairs before dropping classical controls.
+            targets = inst.targets_copy()
+            if len(targets) % 2 != 0:
                 raise ValueError(
-                    f"Malformed {name} instruction with odd #qubit targets: {qubits}"
+                    f"Malformed {name} instruction with odd #targets: {targets}"
                 )
-            for i in range(0, len(qubits), 2):
-                ops.append((qubits[i], qubits[i + 1]))
+            for i in range(0, len(targets), 2):
+                op = tuple(t.value for t in targets[i:i + 2] if t.is_qubit_target)
+                if op:
+                    ops.append(op)
         else:
-            for q in qubits:
+            for q in _qubit_targets(inst):
                 ops.append((q,))
 
+        if not ops:
+            continue
         # Counting: one-/two-qubit counts are structural; volume is gate-set-defined.
         for op in ops:
             if len(op) == 1:
